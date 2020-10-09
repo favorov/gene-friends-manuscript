@@ -1,0 +1,88 @@
+% This is LLNCS.DEM the demonstration file of
+% the LaTeX macro package from Springer-Verlag
+% for Lecture Notes in Computer Science,
+% version 2.4 for LaTeX2e as of 16. April 2010
+%
+\documentclass{llncs}
+% % % % % % % % % % % % % % % % % % % %
+% For Russian uncomment the following lines
+%\usepackage[utf8x]{inputenc}
+%\usepackage[russian]{babel}
+% \def\keywordname{{\bf Ключевые слова:}}%
+% % % % % % % % % % % % % % % % % % % % 
+\usepackage{graphicx}
+\begin{document}
+%
+\title{Gene's best friends: statistical testing of selecting features}
+%
+\titlerunning{Gene's best friends}  
+% abbreviated title (for running head)
+%                                     also used for the TOC unless
+%                                     \toctitle is used
+%
+\author{Alexander Favorov\inst{1}\textsuperscript,\inst{2} \and Vasiliy Ramensky \inst{3}
+\and Andrey Mironov \inst{4}\textsuperscript,\inst{5}}
+%
+\authorrunning{A. Favorov et al.} % abbreviated author list (for running head)
+%
+%%%% list of authors for the TOC (use if author list has to be modified)
+\tocauthor{Alexander Favorov, Vasiliy Ramensky, and Andrey Mironov}
+%
+\institute{
+Johns Hopkins University School of Medicine, Baltimore, MD 21205, USA,
+\and
+Vavilov Institute of General Genetics, RAS, Moscow, 119333, Russia, 
+\email{favorov@sensi.org}
+\and
+National Health and Research Center of Preventive Healthcare, Moscow, 101990, Russia
+\and
+Faculty of Bioengineering and Bioinformatics, MSU, Moscow, 119992, Russia
+\and
+Institute for Information Transmission Problems, RAS, Moscow, 127994, Russia
+}
+
+\maketitle              % typeset the title of the contribution
+
+\begin{abstract}
+Suppose we have a set of features and a set of entities, and a matrix that describe how strong the feature is relied with an entity, e.g. features are genes, entities are gene expression patterns, and values are loads of the genes in the patterns. Sometimes, expression of a gene implies expression of a particular pattern (the simplest case is: the gene has nonzero load only in that pattern). If so, we say that the gene selects the pattern. Here we describe a statistical test that identify pairs of a selecting feature and the selected entity. The test is based on rank statistics and it does not rely on a suggestion about the relation measure distribution. The selected entity is referred to as the feature's best friend, and the test is named "the best friend test" or "the gene's best friend test". \url{https://github.com/favorov/gene-friends}
+\keywords{gene's best friend, specific gene regulation, pattern marker, rank statistics, selecting }
+\end{abstract}
+%
+\section{Introduction: friends and markers}
+
+
+We want to identify those entities that are specifically marked by a feature. We call the entity the feature's best friend. We formulated \cite{best_friends:2015} this task in a symmetric form on gene expression data as searching for genes that are best friends of genes. Best friend of a gene $G_i$ is another gene $G_j$ that is expressed concertedly with the gene $G_i$, while other genes $G_k, k\neq i, k \neq j$ are (almost) not. The best friend is unique, while one gene can be the best friend for more than one gene. The solution we proposed (double ranking) did not provide either statistical measure or an effect size estimate. The similar problem was formulated in an asymmetric setup \cite{patternmarkers:2017} to identify genes that uniquely mark expression patters presented as vectors of the gene expression activity. Each pattern $j, j=1..n$ was scaled by $max_i(P_{ij}),i=1..k$ (genes are rows), so $max_i(P_{ij})=1$ for any pattern, and the quality of a gene $m$ as a marker for pattern $l$ was estimated by the Euclidean distance of the $P_{mj}, j=1..n$ vector from the ideal marked vector $\delta_{lj}$. The less the distance is, the better the marker is. Reformulating the friendship terms \cite{best_friends:2015} for an asymmetric case, the pattern is the best friend for its marker genes. The markers can be multiple for a pattern, the best friend is unique for a marker gene.
+
+Here, we solve this problem in asymmetric form using the rank statistics.
+%
+\section{Method}
+\subsection{Ranking}
+Let's say we have an $P_{ij}$ that represent the strength of relation between $k$ features and $n$ entities. We want to identify all the features that are preferably relate to one entity. Such a feature is a marker for the entity, and the entity is the best friend for the feature.
+As a normalisation, we rank all the features by its relation strength to each entity, so obtaining $R_{ij}= \textrm{rank of } P_{ij} \textrm{ in } P_{*j}$. Then, we scale $R$ into $[0..1]$ : $r_{ij}={R_{ij}}/{k}$.
+
+\subsection{Rank statistics}
+For each feature $i,i=1..k$, we obtain a vector $r_{ij}, j=1..n$. There are normalised ranks of the feature in different entities, in the a null hypothesis they are uniformly i.i.d. in [0,1]. Let's create a rank statistics $u_i$ by ordering their values. If the feature is a marker for an entity, the entity corresponds to the first value $u_1$. Let's use the difference $u_2-u_1$ as a measure of uniqueness (quality of the marker). Indeed, if we see that the difference is significantly higher than we can expect if null hypothesis holds, we can conclude that the feature unexpectedly prefer the entity, so it is a marker (and the entity is its best friend). Similarly to the density estimation for each $u_i$ (see, e.g. \cite{Gut:2009}) we estimate the probability to observe the difference $u_2 - u_1 \ge t$. 
+
+\begin{eqnarray*}
+p(t) = & n!\displaystyle \int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n....du_4 du_3 du_2 du_1 = \\ 
+&\displaystyle \frac{n!}{(n-3)!}\int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1 \left( 1-u_3 \right)^{n-3}du_3 du_2 du_1 = \\
+&\displaystyle \frac{n!}{(n-2)!}\int_0^{1-t}\int_{{u_1}+t}^1\left( 1-u_2 \right)^{n-2} du_2 du_1 = \\
+&\displaystyle n \int_0^{1-t}\left( 1-t-u_1 \right)^{n-1} du_1 = (1-t)^n
+\end{eqnarray*}
+
+After the correction this p-value for multiple hypothesis testing (each feature provides its own null hypothesis), we identify the statistically significant pairs of a feature (marker) and entity (its best friend). 
+
+\subsection*{Notes and comments}
+
+For a symmetric case, sometimes it makes sense to remove the main diagonal before ranking not to obtain trivial self-relations.
+
+\includegraphics[scale=.5,trim=0 10cm 0 0, clip=true]{rank3d-nocolour}
+
+The figure explains the probability estimation for the $n=3$ case. The rank statistics probability density is $3!=6$ and it uniformly scattered in (0,0,0), (0,0,1), (0,1,1), (1,1,1) tetrahedron. The $u_2 - u_1 \ge t$ condition holds only in the (0,t,t), (0,t,1), (0,1,1), (1-t,1,1) small tetrahedron.
+
+To assess the p-value for a feature $i$, we do not need to rank the whole $r_{ij}, j=1..n$ vector to build the rank statistics $u_j$; we actually need only the $t$ value, so it is enough to find the maximal and the second values of $r_{ij}$.
+
+\bibliography{gene-best-friends-itis20}
+
+\bibliographystyle{splncs03}
+\end{document}
