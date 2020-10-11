@@ -1,6 +1,6 @@
 #use gmake!
-name=gene-best-friends-abstract-itis20
-bibname=gene-best-friends-itis20
+name=gene-best-friends-manuscript
+bibname=gene-best-friends
 #bibname=$(name)
 
 .PHONY: all clean
