@@ -11,6 +11,7 @@
 % \def\keywordname{{\bf Ключевые слова:}}%
 % % % % % % % % % % % % % % % % % % % % 
 \usepackage{graphicx}
+%\usepackage[title]{appendix}
 \begin{document}
 %
 \title{Gene's best friends: marker rank statistics}
@@ -58,26 +59,24 @@ Let's make a generalisation. We have entities and features and a matrix that sho
 %
 \section{Method}
 \subsection{Ranking}
-Let's say we have an $P_{ij}$ that represent the strength of relation between $k$ features and $n$ entities. We want to identify all the features that are preferably relate to one entity. Such a feature is a marker for the entity, and the entity is the best friend for the feature.
-As a normalisation, we rank all the features by its relation strength to each entity, so obtaining $R_{ij}= \textrm{rank of } P_{ij} \textrm{ in } P_{*j}$. Then, we scale $R$ into $[0..1]$ : $r_{ij}={R_{ij}}/{k}$.
+Let's say we have an $P_{ij}$ matrix that represent the strength of relation between $k$ features and $n$ entities. We want to identify all entities that are preferably selected (marked) by one or more features. Such a feature is a marker for the entity, and the entity is the best friend for the feature.
+First, we rank all the features by its $P_{ij}$ for each entity $j$, so obtaining $R_{ij}= \textrm{rank of } P_{ij} \textrm{ in } P_{*j}$. Then, we scale $R$ into $[0..1]$ : $r_{ij}={R_{ij}}/{k}$. To be specific, we suppose that the ranking is ascending, the smaller is the rank, the stronger is the relation.
 
 \subsection{Single marker rank statistics}
 For each feature $i,i=1..k$, we obtain a vector $r_{ij}, j=1..n$. There are normalised ranks of the feature in different entities, in the a null hypothesis they are uniformly i.i.d. in [0,1]. Let's create a rank statistics $u_i$ by ordering their values. If a feature is a unique marker for an entity, the entity corresponds to the first  value $u_1$. Let's use the difference $u_2-u_1$ as a measure of uniqueness (quality of the marker). Indeed, if we see that the difference is significantly higher than we can expect if null hypothesis holds, we can conclude that the feature unexpectedly prefer the entity, so it is a marker (and the entity is its best friend). Similarly to the density estimation for each $u_i$ (see, e.g. \cite{Gut:2009}) we estimate the probability to observe the difference $u_2 - u_1 \ge t$. 
 
-First, the whole volume of ranked variables $u_1 .. u_n$ is \cite{Gut:2009}:
+First, the whole n-dimension (nD) volume of ranked variables $u_1 .. u_n$ is:
 \begin{eqnarray*}
-V = &\displaystyle \int_0^1\int_{u_1}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n....du_4 du_3 du_2 du_1 = \\ 
-&\displaystyle \frac{1}{(n-3)!}\int_0^1\int_{u_1}^1\int_{u_2}^1 \left( 1-u_3 \right)^{n-3}du_3 du_2 du_1 = \\
-&\displaystyle \frac{1}{(n-2)!}\int_0^{1-t}\int_{{u_1}+t}^1\left( 1-u_2 \right)^{n-2} du_2 du_1 = \\
-&\displaystyle \frac{1}{(n-1)!} \int_0^1\left( 1-u_1 \right)^{n-1} du_1 = \frac{1}{n!}
-\end{eqnarray*} 
+V = &\displaystyle \int_0^1\int_{u_1}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n....du_4 du_3 du_2 du_1 =  \frac{1}{n!}
+\end{eqnarray*}
+see eq. \ref{eq:volume} for details.
+
+Let's denote the p-value for the observation $t=u_2-u_1$ as $p_1(t)$. $p_1(t)$ is the ratio of nD, that is limited by $t<=u_2-u_1$ condition, and $V$.
 
 \begin{eqnarray*}
-p(t) = & n!\displaystyle \int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n....du_4 du_3 du_2 du_1 = \\ 
-&\displaystyle \frac{n!}{(n-3)!}\int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1 \left( 1-u_3 \right)^{n-3}du_3 du_2 du_1 = \\
-&\displaystyle \frac{n!}{(n-2)!}\int_0^{1-t}\int_{{u_1}+t}^1\left( 1-u_2 \right)^{n-2} du_2 du_1 = \\
-&\displaystyle n \int_0^{1-t}\left( 1-t-u_1 \right)^{n-1} du_1 = (1-t)^n
+p(t) = & \displaystyle\frac{1}{V} \displaystyle \int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n....du_4 du_3 du_2 du_1 = (1-t)^n
 \end{eqnarray*}
+see eq. \ref{eq:p_1} for details.
 
 After the correction this p-value for multiple hypothesis testing (each feature provides its own null hypothesis), we identify the statistically significant pairs of a feature (marker) and entity (its best friend).
 
@@ -95,7 +94,7 @@ To assess the p-value for a feature $i$, we do not need to rank the whole $r_{ij
 
 \section{Discussion}
 
-We formulated a statistical test that to detest reliable pairs of marker feature and the marked entity. Nevertheless the formulation of the problem looks abstract, its solution provides numerous straightforward application. The motivating example we started with was to detect the marker genes for expression patterns. The patterns could be obtained from the CoGAPS (scCoGAPS) \cite{Fertig_2016} or other matrix factorisation method \cite{Stein_2018}. The identification of the marker genes can critically simplify biological interpretation. If the matrix is the amplitude component from  the decomposition, the marker time points (or, the marker cells for scCoGAPS) can also be very informative for analysis. If the matrix contains the expression correlation for two gene sets, annotated best friends of an unannotated gene extend the existing annotation.
+We formulated a statistical test that to detest reliable pairs of marker feature and the marked entity. Nevertheless the formulation of the problem looks abstract, its solution provides numerous straightforward application. The motivating example we started with was to detect the marker genes for expression patterns. The patterns could be obtained from the CoGAPS (scCoGAPS) \cite{Fertig_2016} or other matrix factorisation method \cite{Stein_2018}. The identification of the marker genes can critically simplify biological interpretation. If the matrix is the amplitude component from  the decomposition, the marker time points (or, the marker cells for scCoGAPS) can also be very informative for analysis. If the matrix contains the expression correlation for two gene sets, annotated best friends of an non-annotated gene extend the existing annotation.
 
 \section{Conflict of interest}
 Authors declares no conflict of interest.
@@ -106,4 +105,38 @@ AF acknowledges support by National Institutes of Health (NIH) P30CA006973 and 1
 \bibliography{gene-best-friends}
 
 \bibliographystyle{splncs03}
+%\begin{subappendices}
+
+\newcommand{\beginsupplement}{%
+        \setcounter{table}{0}
+        \renewcommand{\thetable}{S\arabic{table}}%
+        \setcounter{figure}{0}
+        \renewcommand{\thefigure}{S\arabic{figure}}
+        \setcounter{equation}{0}
+        \renewcommand{\theequation}{S\arabic{equation}}%
+     }
+\section*{Supplement}
+\beginsupplement
+
+%\renewcommand{\thesection}{\Alph{section}}%
+% or try \arabic{section}
+
+\begin{eqnarray}
+V = &\displaystyle \int_0^1\int_{u_1}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n....du_4 du_3 du_2 du_1 = \nonumber \\ 
+&\displaystyle \frac{1}{(n-3)!}\int_0^1\int_{u_1}^1\int_{u_2}^1 \left( 1-u_3 \right)^{n-3}du_3 du_2 du_1 = \nonumber \\
+&\displaystyle \frac{1}{(n-2)!}\int_0^{1-t}\int_{{u_1}+t}^1\left( 1-u_2 \right)^{n-2} du_2 du_1 = \nonumber \\
+&\displaystyle \frac{1}{(n-1)!} \int_0^1\left( 1-u_1 \right)^{n-1} du_1 = \frac{1}{n!} \label{eq:volume}
+\end{eqnarray} 
+
+\begin{eqnarray}
+p_1(t) = & \displaystyle \frac{1}{V}\displaystyle \int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n....du_4 du_3 du_2 du_1 =  \nonumber \\ 
+&\displaystyle \frac{n!}{(n-3)!}\int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1 \left( 1-u_3 \right)^{n-3}du_3 du_2 du_1 =  \nonumber \\
+&\displaystyle \frac{n!}{(n-2)!}\int_0^{1-t}\int_{{u_1}+t}^1\left( 1-u_2 \right)^{n-2} du_2 du_1 =  \nonumber \\
+&\displaystyle n \int_0^{1-t}\left( 1-t-u_1 \right)^{n-1} du_1 = (1-t)^n \label{eq:p_1}
+\end{eqnarray}
+
+%\end{subappendices}
+
 \end{document}
+
+
