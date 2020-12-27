@@ -45,7 +45,7 @@ Institute for Information Transmission Problems, RAS, Moscow, 127994, Russia
 \maketitle              % typeset the title of the contribution
 
 \begin{abstract}
-Suppose we have a set of features and a set of entities, and a matrix that describe how strong the feature is relied with an entity, e.g. features are genes, entities are gene expression patterns, and values are loads of the genes in the patterns. Sometimes, expression of a gene implies expression of a particular pattern (the simplest case is: the gene has nonzero load only in that pattern). If so, we say that the gene marks the pattern. Here we describe a statistical test that identify pairs of a marker feature and the marked entity. The test is based on rank statistics and it does not rely on a suggestion about the distribution of the relation strength. The marked entity is referred to as the feature's best friend, and the test is named "the best friends test" or "the gene's best friends test". \url{https://github.com/favorov/gene-friends}
+Suppose we have a set of features and a set of entities, and a we have the strength of the feature-to-entity relations quantified (obviously, the quantities populate an features*entities matrix). Possible example is: features are genes, entities are gene expression patterns, and values are loads of the genes in the patterns. Sometimes, expression of a gene implies expression of a particular pattern (the simplest case is: the gene has nonzero load only in that pattern). If so, we say that the gene marks the pattern. Here we describe a statistical test that identify pairs of a marker feature and the marked entity. The test is based on rank statistics and it does not rely on propositions about the distribution of the relation quantity. The marked entity is referred to as the feature's best friend, and the test is named "the best friends test" or "the gene's best friends test". \url{https://github.com/favorov/gene-friends}
 \keywords{gene's best friends, specific gene regulation, pattern marker, rank statistics, marker feature, marked entity}
 \end{abstract}
 %
@@ -81,6 +81,7 @@ see eq. \ref{eq:p_1} for details.
 After the correction this p-value for multiple hypothesis testing (each feature provides its own null hypothesis), we identify the statistically significant pairs of a feature (marker) and entity (its best friend).
 
 \subsection{Multiple marker rank statistics}
+Now, let's suppose that an entity has more than one features, that almost equally good marks it, for example, two genes has nonzero load in a pattern. The pattern is the best friend for both of them, and each of them or their combination is a unique marker for the pattern, but the single marker rank statistics cannot find them, for the distance $u_2-u_1$ is quite low: the markers are almost equally good.
 
 \subsection*{Notes and comments}
 
