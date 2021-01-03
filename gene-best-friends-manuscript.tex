@@ -130,7 +130,7 @@ AF acknowledges support by National Institutes of Health (NIH) P30CA006973 and 1
 &\displaystyle \int_0^b\left(b-x\right)^{n-1}dx=\displaystyle \frac{b^n}{n}  \label{eq:left}
 \end{eqnarray}
 
-Applying \ref{eq:left} recursively from $u_n$ until $u_1$: 
+Applying \ref{eq:right} recursively from $u_n$ until $u_1$: 
 \begin{eqnarray}
 V = &\displaystyle \int_0^1\int_{u_1}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n....du_4 du_3 du_2 du_1 = \nonumber \\ 
 &\displaystyle \frac{1}{(n-3)!}\int_0^1\int_{u_1}^1\int_{u_2}^1 \left( 1-u_3 \right)^{n-3}du_3 du_2 du_1 = \nonumber \\
@@ -138,7 +138,7 @@ V = &\displaystyle \int_0^1\int_{u_1}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}
 &\displaystyle \frac{1}{(n-1)!} \int_0^1\left( 1-u_1 \right)^{n-1} du_1 = \frac{1}{n!} \label{eq:volume}
 \end{eqnarray} 
 
-Applying \ref{eq:left} recursively from $u_n$ until $u_2$ and then \ref{eq:right} to $u_1$:
+Applying \ref{eq:right} recursively from $u_n$ until $u_2$ and then \ref{eq:left} to $u_1$:
 \begin{eqnarray}
 p_1(t) = & \displaystyle \frac{1}{V}\displaystyle \int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n....du_4 du_3 du_2 du_1 =  \nonumber \\ 
 &\displaystyle \frac{n!}{(n-3)!}\int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1 \left( 1-u_3 \right)^{n-3}du_3 du_2 du_1 =  \nonumber \\
