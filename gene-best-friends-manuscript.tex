@@ -121,31 +121,40 @@ AF acknowledges support by National Institutes of Health (NIH) P30CA006973 and 1
 
 %\renewcommand{\thesection}{\Alph{section}}%
 % or try \arabic{section}
+For an integer $m$,
 \begin{eqnarray}
-&\displaystyle \int_a^1\left(1-x\right)^{n-1}dx=
+&\displaystyle \int_a^b\left(b-x\right)^{m-1}dx=
 %-\displaystyle \int_0^{1-a}v^{n-1}dv=
-\displaystyle \frac{\left(1-a\right)^n}{n}  \label{eq:right}
+\displaystyle \frac{\left(b-a\right)^m}{m}  \label{eq:intab}
 \end{eqnarray} 
+%\begin{eqnarray}
+%&\displaystyle \int_a^1\left(1-x\right)^{m-1}dx=
+%-\displaystyle \int_0^{1-a}v^{n-1}dv=
+%\displaystyle \frac{\left(1-a\right)^m}{m}  \label{eq:right}
+%\end{eqnarray} 
+%\begin{eqnarray}
+%&\displaystyle \int_0^b\left(b-x\right)^{m-1}dx=\displaystyle \frac{b^m}{m}  \label{eq:left}
+%\end{eqnarray}
+Applying \ref{eq:intab} recursively from $u_n$ until $u_1$: 
 \begin{eqnarray}
-&\displaystyle \int_0^b\left(b-x\right)^{n-1}dx=\displaystyle \frac{b^n}{n}  \label{eq:left}
-\end{eqnarray}
-
-Applying \ref{eq:right} recursively from $u_n$ until $u_1$: 
-\begin{eqnarray}
-V = &\displaystyle \int_0^1\int_{u_1}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n....du_4 du_3 du_2 du_1 = \nonumber \\ 
+V = &\displaystyle \int_0^1\int_{u_1}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n...du_4 du_3 du_2 du_1 = \nonumber \\ 
 &\displaystyle \frac{1}{(n-3)!}\int_0^1\int_{u_1}^1\int_{u_2}^1 \left( 1-u_3 \right)^{n-3}du_3 du_2 du_1 = \nonumber \\
 &\displaystyle \frac{1}{(n-2)!}\int_0^{1-t}\int_{{u_1}+t}^1\left( 1-u_2 \right)^{n-2} du_2 du_1 = \nonumber \\
 &\displaystyle \frac{1}{(n-1)!} \int_0^1\left( 1-u_1 \right)^{n-1} du_1 = \frac{1}{n!} \label{eq:volume}
 \end{eqnarray} 
-
-Applying \ref{eq:right} recursively from $u_n$ until $u_2$ and then \ref{eq:left} to $u_1$:
 \begin{eqnarray}
-p_1(t) = & \displaystyle \frac{1}{V}\displaystyle \int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n....du_4 du_3 du_2 du_1 =  \nonumber \\ 
-&\displaystyle \frac{n!}{(n-3)!}\int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1 \left( 1-u_3 \right)^{n-3}du_3 du_2 du_1 =  \nonumber \\
+& p_1(t) =  \displaystyle \frac{1}{V}\displaystyle \int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n...du_2 du_1 =  \nonumber \\ 
+%&\displaystyle \frac{n!}{(n-3)!}\int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1 \left( 1-u_3 \right)^{n-3}du_3 du_2 du_1 =  \nonumber \\
 &\displaystyle \frac{n!}{(n-2)!}\int_0^{1-t}\int_{{u_1}+t}^1\left( 1-u_2 \right)^{n-2} du_2 du_1 =  \nonumber \\
 &\displaystyle n \int_0^{1-t}\left( 1-t-u_1 \right)^{n-1} du_1 = (1-t)^n \label{eq:p_1}
 \end{eqnarray}
-
+\begin{eqnarray}
+& p_k(t) = \displaystyle \frac{1}{V}\displaystyle \int_0^{1-t}\int_{{u_1}}^{1-t}...\int_{u_{k-1}}^{1-t}\int_{u_k+t}^1...\int_{u_{n-1}}^1 du_n... du_1 =  \nonumber \\ 
+& \displaystyle \frac{n!}{(n-k-1)!}\displaystyle \int_0^{1-t}\int_{{u_1}}^{1-t}...\int_{u_{k-1}}^{1-t}\int_{u_k+t}^1 \left( 1-u_{k+1} \right)^{n-k-1} du_{k+1}...du_1 =  \nonumber \\
+& \displaystyle \frac{n!}{(n-k)!}\displaystyle \int_0^{1-t}\int_{{u_1}}^{1-t}...\int_{u_{k-1}}^{1-t} \left( 1-t-u_{k} \right)^{n-k} du_k...du_1 =  \nonumber \\
+& \displaystyle \frac{n!}{(n-k+1)!}\displaystyle \int_0^{1-t}\int_{{u_1}}^{1-t}...\int_{u_{k-2}}^{1-t} \left( 1-t-u_{k-1} \right)^{n-k+1} du_{k-1}...du_1 =  \nonumber \\
+& \displaystyle n \int_0^{1-t}\left( 1-t-u_1 \right)^{n-1} du_1 = (1-t)^n \label{eq:p_k}
+\end{eqnarray}
 %\end{subappendices}
 
 \end{document}
