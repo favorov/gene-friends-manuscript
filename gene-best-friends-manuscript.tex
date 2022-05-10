@@ -21,35 +21,47 @@
 %                                     also used for the TOC unless
 %                                     \toctitle is used
 %
-\author{Alexander Favorov\inst{1}\textsuperscript,\inst{2} \and Vasiliy Ramensky \inst{3}
-\and Andrey Mironov \inst{4}\textsuperscript,\inst{5}}
+\author{Alexander Favorov\inst{1}\textsuperscript,\inst{2}
+\and Vera Mukhina \inst{2,3} \and Vasiliy Ramensky \inst{4}
+\and Andrey Mironov \inst{3}\textsuperscript,\inst{5}}
 %
 \authorrunning{A. Favorov et al.} % abbreviated author list (for running head)
 %
 %%%% list of authors for the TOC (use if author list has to be modified)
-\tocauthor{Alexander Favorov, Vasiliy Ramensky, and Andrey Mironov}
+\tocauthor{Alexander Favorov, Vera Mukhina, Vasiliy Ramensky, and Andrey Mironov}
 %
 \institute{
-Johns Hopkins University School of Medicine, Baltimore, MD 21205, USA,
+Johns Hopkins University School of Medicine, \\ Baltimore, MD 21205, USA,
 \and
-Vavilov Institute of General Genetics, RAS, Moscow, 119333, Russia, 
+Vavilov Institute of General Genetics, RAS, \\ Moscow, 119333, Russia, 
 \email{favorov@sensi.org}
 \and
-National Health and Research Center of Preventive Healthcare, Moscow, 101990, Russia
+Institute for Information Transmission Problems, RAS, \\ Moscow,  127994, Russia
 \and
-Faculty of Bioengineering and Bioinformatics, MSU, Moscow, 119992, Russia
+National Health and Research Center of Preventive Healthcare, \\ Moscow, 101990, Russia
 \and
-Institute for Information Transmission Problems, RAS, Moscow, 127994, Russia
+Faculty of Bioengineering and Bioinformatics, MSU, \\ Moscow, 119992, Russia
 }
 
 \maketitle              % typeset the title of the contribution
 
+\newcommand{\tag}{tag}
+\newcommand{\cloud}{cloud}
+
 \begin{abstract}
+Suppose we have set of {\tag}s $E$ and a set of {\cloud}s $C$ of this elements with some fuzzy membership, e.g. there is a numeric measure of how an element is represented in a community $A(e,c)$ for each pair $(e,c):e \in E,c \in C$. The higher the $A(e,c)$ value is, the more the element $e$ is involved in the community $c$. The absence of the element in the community is shown by the value that is minimal for the community.
+
+A good example that is easy to think about is: genes are elements and their regulation by transcription factors (TF’s) form communities, and A shows the strength of the regulation. We look at a gene and we want to know whether a TF is its friend, i.e. whether the TF specifically regulates the gene. The naïve idea is to look for a TF that the gene is the most sensitive for. Still, it’s possible that this TF is the strongest for the most of the genes. Sometimes, it is what we want to find, but now we want to answer other questions, namely, what TF is the most specific factor for the gene and is the specificity enough to say that is does not look like a random outcome?
+
+Sometimes, the communities are in in one-to-one relation with the elements, e.g. each c is a set of neighbours of e in some graph. For this example, A is a weighted adjacency matrix of this graph. The friendship terminology emerges naturally from this case. The friendship relation itself is asymmetric: a friend cares about Augustus, while Augustus does not.
+
 Suppose we have a set of features and a set of entities, and a we have the strength of the feature-to-entity relations quantified (obviously, the quantities populate an features*entities matrix). Possible example is: features are genes, entities are gene expression patterns, and values are loads of the genes in the patterns. Sometimes, expression of a gene implies expression of a particular pattern (the simplest case is: the gene has nonzero load only in that pattern). If so, we say that the gene marks the pattern. Here we describe a statistical test that identify pairs of a marker feature and the marked entity. The test is based on rank statistics and it does not rely on propositions about the distribution of the relation quantity. The marked entity is referred to as the feature's best friend, and the test is named "the best friends test" or "the gene's best friends test". The statistics is naturally expand to the case when a feature selects (separates) a subset of entities, thus having more than one best friend. The R code is available at \url{https://github.com/favorov/best-friends}
 \keywords{best friends, gene's best friends, specific gene regulation, pattern marker, rank statistics, marker feature, marked entity}
 \end{abstract}
 %
 \section{Introduction: friends and markers}
+
+There is a simple intuition of what does it mean to be a friend. A friend of Augustus cares about Augustus more than about other persons. And, if one sees Augustus, it makes sense to infer to see friends(s) of Augustus also. Lets’s try to translate it to statistical inferences.
 
 Let's picture a set of genes and their loads in expression patterns. The patterns describe the expression of the genes in some process. Sometimes, we can conclude that a pattern is expressed from expression of a single gene. The simplest case that allows this inference is when the gene has nonzero load in only one pattern. The situation when other loads are just relatively small, also fits the inference. We will refer to the gene as marker gene and to the pattern as the best friend of the gene. We want to identify the marker genes and their best friends given the load matrix.
 
