@@ -12,9 +12,12 @@
 % % % % % % % % % % % % % % % % % % % % 
 \usepackage{graphicx}
 \usepackage{comment}
+\usepackage{epigraph}
 %\usepackage[title]{appendix}
 \begin{document}
 %
+
+
 \title{Telling the story of best friends: marker rank statistics}
 %
 \titlerunning{Best friends}  
@@ -52,6 +55,10 @@ Faculty of Bioengineering and Bioinformatics, MSU, \\ Moscow, 119992, Russia
 \newcommand{\C}{C}
 \newcommand{\tl}{t}
 \newcommand{\cl}{c}
+%\setlength\epigraphwidth{.8\textwidth}
+\setlength\epigraphrule{0pt}
+
+\epigraph{SI AUGUSTUM VIDEAT AMICOS EIUS VIDEATI}
 
 \begin{abstract}
 
@@ -60,6 +67,8 @@ Suppose we have a set of {\tag}s and a set of fuzzy set of {\tag}s, which we wil
 \keywords{best friends, gene's best friends, specific gene regulation, pattern marker, rank statistics, marker feature, marked entity}
 \end{abstract}
 %
+
+
 \section{Introduction: friends and markers}
 
 There is a simple intuition of what does it mean to be a friend. A friend of Augustus cares about Augustus more than about other persons. And, if one sees Augustus, it makes sense to infer to see friends(s) of Augustus also. Lets’s try to translate it to statistical inferences.
@@ -70,14 +79,7 @@ We formulated \cite{best_friends:2015} the similar task in a symmetric form on g
 
 Let's make a generalisation. We have entities and features and a matrix that show how strong is a feature ascribed to an entity. We want to identify those features that reliably and uniquely identify an entity. Let's call the feature the entity's marker and let's call the entity the feature's best friend. Here, we describe a rank test identifying significant pairs of marker feature and its best friend entity.
 
-\begin{comment}
-\subsection{ex-abstract}
-Suppose we have set of {\tag}s $\T$ and a set of {\cloud}s $\C$ of this {\tag}s with some fuzzy membership, e.g. there is a numeric measure of how an {\tag} is represented in a {\cloud} $A(\tl,\cl)$ for each pair $(\tl,\cl):\tl \in \T, \cl \in \C$. The higher the $A(\tl,\cl)$ value is, the more the {\tag} $\tl$ is involved in the {\cloud} $\cl$. The absence of the {\tag} in the {\cloud} is shown by the value that is minimal for the {\cloud}.
 
-An example that is easy to think about is: genes are {\tag}s and their groups under regulation by same transcription factors (TF’s) form {\cloud}s, and A shows the strength of the regulation. We look at a gene and we want to know whether a TF is its friend, i.e. whether the TF specifically prefers (regulates) the gene. The na\"ive idea is to look for a TF that the gene is the most sensitive for. Still, it’s possible that this TF is the strongest for the most of the genes. Sometimes, it is what we want to find, but now we want to answer other questions, namely, what TF is the most specific factor for the gene and is the specificity enough to say that is does not look like a random outcome?
-
-Sometimes, the {\cloud}s are in in one-to-one relation with the {\tag}s, e.g. each {\cloud} is a set of {\tag}s, which are neighbours of {\tag} in some graph. For this example, A is a weighted adjacency matrix of this graph. The friendship terminology emerges naturally from this case. The friendship relation itself is asymmetric: a friend cares about Augustus, while Augustus does not.
-\end{comment}
 
 %
 \section{Method}
@@ -94,8 +96,8 @@ $j$ is fixed: define $r_{\cl_j}( a^i_{j}) = (i)_j$,\\ $r_{\tl}( a^{(i)}_{j}) = a
 
 
 %=========
-Let's say we have an $A_{ij} = A(\tl_i, \cl_j)$ - matrix that represent the strength of relation between $k = |T|$ tags and $n = |C|$ clouds. We want to identify all entities that are preferably selected (marked) by one or more features. Such a feature is a marker for the entity, and the entity is the best friend for the fea fture.
-First, we rank all the features by its $A_{ij}$ for each entity $j$, so obtaining $R_{ij}= \text xrm{rank of } P_{ij} \textrm{ in } P_{*j}$. Then, we scale $R$ into $[0..1]$ : $r_{ij}={R_{ij}}/{k}$. To be specific, we suppose that the ranking is ascending, the smaller is the rank, the stronger is the relation.
+Let's say we have an $A_{ij} = A(\tl_i, \cl_j)$ - matrix that represent the strength of relation between $k = |T|$ tags and $n = |C|$ clouds. We want to identify all entities that are preferably selected (marked) by one or more features. Such a feature is a marker for the entity, and the entity is the best friend for the feature.
+First, we rank all the features by its $A_{ij}$ for each entity $j$, so obtaining $R_{ij}= \textrm{rank of } P_{ij} \textrm{ in } P_{*j}$. Then, we scale $R$ into $[0..1]$ : $r_{ij}={R_{ij}}/{k}$. To be specific, we suppose that the ranking is ascending, the smaller is the rank, the stronger is the relation.
 
 \subsection{Single marker rank statistics}
 For each feature $i,i=1..k$, we obtain a vector $r_{ij}, j=1..n$. There are normalised ranks of the feature in different entities, in the a null hypothesis they are uniformly i.i.d. in [0,1]. Let's create a rank statistics $u_i$ by ordering their values. If a feature is a unique marker for an entity, the entity corresponds to the first  value $u_1$. Let's use the difference $u_2-u_1$ as a measure of uniqueness (quality of the marker). Indeed, if we see that the difference is significantly higher than we can expect if null hypothesis holds, we can conclude that the feature unexpectedly prefer the entity, so it is a marker (and the entity is its best friend). Similarly to the density estimation for each $u_i$ (see, e.g. \cite{Gut:2009}) we estimate the probability to observe the difference $u_2 - u_1 \ge t$. 
@@ -191,7 +193,14 @@ V = &\displaystyle \int_0^1\int_{u_1}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}
 & \displaystyle n \int_0^{1-t}\left( 1-t-u_1 \right)^{n-1} du_1 = (1-t)^n \label{eq:p_k}
 \end{eqnarray}
 %\end{subappendices}
+\begin{comment}
+\subsection{ex-abstract}
+Suppose we have set of {\tag}s $\T$ and a set of {\cloud}s $\C$ of this {\tag}s with some fuzzy membership, e.g. there is a numeric measure of how an {\tag} is represented in a {\cloud} $A(\tl,\cl)$ for each pair $(\tl,\cl):\tl \in \T, \cl \in \C$. The higher the $A(\tl,\cl)$ value is, the more the {\tag} $\tl$ is involved in the {\cloud} $\cl$. The absence of the {\tag} in the {\cloud} is shown by the value that is minimal for the {\cloud}.
 
+An example that is easy to think about is: genes are {\tag}s and their groups under regulation by same transcription factors (TF’s) form {\cloud}s, and A shows the strength of the regulation. We look at a gene and we want to know whether a TF is its friend, i.e. whether the TF specifically prefers (regulates) the gene. The na\"ive idea is to look for a TF that the gene is the most sensitive for. Still, it’s possible that this TF is the strongest for the most of the genes. Sometimes, it is what we want to find, but now we want to answer other questions, namely, what TF is the most specific factor for the gene and is the specificity enough to say that is does not look like a random outcome?
+
+Sometimes, the {\cloud}s are in in one-to-one relation with the {\tag}s, e.g. each {\cloud} is a set of {\tag}s, which are neighbours of {\tag} in some graph. For this example, A is a weighted adjacency matrix of this graph. The friendship terminology emerges naturally from this case. The friendship relation itself is asymmetric: a friend cares about Augustus, while Augustus does not.
+\end{comment}
 \end{document}
 
 
