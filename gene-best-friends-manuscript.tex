@@ -12,7 +12,11 @@
 % % % % % % % % % % % % % % % % % % % % 
 \usepackage{graphicx}
 \usepackage{comment}
+\usepackage{xcolor}
 \usepackage{epigraph}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
 %\usepackage[title]{appendix}
 \begin{document}
 %
@@ -49,7 +53,7 @@ Faculty of Bioengineering and Bioinformatics, MSU, \\ Moscow, 119992, Russia
 
 \maketitle              % typeset the title of the contribution
 
-\newcommand{\tag}{tag}
+\renewcommand{\tag}{tag}
 \newcommand{\cloud}{cloud}
 \newcommand{\T}{T}
 \newcommand{\C}{C}
@@ -60,9 +64,11 @@ Faculty of Bioengineering and Bioinformatics, MSU, \\ Moscow, 119992, Russia
 
 \epigraph{SI AUGUSTUM VIDEAT AMICOS EIUS VIDEATI}
 
+\vspace{-0.2in}
+
 \begin{abstract}
 
-
+\textcolor{green}{We define a tag's most friendly cloud as a cloud that pays maximal rank-normalized attention to the tag.}
 Suppose we have a set of {\tag}s and a set of fuzzy set of {\tag}s, which we will refer to as {\cloud}s, and a we have the {\tag}-to-{\cloud} relation quantified as a scalar for each $\left( {\tag},{\cloud}\right)$ pair. An example is: {\tag}s are genes, {\cloud}s are gene expression patterns, and the scalars are loads of the genes in the patterns. Sometimes, observation that a gene is expressed implies expression of a particular pattern (the simplest case is: the gene has nonzero load only in that pattern). If so, we say that the gene marks the pattern. Here we describe a statistical test that identify pairs of a marker {\tag} and the marked {\cloud}. The test is based on rank statistics and it does not rely on propositions about the distribution of the relation quantity. The marked {\cloud} is referred to as the {\tag}'s best friend, and the test is named "the best friends test" or "the gene's best friends test". The statistics is naturally expand to the case when a {\tag} selects (separates) a subset of {\cloud}s, thus having more than one best friend. The code (currently, only R) is available at \url{https://github.com/favorov/best-friends}
 \keywords{best friends, gene's best friends, specific gene regulation, pattern marker, rank statistics, marker feature, marked entity}
 \end{abstract}
@@ -77,27 +83,72 @@ Let's picture a set of genes and their loads in expression patterns. Each patter
 
 We formulated \cite{best_friends:2015} the similar task in a symmetric form on gene expression data as searching for genes that are best friends of genes. Best friend of a gene $G_i$ is another gene $G_j$ that is expressed concertedly with the gene $G_i$, while other genes $G_k, k\neq i, k \neq j$ are (almost) not. The best friend is unique, while one gene can be the best friend for more than one gene. The solution we proposed (rank backwards ranking) showed the putative pairs of marker and its best friend, but it did not provide either statistical measure or an effect size estimate. Later, the problem was also formulated in an asymmetric setup \cite{patternmarkers:2017} for genes and expression patterns, and the solution was to scale each gene's loads to $max((\mbox{all loads for this gene})==1$ and calculate the Euclidean distance between the scaled vector of loads and the ideal $(0,0,...,1,...0$). The less the distance is, the better the marker is. 
 
-Let's make a generalisation. We have entities and features and a matrix that show how strong is a feature ascribed to an entity. We want to identify those features that reliably and uniquely identify an entity. Let's call the feature the entity's marker and let's call the entity the feature's best friend. Here, we describe a rank test identifying significant pairs of marker feature and its best friend entity.
+\textcolor{orange}{Let's make a generalisation. We have entities and features and a matrix that show how strong is a feature ascribed to an entity. We want to identify those features that reliably and uniquely identify an entity. Let's call the feature the entity's marker and let's call the entity the feature's best friend. Here, we describe a rank test identifying significant pairs of marker feature and its best friend entity.}
 
 
 
 %
 \section{Method}
-\subsection{Ranking}
+% \subsection{Ranking}
 
-How does the friendship of a community to one of the elements looks like in terms of the $A$ values? The rank of the element in the friendly community is to be higher than in other communities and the difference is to be very unlikely to be obtained by chance. In other words, for every $\tl_i \in T$, and $\cl_j \in C$, let $A(\tl_i, \cl_j) = a^i_{j}$.
+% How does the friendship of a community to one of the elements looks like in terms of the $A$ values? The rank of the element in the friendly community is to be higher than in other communities and the difference is to be very unlikely to be obtained by chance. In other words, for every $\tl_i \in T$, and $\cl_j \in C$, let $A(\tl_i, \cl_j) = a^i_{j}$.
 
-% Rank over $t_i$: $a^{(i)}_{j}$\\
-% Rank over $t_i$ and $c_j$: $a^{(i)}_{(j)}$
+% % Rank over $t_i$: $a^{(i)}_{j}$\\
+% % Rank over $t_i$ and $c_j$: $a^{(i)}_{(j)}$
 
-$j$ is fixed: define $r_{\cl_j}( a^i_{j}) = (i)_j$,\\ $r_{\tl}( a^{(i)}_{j}) = a^{(i)}_{(j)}$
+% $j$ is fixed: define $r_{\cl_j}( a^i_{j}) = (i)_j$,\\ $r_{\tl}( a^{(i)}_{j}) = a^{(i)}_{(j)}$
 
 
 
 
 %=========
-Let's say we have an $A_{ij} = A(\tl_i, \cl_j)$ - matrix that represent the strength of relation between $k = |T|$ tags and $n = |C|$ clouds. We want to identify all entities that are preferably selected (marked) by one or more features. Such a feature is a marker for the entity, and the entity is the best friend for the feature.
-First, we rank all the features by its $A_{ij}$ for each entity $j$, so obtaining $R_{ij}= \textrm{rank of } P_{ij} \textrm{ in } P_{*j}$. Then, we scale $R$ into $[0..1]$ : $r_{ij}={R_{ij}}/{k}$. To be specific, we suppose that the ranking is ascending, the smaller is the rank, the stronger is the relation.
+% Let's say we have an $A_{ij} = A(\tl_i, \cl_j)$ - matrix that represent the strength of relation between $k = |T|$ tags and $n = |C|$ clouds. We want to identify all entities that are preferably selected (marked) by one or more features. Such a feature is a marker for the entity, and the entity is the best friend for the feature.
+% First, we rank all the features by its $A_{ij}$ for each entity $j$, so obtaining $R_{ij}= \textrm{rank of } P_{ij} \textrm{ in } P_{*j}$. Then, we scale $R$ into $[0..1]$ : $r_{ij}={R_{ij}}/{k}$. To be specific, we suppose that the ranking is ascending, the smaller is the rank, the stronger is the relation.
+Let $T = \{t_1, \dots, t_n\}$ be a set (source pool) of tags, and set of \textit{clouds} $C = \{c_1, \dots, c_k\}$. Each cloud is a set of tags coming from $T$. %W.l.g. we assume $|T| = k$, and $|C| = n$.
+For each $t$ in $T$ and for each $c$ in $C$, we define the strength of \textcolor{red}{relation} of $t$ in $c$ as a scalar function $\mu_c(t)$. 
+We assume $\mu_c(t)$ to be known for all $t\in T$ and $c \in C$. This information is stored in the matrix of size $k\times n$, 
+\[
+M = (\mu_{ij}), 
+\quad \mu_{ij} = \mu_{\cl_j}(\tl_i).
+\]
+In other words, $j$-th column in $M$ contains the information about the strength of the relation between each tag and the cloud $c_j$.
+The idea of the method is 
+to identify for each tag $\tl_i$ the most friendly cloud.
+
+Let $M_j =(\mu_{1j}, \dots \mu_{nj})$ be the $j$-th column in the matrix $M$. 
+We sort it in the decreasing order, and find the corresponding ordinal number of $\mu_{ij}$,
+$r_{ij} := \text{rank}(\mu_{ij}|\text{inside}~M_j)$.
+Of note, we resolve ties by the mean rank of the tied elements.
+In other words, the new matrix
+$R = (r_{ij})$ contains the ranks of the tags inside the clouds.
+One may interpret $R$ as the rank-normalized \textcolor{green}{attention} which the cloud $\cl_j$ pays to the tag $\tl_i$. \textcolor{green}{We define a tag's most friendly cloud as a cloud that pays maximal rank-normalized attention to the tag.} 
+%\textcolor{red}{Now we are able} to identify the most friendly cloud $\cl_{(1)}(\tl_i)$ for a tag $\tl_i$.
+% Let $R_{i} = (r_{i1}, \dots, r_{ik})$ be the $i$-th row of matrix $R$ which corresponds to the \tag $\tl_i$. We sort $R_i$ in the decreasing order and find the largest element,
+% $$
+% j^* = 
+% \underset{j}{\text{argmax}}~\text{rank}(r_{ij}|\text{inside}~R_i),
+% \quad
+% c_{(1)}(t_i) = c_{j^*}. 
+% $$
+
+% \[ \text(find)
+% q = \text{rank}(r_{ij}|\text{inside}~R_i),
+% \quad
+% c_{(q)}(t_i)
+% \]
+\textcolor{red}{Now we are able} to arrange the clouds w.r.t. \textcolor{red}{degree of friendliness} demonstrated to the tag $\tl_i$. W.l.g. we assume 
+$c_{(1)}(t_i)$ be the most friendly cloud, $c_{(2)}(t_i)$ the second friendliest cloud, and so on:
+\[
+c_{(q)}(t_i) = c_{j}, \quad \text{where}~j~\text{is s.t.}~ q = \text{rank}(r_{ij}|\text{inside}~R_i).
+\]
+
+
+To asses whether the most friendly cluster is the best friend, we estimate the probability ...
+
+Under $H_0$ we assume $\mu_c(t) \sim P$ (they come from the same distribution).
+
+
+ 
 
 \subsection{Single marker rank statistics}
 For each feature $i,i=1..k$, we obtain a vector $r_{ij}, j=1..n$. There are normalised ranks of the feature in different entities, in the a null hypothesis they are uniformly i.i.d. in [0,1]. Let's create a rank statistics $u_i$ by ordering their values. If a feature is a unique marker for an entity, the entity corresponds to the first  value $u_1$. Let's use the difference $u_2-u_1$ as a measure of uniqueness (quality of the marker). Indeed, if we see that the difference is significantly higher than we can expect if null hypothesis holds, we can conclude that the feature unexpectedly prefer the entity, so it is a marker (and the entity is its best friend). Similarly to the density estimation for each $u_i$ (see, e.g. \cite{Gut:2009}) we estimate the probability to observe the difference $u_2 - u_1 \ge t$. 
