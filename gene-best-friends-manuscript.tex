@@ -69,8 +69,10 @@ Faculty of Bioengineering and Bioinformatics, MSU, \\ Moscow, 119992, Russia
 \begin{abstract}
 
 \textcolor{green}{We define a tag's most friendly cloud as a cloud that pays maximal rank-normalized attention to the tag.}
+\textcolor{blue}{ -- we will return here --} \textcolor{purple}{
 Suppose we have a set of {\tag}s and a set of fuzzy set of {\tag}s, which we will refer to as {\cloud}s, and a we have the {\tag}-to-{\cloud} relation quantified as a scalar for each $\left( {\tag},{\cloud}\right)$ pair. An example is: {\tag}s are genes, {\cloud}s are gene expression patterns, and the scalars are loads of the genes in the patterns. Sometimes, observation that a gene is expressed implies expression of a particular pattern (the simplest case is: the gene has nonzero load only in that pattern). If so, we say that the gene marks the pattern. Here we describe a statistical test that identify pairs of a marker {\tag} and the marked {\cloud}. The test is based on rank statistics and it does not rely on propositions about the distribution of the relation quantity. The marked {\cloud} is referred to as the {\tag}'s best friend, and the test is named "the best friends test" or "the gene's best friends test". The statistics is naturally expand to the case when a {\tag} selects (separates) a subset of {\cloud}s, thus having more than one best friend. The code (currently, only R) is available at \url{https://github.com/favorov/best-friends}
 \keywords{best friends, gene's best friends, specific gene regulation, pattern marker, rank statistics, marker feature, marked entity}
+}
 \end{abstract}
 %
 \section{A simple intro: maybe abstract maybe frog}
@@ -96,7 +98,7 @@ and a set $T = \{t_1, \dots, t_n\}$ of tags. Each tag can be related to each clo
 \begin{tabular}{c|c|c|c}
 \textbf{Example}                                                      & \textbf{tag $t$} & \textbf{cloud $c$}                                                       & \textbf{attention $A(t, c)$}                                            \\ \hline
 \begin{tabular}[c]{@{}c@{}}gene regulation\\  by TFs\end{tabular}     & gene             & \begin{tabular}[c]{@{}c@{}}genes under \\ TF regulation\end{tabular}     & \begin{tabular}[c]{@{}c@{}}strength of \\ regulation\end{tabular}       \\ \hline
-\begin{tabular}[c]{@{}c@{}}transactional \\ correlations\end{tabular} & gene             & \begin{tabular}[c]{@{}c@{}}genes coexpressed \\ with a gene\end{tabular} & \begin{tabular}[c]{@{}c@{}}transcription \\ correlation\end{tabular}    \\ \hline
+\begin{tabular}[c]{@{}c@{}}transcription \\ correlations\end{tabular} & gene             & \begin{tabular}[c]{@{}c@{}}genes coexpressed \\ with a gene\end{tabular} & \begin{tabular}[c]{@{}c@{}}transcription \\ correlation\end{tabular}    \\ \hline
 fuzzy clustering                                                      & object           & cluster                                                                  & \begin{tabular}[c]{@{}c@{}}object weight \\ in cluster\end{tabular}     \\ \hline
 \begin{tabular}[c]{@{}c@{}}transcription\\ decomposition\end{tabular} & transcript       & \begin{tabular}[c]{@{}c@{}}transcription \\ pattern\end{tabular}         & \begin{tabular}[c]{@{}c@{}}transcript's \\ load in pattern\end{tabular} \\ \hline
 tag cloud                                                             & word             & word cloud                                                               & word counts                                                            
@@ -174,15 +176,30 @@ c_{(q)}(t_i) = c_{j}, \quad \text{where}~j~\text{is such that}~ q = \text{rank}(
 
 
 
-To asses whether the most friendly cluster is the best friend, we estimate the probability ...
+To asses whether the most friendly cluster is the best friend, we estimate the difference 
+\[
+u(t_i) = c_{(1)}(t_i) -  c_{(2)}(t_i).
+\]
 
-Under $H_0$ we assume $A(t, c) \sim P$ (they come from the same distribution).
+
+
+probability ...
+
+Under $H_0$ we assume that for each $A(t, c) \sim \pi_{A}(t, c)$
+
+%(they come from the same distribution).
 
 
  
 
 \subsection{Single marker rank statistics}
-For each feature $i,i=1\dots k$, we obtain a vector $r_{ij}, j=1..n$. There are normalised ranks of the feature in different entities, in the a null hypothesis they are uniformly i.i.d. in [0,1]. Let's create a rank statistics $u_i$ by ordering their values. If a feature is a unique marker for an entity, the entity corresponds to the first  value $u_1$. Let's use the difference $u_2-u_1$ as a measure of uniqueness (quality of the marker). Indeed, if we see that the difference is significantly higher than we can expect if null hypothesis holds, we can conclude that the feature unexpectedly prefer the entity, so it is a marker (and the entity is its best friend). Similarly to the density estimation for each $u_i$ (see, e.g. \cite{Gut:2009}) we estimate the probability to observe the difference $u_2 - u_1 \ge t$. 
+
+% +\subsection{Multiple marker rank statistics}
+
+
+
+%============
+For each feature (tag!) $i,i=1\dots k$, we obtain a vector $r_{ij}, j=1..n$. There are normalised ranks of the feature in different entities, in the a null hypothesis they are uniformly i.i.d. in [0,1]. Let's create a rank statistics $u_i$ by ordering their values. If a feature is a unique marker for an entity, the entity corresponds to the first  value $u_1$. Let's use the difference $u_2-u_1$ as a measure of uniqueness (quality of the marker). Indeed, if we see that the difference is significantly higher than we can expect if null hypothesis holds, we can conclude that the feature unexpectedly prefer the entity, so it is a marker (and the entity is its best friend). Similarly to the density estimation for each $u_i$ (see, e.g. \cite{Gut:2009}) we estimate the probability to observe the difference $u_2 - u_1 \ge t$. 
 
 First, the whole n-dimension (nD) volume of ranked variables $u_1 .. u_n$ is:
 \begin{eqnarray*}
