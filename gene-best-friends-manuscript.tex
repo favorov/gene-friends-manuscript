@@ -99,7 +99,7 @@ Each tag $t \in T$ and cloud $c \in C$ are related by the attention $A(t, c)$, t
 
 In the following, the attention values are stored in $n\times k$ matrix $\mathcal{A}$. 
 
-The tag-cloud-attention model applies to many problems in bioinformatics and statistics.
+The tag-cloud-attention model applies to many problems in bio-informatics and statistics.
 Tab.\ref{tab:examples} contains some of them.
 \begin{table}[h!]
 \centering
@@ -178,21 +178,66 @@ For a similar test that splits all the clouds into $m$ friends of the tag and th
 
 %
 \section{Method}
-The attention matrix $\mathcal{A}$ plays a key role in the statistical test. Recall its elements are 
-$A(t_i, c_j)$ for all $t_i \in T$ and $c_j \in C$. For the sake of simplicity, we will write $a_{ij}$ instead of $A(t_i, c_j)$. For all $i \in \{1, \dots, n\}, j  \in \{1, \dots, k\}$ $a_{ij} = A(\tl_i, \cl_j)$ and
+The attention matrix $\mathcal{A}$ plays a key role in the statistical test. Recall its elements \textcolor{red}{are the strength of attention} $A(t_i, c_j)$ the cloud $c_j \in C$
+ pays to the tag $t_i \in T$. For the sake of simplicity, we will write $a_{ij}$ instead of $A(t_i, c_j)$. Thus, we get
 \[
 \mathcal{A} = \begin{pmatrix}
 a_{11} & a_{12} & \dots & a_{1k} \\
        &\cdots & \cdots &  \\
 a_{n1} & a_{n2} & \dots & a_{nk}
-\end{pmatrix}.
+\end{pmatrix}, 
+\quad ~\text{with}~a_{ij} = A(\tl_i, \cl_j).
 \]
-
-Thus, each column in $\mathcal{A}$ stores the information about the strength of attention that the corresponding cloud pays to all tags in $T$. We denote the corresponding column as 
+%~\text{for all}~i \in \{1, \dots, n\}, j  \in \{1, \dots, k\}
+In other words, each column in $\mathcal{A}$ stores the information about the strength of attention that the corresponding cloud pays to all tags in $T$. We denote the \textcolor{red}{respective} column as 
 $\mathcal{A}_{:j} =(a_{1j}, \dots a_{nj})$ for all clouds $c_j$, $j  \in \{1, \dots, k\}$.
 
+Under $H_0$ we assume all items in $\mathcal{A}$ are independent. Moreover, the items in
+$\mathcal{A}_{:j}$ are i.i.d.
+In what follows, we consider separately the case of symmetric $\mathcal{A}$.
+ 
+\subsection{Asymmetric $\mathcal{A}$}
 
-\textbf{Step 1. Find the tag's friend(s) among the clouds} We rank all the tags by the attention the cloud pays to the tag. 
+For each cloud $c_j \in C$ we rank the elements inside
+$\mathcal{A}_{:j}$.
+Namely, we decreasingly order $\mathcal{A}_{:j}$, and find the ordinal number for each $a_{ij} \in \mathcal{A}_{:j}$,
+$R_{ij} := \text{rank}(a_{ij}|\text{inside}~\mathcal{A}_{:j})$. We resolve ties by the mean rank of the tied elements.
+
+Let
+\[
+\mathcal{R} = \begin{pmatrix}
+r_{11} & r_{12} & \dots & r_{1k} \\
+       &\cdots & \cdots &  \\
+r_{n1} & r_{n2} & \dots & r_{nk}
+\end{pmatrix}, 
+\quad ~\text{with}~r_{ij} = \frac{R_{ij}}{n}.
+\]
+Each item in $\mathcal{R}$ is the normalized attention's rank the cloud $c_j \in C$ pays to the tag $t_i \in T$. Let $\mathcal{R}_{i:}$ be the $i$-th row in $\mathcal{R}$.
+
+\textcolor{red}{In order to find the most friendly cloud for the tag $t_i\in T$} we rank the elements inside
+$\mathcal{R}_{i:}$. 
+
+
+% Now, for each tag, we define the degree of the friendliness of a cloud for this tag, by ranking the tag's row $\mathcal{R}_{i:}= \{r_{i1}, \dots, r_{ik}\}$. 
+
+The most friendly cloud $c_{(1)}(t_i)$ is the cloud with the minimal value of $R_{ij}$, the next is $c_{(2)}(t_i)$, etc, etc. 
+\[
+c_{(q)}(t_i) = c_{j}, \quad \text{where}~j~\text{is such that}~ q = \text{rank}(r_{ij}|\text{inside}~\mathcal{R}_{i:}).
+\]
+
+
+
+To assess whether the most friendly cloud is the best friend, we estimate the difference 
+\[
+u(t_i) := c_{(1)}(t_i) -  c_{(2)}(t_i).
+\]
+
+
+
+
+
+
+% \textbf{Step 1. Find the tag's friend(s) among the clouds} We rank all the tags by the attention the cloud pays to the tag. 
 % For each $t$ in $T$ and each $c$ in $C$, we describe the intensity of attention $c$ pays to $t$ as a scalar function $A(t, c)$. 
 % Let $A(t, c)$ to be known for all $t\in T$ and all $c \in C$. This information about attention is stored in the matrix of size $n\times k$, \textit{i.e.}, for all $i \in \{1, \dots, n\}, j  \in \{1, \dots, k\}$:
 % \[
@@ -202,42 +247,34 @@ $\mathcal{A}_{:j} =(a_{1j}, \dots a_{nj})$ for all clouds $c_j$, $j  \in \{1, \d
 % In other words, $j$-th column in $\mathcal{A}$ contains the information about the intensity of attention which the cloud $c_j$ pays to all tags in $T$,
 % we denote it as 
 % $\mathcal{A}_{:j} =(a_{1j}, \dots a_{nj})$.
-The ranking the decreasing, the first is the best. 
+% The ranking the decreasing, the first is the best. 
 
 
-Now we create the rank matrix $\mathcal{R}$ of the same $n\times k$ size, and each element is the corresponding attention's rank inside inside the column of the attention matrix. %We normalise the values to be in $[0,1]$ by dividing by $n$ and we refer to the normalised ranks as $\mathcal{R}$ matrix as well.
+% Now we create the rank matrix $\mathcal{R}$ of the same $n\times k$ size, and each element is the corresponding attention's rank inside the column of the attention matrix. %We normalise the values to be in $[0,1]$ by dividing by $n$ and we refer to the normalised ranks as $\mathcal{R}$ matrix as well.
 
-\textcolor{red}{The method described below identifies the most friendly cloud for each tag $\tl_i$. Comment: the most friendly chuvak is a putative best friend.}
-To do this, we decreasingly order $\mathcal{A}_{j}$, and thus for each $a_{ij}$ we find the ordinal number 
-$R_{ij} := \text{rank}(a_{ij}|\text{inside}~\mathcal{A}_{:j})$.
-Of note, we resolve ties by the mean rank of the tied elements.
+% \textcolor{red}{The method described below identifies the most friendly cloud for each tag $\tl_i$. Comment: the most friendly chuvak is a putative best friend.}
+% To do this, we decreasingly order $\mathcal{A}_{j}$, and thus for each $a_{ij}$ we find the ordinal number 
+% $R_{ij} := \text{rank}(a_{ij}|\text{inside}~\mathcal{A}_{:j})$.
+% Of note, we resolve ties by the mean rank of the tied elements.
 
-The next step is to store all $r_{ij}$ the new matrix,
-\[
-\mathcal{R} = (r_{ij}), \quad \text{with}~ r_{ij} = \frac{R_{ij}}{n}.
-\]
-It contains the ranks of the tags inside the clouds. One may interpret $\mathcal{R}$ as the rank-normalized intensity of the attention that the clouds pay to the tags.
+% The next step is to store all $r_{ij}$ the new matrix,
+% \[
+% \mathcal{R} = (r_{ij}), \quad \text{with}~ r_{ij} = \frac{R_{ij}}{n}.
+% \]
+% It contains the ranks of the tags inside the clouds. One may interpret $\mathcal{R}$ as the rank-normalized intensity of the attention that the clouds pay to the tags.
 
-Now, for each tag, we define the degree of the friendliness of a cloud for this tag, by ranking the tag's row $\mathcal{R}_{i:}= \{r_{i1}, \dots, r_{ik}\}$. The most friendly cloud $c_{(1)}(t_i)$ is the cloud with the minimal value of $R_{ij}$, the next is $c_{(2)}(t_i)$, etc, etc. 
-\[
-c_{(q)}(t_i) = c_{j}, \quad \text{where}~j~\text{is such that}~ q = \text{rank}(r_{ij}|\text{inside}~\mathcal{R}_{i:}).
-\]
 
-Under $H_0$ we assume that all items in $\mathcal{A}$ are independent, and
-$\mathcal{A}_{:j}$ are i.i.d inside each cloud $c_j$.
-\textcolor{red}{Symmetric case?}
 
-To assess whether the most friendly cloud is the best friend, we estimate the difference 
-\[
-u(t_i) := c_{(1)}(t_i) -  c_{(2)}(t_i).
-\]
+
+
 
 %(they come from the same distribution).
 
 
+\subsection{Symmetric $\mathcal{A}$}
  
 
-\subsection{Single marker rank statistics}
+\section{Single marker rank statistics}
 
 % +\subsection{Multiple marker rank statistics}
 
