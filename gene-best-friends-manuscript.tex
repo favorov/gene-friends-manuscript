@@ -71,7 +71,7 @@ Faculty of Bioengineering and Bioinformatics, MSU, \\ Moscow, 119992, Russia
 
 \textcolor{green}{We define a tag's most friendly cloud as a cloud that pays maximal rank-normalized attention to the tag.}
 \textcolor{blue}{ -- we will return here --} \textcolor{purple}{
-Suppose we have a set of {\tag}s and a set of fuzzy set of {\tag}s, which we will refer to as {\cloud}s, and a we have the {\tag}-to-{\cloud} relation quantified as a scalar for each $\left( {\tag},{\cloud}\right)$ pair. An example is: {\tag}s are genes, {\cloud}s are gene expression patterns, and the scalars are loads of the genes in the patterns. Sometimes, observation that a gene is expressed implies expression of a particular pattern (the simplest case is: the gene has nonzero load only in that pattern). If so, we say that the gene marks the pattern. Here we describe a statistical test that identify pairs of a marker {\tag} and the marked {\cloud}. The test is based on rank statistics and it does not rely on propositions about the distribution of the relation quantity. The marked {\cloud} is referred to as the {\tag}'s best friend, and the test is named "the best friends test" or "the gene's best friends test". The statistics is naturally expand to the case when a {\tag} selects (separates) a subset of {\cloud}s, thus having more than one best friend. The code (currently, only R) is available at \url{https://github.com/favorov/best-friends}
+Suppose we have a set of {\tag}s and a set of fuzzy set of {\tag}s, which we will refer to as {\cloud}s, and we have the {\tag}-to-{\cloud} relation quantified as a scalar for each $\left( {\tag},{\cloud}\right)$ pair. An example is: {\tag}s are genes, {\cloud}s are gene expression patterns, and the scalars are loads of the genes in the patterns. Sometimes, an observation that a gene is expressed implies the expression of a particular pattern (the simplest case is: the gene has nonzero load only in that pattern). If so, we say that the gene marks the pattern. Here we describe a statistical test that identifies pairs of a marker {\tag} and the marked {\cloud}. The test is based on rank statistics and it does not rely on propositions about the distribution of the relation quantity. The marked {\cloud} is referred to as the {\tag}'s best friend, and the test is named "the best friends test" or "the gene's best friends test". The statistics naturally expand to the case when a {\tag} selects (separates) a subset of {\cloud}s, thus having more than one best friend. The code (currently, only R) is available at \url{https://github.com/favorov/best-friends}
 \keywords{best friends, gene's best friends, specific gene regulation, pattern marker, rank statistics, marker feature, marked entity}
 }
 \end{abstract}
@@ -157,7 +157,7 @@ fuzzy clustering                                                      & object  
 %--------------
 \paragraph{Approach} \textcolor{red}{to be done!} To identify the friend(s), first, for each cloud, we rank all the tags by the attention the cloud pays to the tag. The ranking the decreasing, the first is the best. Then the corresponding ranks $r(t_i,c_j)$ are stored in the $n\times k$ matrix $\mathbb{R}$. Now, for each tag, we define the degree of the friendliness of a cloud for this tag, by ranking the tag's row in $\mathbb{R}$ matrix. The most friendly cloud $c_{(1)}(t_i)$ is the cloud with the minimal value of $R_{ij}$, the next is $c_{(2)}(t_i)$, etc, etc. 
 
-If a cloud is best friend, it is to be the most friendly cloud for the tag, but it is not enough. In any ranking, there is a first element, and we want to estimate the probability to observe what we observe by random. The null hypothesis we use to picture a random setup is that in any column of $\mathcal{R}$ all the elements are i.i.d., or, in other words, attentions that a cloud pays to all the tags are independently sampled from the same distribution. The distributions can differ from cloud to cloud. 
+If a cloud is the best friend, it is to be the most friendly cloud for the tag, but it is not enough. In any ranking, there is a first element, and we want to estimate the probability to observe what we observe by random. The null hypothesis we use to picture a random setup is that in any column of $\mathcal{R}$ all the elements are i.i.d., or, in other words, attentions that a cloud pays to all the tags are independently sampled from the same distribution. The distributions can differ from cloud to cloud. 
 
 The statistics we use to test, whether the most friendly cloud for the tag $t_i$ is really the best friend, is the difference $\Delta$ between the values $r(t_i,c_{(2)}(t_i))$ and $r(t_i,c_{(1)}(t_i))$. We estimate the probability (p-value) to observe this difference as $\leq \Delta$ given the null hypothesis proposition. If the p-value is small enough, we reject the null and claim that the friendliness of the cloud $c_{(1)}(t_i)$ is unlikely to observe by random and so we refer to it as the best friend of $t_i$. In this case, $t_i$ is a marker of its best friend cloud $c_{(1)}(t_i)$.
 
@@ -178,8 +178,8 @@ For a similar test that splits all the clouds into $m$ friends of the tag and th
 
 %
 \section{Method}
-The attention matrix $\mathcal{A}$ plays a key role in the statistical test. Recall its elements \textcolor{red}{are the strength of attention} $A(t_i, c_j)$ the cloud $c_j \in C$
- pays to the tag $t_i \in T$. For the sake of simplicity, we will write $a_{ij}$ instead of $A(t_i, c_j)$. Thus, we get
+The attention matrix $\mathcal{A}$ (see above) is the only input for the statistical test. Its elements \textcolor{red}{are the strength of attention} $A(t_i, c_j)$ the cloud $c_j \in C$
+ pays to the tag $t_i \in T$. For the sake of simplicity, we will write $a_{ij}$ instead of $A(t_i, c_j)$:
 \[
 \mathcal{A} = \begin{pmatrix}
 a_{11} & a_{12} & \dots & a_{1k} \\
@@ -189,21 +189,17 @@ a_{n1} & a_{n2} & \dots & a_{nk}
 \quad ~\text{with}~a_{ij} = A(\tl_i, \cl_j).
 \]
 %~\text{for all}~i \in \{1, \dots, n\}, j  \in \{1, \dots, k\}
-In other words, each column in $\mathcal{A}$ stores the information about the strength of attention that the corresponding cloud pays to all tags in $T$. We denote the \textcolor{red}{respective} column as 
-$\mathcal{A}_{:j} =(a_{1j}, \dots a_{nj})$ for all clouds $c_j$, $j  \in \{1, \dots, k\}$.
+Each column in $\mathcal{A}$ ($\mathcal{A}_{:j} =(a_{1j}, \dots a_{nj})'$ with $'$ denoting transposition)  stores the information about the strength of attention that the cloud $c_j$ pays to each tag in $T$. 
 
-Under $H_0$ we assume all items in $\mathcal{A}$ are independent. Moreover, the items in
+Under $H_0$ we assume all values in $\mathcal{A}$ are independent. Moreover, the values in each
 $\mathcal{A}_{:j}$ are i.i.d.
 In what follows, we consider separately the case of symmetric $\mathcal{A}$.
- 
-\subsection{Asymmetric $\mathcal{A}$}
 
 For each cloud $c_j \in C$ we rank the elements inside
 $\mathcal{A}_{:j}$.
-Namely, we decreasingly order $\mathcal{A}_{:j}$, and find the ordinal number for each $a_{ij} \in \mathcal{A}_{:j}$,
-$R_{ij} := \text{rank}(a_{ij}|\text{inside}~\mathcal{A}_{:j})$. We resolve ties by the mean rank of the tied elements.
+Namely, we decreasingly order $\mathcal{A}_{:j}$. So for each $a_{ij} \in \mathcal{A}_{:j}$, we have the ordinal number $R_{ij}:=\text{rank}\left(a_{ij}|\text{inside}~\mathcal{A}_{:j}\right)$. We resolve ties by the mean rank of the tied elements. 
 
-Let
+Let's denote
 \[
 \mathcal{R} = \begin{pmatrix}
 r_{11} & r_{12} & \dots & r_{1k} \\
@@ -212,25 +208,40 @@ r_{n1} & r_{n2} & \dots & r_{nk}
 \end{pmatrix}, 
 \quad ~\text{with}~r_{ij} = \frac{R_{ij}}{n}.
 \]
-Each item in $\mathcal{R}$ is the normalized attention's rank the cloud $c_j \in C$ pays to the tag $t_i \in T$. Let $\mathcal{R}_{i:}$ be the $i$-th row in $\mathcal{R}$.
+In other words, each $r_{ij}$ is the normalized rank of the attention $A(t_i, c_j)$ inside $\mathcal{A}_{:j}$. 
 
-\textcolor{red}{In order to find the most friendly cloud for the tag $t_i\in T$} we rank the elements inside
-$\mathcal{R}_{i:}$. 
+Let $\mathcal{R}_{i:} = (r_{i1}, \dots, r_{ik})$ be the $i$-th row in $\mathcal{R}$. We decreasingly order its elements and denote the ordered vector as
+\[
+\mathcal{R}^{i}_{(k)} := (r^{i}_{(1)}, \dots, r^{i}_{(k)}).
+\]
+We stick to notations accepted in ranks statistics \textcolor{red}{[?]}, so $(1)$ is the cloud-index of the smallest entry in $\mathcal{R}_{i:}$, ${(2)}$ is the cloud-index of the second smallest entry, etc.
+
+Since we will apply this procedure for each tag $t_i\in T$, we slightly change the notations and denote 
+\[
+r_{i(q)} = r_{(q)}(t_i)...
+\]
 
 
+We will denote the corresponding cloud $c_{(1)}(t_i)$
+
+
+
+%%%------
+The test statistics for the tag $t_i$ is
+\[
+u(t_i) := r_{i(1)} -  r_{i(2)}.
+\]
+
+\textcolor{red}{To find the most friendly cloud for the tag $t_i\in T$}
 % Now, for each tag, we define the degree of the friendliness of a cloud for this tag, by ranking the tag's row $\mathcal{R}_{i:}= \{r_{i1}, \dots, r_{ik}\}$. 
 
-The most friendly cloud $c_{(1)}(t_i)$ is the cloud with the minimal value of $R_{ij}$, the next is $c_{(2)}(t_i)$, etc, etc. 
-\[
-c_{(q)}(t_i) = c_{j}, \quad \text{where}~j~\text{is such that}~ q = \text{rank}(r_{ij}|\text{inside}~\mathcal{R}_{i:}).
-\]
+% The most friendly cloud $c_{(1)}(t_i)$ is the cloud with the minimal value of $R_{ij}$, the next is $c_{(2)}(t_i)$, etc, etc. 
+% \[
+% c_{(q)}(t_i) = c_{j}, \quad \text{where}~j~\text{is such that}~ q = \text{rank}(r_{ij}|\text{inside}~\mathcal{R}_{i:}).
+% \]
 
 
 
-To assess whether the most friendly cloud is the best friend, we estimate the difference 
-\[
-u(t_i) := c_{(1)}(t_i) -  c_{(2)}(t_i).
-\]
 
 
 
@@ -270,6 +281,9 @@ u(t_i) := c_{(1)}(t_i) -  c_{(2)}(t_i).
 
 %(they come from the same distribution).
 
+\subsection{Asymmetric $\mathcal{A}$}
+
+In case of asymmetric $\mathcal{A}$ the ...
 
 \subsection{Symmetric $\mathcal{A}$}
  
