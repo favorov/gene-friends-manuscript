@@ -3,8 +3,8 @@ library(dplyr)
 library(ggplot2)
 
 msize<-100
-n<-1000
-zerodiag<-TRUE
+n<-5000
+zerodiag<-FALSE
 
 two_columns<-data.table('u31'=rep(-1,n),'u32'=rep(-1,n))
 
@@ -19,6 +19,11 @@ for (i in 1:n) {
 
 #toplot<-two_columns[, .(count=.N), by=.(u31, u32)]
 two_columns<-two_columns %>% count (u31,u32)
-plot(two_columns,cex=.5)
+#plot(two_columns,cex=.5)
+dots <- ggplot(two_columns,aes(x=u31,y=u32)) + 
+  geom_point(size=two_columns$n,alpha=0.5) + theme_classic()
+
+plot(dots)
+
 tst<-cor.test(two_columns[[1]],two_columns[[2]],method="kendall")
 print(tst)
