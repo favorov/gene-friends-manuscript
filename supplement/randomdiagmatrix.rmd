@@ -1,0 +1,84 @@
+---
+title: "Supplement: Symmetric Case"
+output: html_document
+date: "2023-03-28"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libs, echo=FALSE, message=FALSE}
+library(data.table)
+library(dplyr)
+library(ggplot2)
+```
+
+## Symmetric case
+
+We test whether we can use the independence of ranks of the same column element in two different rows.
+
+First, we set up the parameters: number of runs, the size of the matrix, and whether the main diagonal is zero.
+
+```{r parameters}
+msize<-100
+n<-5000
+zerodiag<-FALSE
+```
+
+
+We make a symmetric random matrix n times and then we save the ranks of 3 row in 1 column and in second column for each permutation.
+
+```{r experiment}
+two_columns<-data.table('u31'=rep(-1,n),'u32'=rep(-1,n))
+for (i in 1:n) {
+  matr<-matrix(runif(msize**2),nrow=msize)
+  matr<-matr+t(matr)
+  if(zerodiag) {diag(matr)<-0}
+  two_columns[i,1]<-msize-rank(matr[,1])[3]
+  two_columns[i,2]<-msize-rank(matr[,2])[3]
+}
+```
+
+Let's plot the results.
+
+```{r plot}
+two_columns<-two_columns %>% count (u31,u32)
+dots <- ggplot(two_columns,aes(x=u31,y=u32)) + 
+  geom_point(size=two_columns$n,alpha=0.5) + theme_classic()
+plot(dots)
+```
+
+The Kendall correlation does not detect any correlation between the vectors.
+
+```{r correlation}
+tst<-cor.test(two_columns[[1]],two_columns[[2]],method="kendall")
+print(tst)
+```
+
+
+```{r experiment_zero_diag}
+zerodiag<-TRUE
+two_columns<-data.table('u31'=rep(-1,n),'u32'=rep(-1,n))
+for (i in 1:n) {
+  matr<-matrix(runif(msize**2),nrow=msize)
+  matr<-matr+t(matr)
+  if(zerodiag) {diag(matr)<-0}
+  two_columns[i,1]<-msize-rank(matr[,1])[3]
+  two_columns[i,2]<-msize-rank(matr[,2])[3]
+}
+```
+
+
+```{r plot_zero_diag}
+two_columns<-two_columns %>% count (u31,u32)
+dots <- ggplot(two_columns,aes(x=u31,y=u32)) + 
+  geom_point(size=two_columns$n,alpha=0.5) + theme_classic()
+plot(dots)
+```
+
+
+```{r correlation_zero_diag}
+tst<-cor.test(two_columns[[1]],two_columns[[2]],method="kendall")
+print(tst)
+```
