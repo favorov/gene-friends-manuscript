@@ -150,8 +150,7 @@ fuzzy clustering                                                      & object  
 
 % To identify the friend(s), first, for each cloud, we rank all the tags by the attention the cloud pays to the tag. The ranking the decreasing, the first is the best. In other words, we create the rank matrix $\mathcal{R}$ of the same $|T|x|C|$ size, and each element is the corresponding attention's rank inside inside the column of the attention matrix. We normalise the values to be in $[0,1]$ by dividing by $|T|$ and we refer to the normalised ranks as $r$ matrix. Now, for each tag, we define the degree of friendliness of a cloud for this tag, by ranking the tag's row in $r_{i,j}=r(t_i,c_j)$ matrix. The most friendly cloud $c_{(1)}(t_i)$ is the cloud with the minimal value of $R_{ij}$, the next is $c_{(2)}(t_i)$, etc, etc.    
 
-% If a cloud is best friend, it is to be the most friendly cloud for the tag, but it is not enough. In any ranking, there is a first element, and we want to estimate the probability to observe what we observe by random. The null-hypothesis we use to picture a random setup is that in any column of $\mathcal{R}$ all the elements are i.i.d., or, in other word, the attentions that a cloud pays to all the tags are independently sampled from the same distribution. The distributions can differ from cloud to cloud. 
-% The statistics we use to test whether the most friendly cloud for the tag $t_i$ is really the best friend is the difference $t$ between the values $r(t_i,c_{(2)}(t_i))$ and $r(t_i,c_{(1)}(t_i))$, in other words, between the next-after-the-best and the best values $r$ for the tag $t_i$. We estimate the probability (p-value) to observe this difference as $<=t$ given the null-hypothesis proposition. If p-value is small enough, we reject the null, and claim that the friendliness of the cloud $c_{(1)}(t_i)$ is unlikely to observe by random and so we refer to it as the best friend of $t_i$. In this case, $t_i$ is a marker of its best friend cloud $c_{(1)}(t_i)$.
+% 
 %For a similar test that splits all the clouds into $m$ friends of the tag and the remaining $|C|-k$ clouds uses the difference  $r(t_i,c_{(m+1)}(t_i))$ and $r(t_i,c_{(m)}(t_i))$. If we obtain the p-value that is small enough, we claim that the clouds $c_{(1)}(t_i)$..$c_{(m)}(t_i)$ are friends of $t_i$ and $t_i$ is their marker.
 
 %--------------
@@ -212,17 +211,21 @@ In other words, each $r_{ij}$ is the normalized rank of the attention $A(t_i, c_
 
 Let $\mathcal{R}_{i:} = (r_{i1}, \dots, r_{ik})$ be the $i$-th row in $\mathcal{R}$. We decreasingly order its elements and denote the ordered vector as
 \[
-\mathcal{R}^{i}_{(k)} := (r^{i}_{(1)}, \dots, r^{i}_{(k)}).
+\mathcal{R}_{i(k)} := (r_{i(1)}, \dots, r_{i(k)}).
 \]
-We stick to notations accepted in ranks statistics \textcolor{red}{[?]}, so $(1)$ is the cloud-index of the smallest entry in $\mathcal{R}_{i:}$, ${(2)}$ is the cloud-index of the second smallest entry, etc.
+We stick to notations accepted in ranks statistics \textcolor{red}{[?]}, so $(1)$ is the cloud-index of the smallest entry in $\mathcal{R}_{i:}$, ${(2)}$ is the cloud-index of the second smallest entry, etc, and we refer to the corresponding clouds as $c_{i(1)}$, $c_{i(2)}$, etc. 
+In these notations, the most friendly cloud for the tag $t_i$ is $c_{i(1)}$.
+ 
+\textcolor{purple}{If a cloud is the tag's best friend, it is to be the most friendly cloud for the tag. The condition is necessary, but not enough. Indeed, in any ranking, there is a first element, and we want to estimate the probability to observe what we observe by random. 
+The null-hypothesis we use to picture a random setup is that in any column of $\mathcal{R}$ all the elements are i.i.d., or, in other word, the attentions that a cloud pays to all the tags are independently sampled from the same distribution. The distributions can differ from cloud to cloud. 
+The statistics we use to test whether the most friendly cloud for the tag $t_i$ is really the best friend is the difference $t$ between the values $r(t_i,c_{(2)}(t_i))$ and $r(t_i,c_{(1)}(t_i))$, in other words, between the next-after-the-best and the best values $r$ for the tag $t_i$. We estimate the probability (p-value) to observe this difference as $<=t$ given the null-hypothesis proposition. If p-value is small enough, we reject the null, and claim that the friendliness of the cloud $c_{(1)}(t_i)$ is unlikely to observe by random and so we refer to it as the best friend of $t_i$. In this case, $t_i$ is a marker of its best friend cloud $c_{(1)}(t_i)$.
+}
+%Since we will apply this procedure for each tag $t_i\in T$, we slightly change the notations and denote 
+% \[
+% r_{i(q)} = r_{(q)}(t_i)...
+% \]
 
-Since we will apply this procedure for each tag $t_i\in T$, we slightly change the notations and denote 
-\[
-r_{i(q)} = r_{(q)}(t_i)...
-\]
-
-
-We will denote the corresponding cloud $c_{(1)}(t_i)$
+%We will denote the corresponding cloud $c_{(1)}(t_i)$
 
 
 
