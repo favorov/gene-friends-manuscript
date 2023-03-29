@@ -21,8 +21,8 @@ We test whether we can use the independence of ranks of the same column element 
 First, we set up the parameters: number of runs, the size of the matrix, and whether the main diagonal is zero.
 
 ```{r parameters}
-msize<-100
-n<-5000
+msize<-10
+n<-10000
 zerodiag<-FALSE
 ```
 
@@ -43,9 +43,11 @@ for (i in 1:n) {
 Let's plot the results.
 
 ```{r plot}
-two_columns<-two_columns %>% count (u31,u32)
+two_columns<-two_columns %>% count (u31,u32,name="counter")
+scale<-median(two_columns$counter)/4
 dots <- ggplot(two_columns,aes(x=u31,y=u32)) + 
-  geom_point(size=two_columns$n,alpha=0.5) + theme_classic()
+  geom_point(size=two_columns$counter/scale,alpha=0.5,col="blue") + 
+  theme_classic()
 plot(dots)
 ```
 
@@ -71,9 +73,11 @@ for (i in 1:n) {
 
 
 ```{r plot_zero_diag}
-two_columns<-two_columns %>% count (u31,u32)
+two_columns<-two_columns %>% count (u31,u32,name="counter")
+scale<-median(two_columns$counter)/4
 dots <- ggplot(two_columns,aes(x=u31,y=u32)) + 
-  geom_point(size=two_columns$n,alpha=0.5) + theme_classic()
+  geom_point(size=two_columns$counter/scale,alpha=0.5,col="blue") + 
+  theme_classic()
 plot(dots)
 ```
 

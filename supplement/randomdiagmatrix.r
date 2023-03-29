@@ -1,10 +1,11 @@
+#https://stats.stackexchange.com/questions/257681/test-for-uniformity-in-r
 library(data.table)
 library(dplyr)
 library(ggplot2)
 
-msize<-100
-n<-5000
-zerodiag<-FALSE
+msize<-10
+n<-10000
+zerodiag<-TRUE
 
 two_columns<-data.table('u31'=rep(-1,n),'u32'=rep(-1,n))
 
@@ -17,11 +18,14 @@ for (i in 1:n) {
   two_columns[i,2]<-msize-rank(matr[,2])[3]
 }
 
+
 #toplot<-two_columns[, .(count=.N), by=.(u31, u32)]
-two_columns<-two_columns %>% count (u31,u32)
+two_columns<-two_columns %>% count (u31,u32,name="counter")
+scale<-median(two_columns$counter)/4
 #plot(two_columns,cex=.5)
 dots <- ggplot(two_columns,aes(x=u31,y=u32)) + 
-  geom_point(size=two_columns$n,alpha=0.5) + theme_classic()
+  geom_point(size=two_columns$counter/scale,alpha=0.5,col="blue") + 
+  theme_classic()
 
 plot(dots)
 
