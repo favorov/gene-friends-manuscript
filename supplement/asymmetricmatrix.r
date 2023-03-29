@@ -12,7 +12,7 @@ two_columns<-data.table('u31'=rep(-1,n),'u32'=rep(-1,n))
 
 for (i in 1:n) {
   matr<-matrix(runif(msize**2),nrow=msize)
-  matr<-matr+t(matr)
+#  matr<-matr+t(matr)
   if(zerodiag) {diag(matr)<-0}
   two_columns[i,1]<-msize-rank(matr[,1])[3]
   two_columns[i,2]<-msize-rank(matr[,2])[3]
