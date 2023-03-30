@@ -37,6 +37,10 @@ for (i in 1:n) {
   matr<-matrix(runif(msize**2),nrow=msize)
   matr<-matr+t(matr)
   if(zerodiag) {diag(matr)<-0}
+  else {diag(matr)<-runif(msize)+runif(msize)}
+  #we regenerate diag to be from the same distrib
+  #everything is now sum of two runif,
+  #and  the diag before we regenetate it is is from 2*runif 
   two_columns[i,1]<-msize-rank(matr[,1])[3]
   two_columns[i,2]<-msize-rank(matr[,2])[3]
 }
@@ -76,6 +80,10 @@ for (i in 1:n) {
   matr<-matrix(runif(msize**2),nrow=msize)
   matr<-matr+t(matr)
   if(zerodiag) {diag(matr)<-0}
+  else {diag(matr)<-runif(msize)+runif(msize)}
+  #we regenerate diag to be from the same distrib
+  #everything is now sum of two runif,
+  #and  the diag before we regenetate it is is from 2*runif 
   two_columns[i,1]<-msize-rank(matr[,1])[3]
   two_columns[i,2]<-msize-rank(matr[,2])[3]
 }
