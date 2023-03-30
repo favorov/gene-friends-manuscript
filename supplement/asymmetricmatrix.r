@@ -32,3 +32,6 @@ dev.off()
 
 tst<-cor.test(two_columns[[1]],two_columns[[2]],method="kendall")
 print(tst)
+
+tst<-chisq.test(two_columns$counter)
+print(tst)

@@ -27,7 +27,13 @@ dots <- ggplot(two_columns,aes(x=u31,y=u32)) +
   geom_point(size=two_columns$counter/scale,alpha=0.5,col="blue") + 
   theme_classic()
 
+pdf("symmetric.pdf")
 plot(dots)
+dev.off()
 
 tst<-cor.test(two_columns[[1]],two_columns[[2]],method="kendall")
+print(tst)
+
+
+tst<-chisq.test(two_columns$counter)
 print(tst)
