@@ -17,6 +17,7 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
+%\usepackage{natbib}
 %\usepackage[title]{appendix}
 \begin{document}
 %
@@ -98,7 +99,7 @@ Each tag $t \in T$ and cloud $c \in C$ are related by the attention $A(t, c)$, t
 
 In the following, the attention values are stored in $n\times k$ matrix $\mathcal{A}$. 
 
-The tag-cloud-attention model applies to many problems in bio-informatics and statistics.
+The tag-cloud-attention model applies to many problems in bioinformatics and statistics.
 Tab.\ref{tab:examples} contains some of them.
 \begin{table}[h!]
 \centering
@@ -208,13 +209,20 @@ r_{n1} & r_{n2} & \dots & r_{nk}
 \]
 In other words, each $r_{ij}$ is the normalized rank of the attention $A(t_i, c_j)$ inside $\mathcal{A}_{:j}$. 
 
-Let $\mathcal{R}_{i:} = (r_{i1}, \dots, r_{ik})$ be the $i$-th row in $\mathcal{R}$. We decreasingly order its elements and denote the ordered vector as
-\[
-\mathcal{R}_{i(k)} := (r_{i(1)}, \dots, r_{i(k)}).
-\]
-We stick to notations accepted in ranks statistics \textcolor{red}{[?]}, so $(1)$ is the cloud-index of the smallest entry in $\mathcal{R}_{i:}$, ${(2)}$ is the cloud-index of the second smallest entry, etc, and we refer to the corresponding clouds as $c_{i(1)}$, $c_{i(2)}$, etc. 
-In these notations, the most friendly cloud for the tag $t_i$ is $c_{i(1)}$.
+Let $\mathcal{R}_{i:} = (r_{i1}, \dots, r_{ik})$ be the $i$-th row in $\mathcal{R}$. We decreasingly order its elements.
+
+% and denote the ordered vector as
+%\[
+%\mathcal{R}_{i\sigma(:)} := (r_{i\sigma(1)}, \dots, %r_{i\sigma(k)}).
+%\]
+Let's denote $\sigma_i(1)$ is the cloud-index of the smallest entry in $\mathcal{R}_{i:}$, ${\sigma_i(2)}$ is the cloud-index of the second smallest entry, etc. We refer to the corresponding clouds as $c_{i(1)}$, $c_{i(2)}$, etc. This notation is in accordance with that accepted in rank statistics applications \cite{Gut:2009}. 
+So, the most friendly cloud for the tag $t_i$ is $c_{i(1)}$.
  
+
+For a cloud to be a tag's best friend it is \textit{necessary} to be the most friendly cloud for the tag, but it is \textit{not enough}. Indeed, in any ranking, there is the first element. Our goal is to statistically estimate whether it is the most friendly by chance. 
+
+
+
 \textcolor{purple}{If a cloud is the tag's best friend, it is to be the most friendly cloud for the tag. The condition is necessary, but not enough. Indeed, in any ranking, there is a first element, and we want to estimate the probability to observe what we observe by random. 
 The null-hypothesis we use to picture a random setup is that in any column of $\mathcal{R}$ all the elements are i.i.d., or, in other word, the attentions that a cloud pays to all the tags are independently sampled from the same distribution. The distributions can differ from cloud to cloud. 
 The statistics we use to test whether the most friendly cloud for the tag $t_i$ is really the best friend is the difference $t$ between the values $r(t_i,c_{(2)}(t_i))$ and $r(t_i,c_{(1)}(t_i))$, in other words, between the next-after-the-best and the best values $r$ for the tag $t_i$. We estimate the probability (p-value) to observe this difference as $<=t$ given the null-hypothesis proposition. If p-value is small enough, we reject the null, and claim that the friendliness of the cloud $c_{(1)}(t_i)$ is unlikely to observe by random and so we refer to it as the best friend of $t_i$. In this case, $t_i$ is a marker of its best friend cloud $c_{(1)}(t_i)$.
@@ -231,10 +239,10 @@ The statistics we use to test whether the most friendly cloud for the tag $t_i$ 
 %%%------
 The test statistics for the tag $t_i$ is
 \[
-u(t_i) := r_{i(1)} -  r_{i(2)}.
+u(t_i) := r_{i\sigma(1)} -  r_{i\sigma(2)}.
 \]
 
-\textcolor{red}{To find the most friendly cloud for the tag $t_i\in T$}
+
 % Now, for each tag, we define the degree of the friendliness of a cloud for this tag, by ranking the tag's row $\mathcal{R}_{i:}= \{r_{i1}, \dots, r_{ik}\}$. 
 
 % The most friendly cloud $c_{(1)}(t_i)$ is the cloud with the minimal value of $R_{ij}$, the next is $c_{(2)}(t_i)$, etc, etc. 
