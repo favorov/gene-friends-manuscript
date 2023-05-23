@@ -1,18 +1,8 @@
-% This is LLNCS.DEM the demonstration file of
-% the LaTeX macro package from Springer-Verlag
-% for Lecture Notes in Computer Science,
-% version 2.4 for LaTeX2e as of 16. April 2010
-% -
 \documentclass{llncs}
-% % % % % % % % % % % % % % % % % % % %
-% For Russian uncomment the following lines
-%\usepackage[utf8x]{inputenc}
- %\usepackage[russian]{babel}
-% \def\keywordname{{\bf Ключевые слова:}}%
-% % % % % % % % % % % % % % % % % % % % 
+\usepackage{standalone}
 \usepackage{graphicx} 
 \usepackage{comment}
-\usepackage{xcolor}
+%\usepackage{xcolor}
 \usepackage{epigraph}
 \usepackage{amsmath}
 \usepackage{amsfonts}
@@ -22,6 +12,9 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{latexcolors}
+\usepackage{import}
+\usepackage{tikz}
+
 
 \begin{document}
 
@@ -35,26 +28,28 @@
 %                                     also used for the TOC unless
 %                                     \toctitle is used
 %
-\author{Alexander Favorov\inst{1}\textsuperscript,\inst{2}
-\and Alexandra Suvorikova \inst{3}, Vera Mukhina \inst{2} \and Vasiliy Ramensky \inst{4}
-\and Andrey Mironov \inst{5}}
+\author{
+Alexandra Suvorikova \inst{1} \and Vasiliy Ramensky \inst{2} \and Vera Mukhina \inst{3} 
+\and Andrey Mironov \inst{4} \and Alexander Favorov\inst{5}\textsuperscript,\inst{6}}
 %
-\authorrunning{A. Favorov et al.} % abbreviated author list (for running head)
+\authorrunning{A. Suvorikova et al.} % abbreviated author list (for running head)
 %
 %%%% list of authors for the TOC (use if author list has to be modified)
-\tocauthor{Alexander Favorov, Alexandra Suvorikova, Vera Mukhina, Vasiliy Ramensky, and Andrey Mironov}
+\tocauthor{Alexandra Suvorikova, Vasiliy Ramensky, Vera Mukhina, Andrey Mironov, and Alexander Favorov}
 %
 \institute{
-Johns Hopkins University School of Medicine, \\ Baltimore, MD 21205, USA,
-\and
-Vavilov Institute of General Genetics, RAS, \\ Moscow, 119333, Russia, 
-\email{favorov@sensi.org}
-\and
 \textcolor{red}{Weierstrass institute, \\ Berlin, Germany,} 
 \and
 National Health and Research Center of Preventive Healthcare, \\ Moscow, 101990, Russia
 \and
+University of Maryland School of Medicine, \\ Baltimore, MD 21205, USA,
+\and
 Department of Bioengineering and Bioinformatics, MSU, \\ Moscow, 119992, Russia
+\and
+Johns Hopkins University School of Medicine, \\ Baltimore, MD 21205, USA,
+\and
+Vavilov Institute of General Genetics, RAS, \\ Moscow, 119333, Russia, 
+\email{favorov@sensi.org}
 }
 
 \maketitle              % typeset the title of the contribution
@@ -84,7 +79,7 @@ Suppose we have a set of {\tag}s and a set of fuzzy set of {\tag}s, which we wil
 %
 \section{A simple intro: maybe abstract maybe frog}
 
-There is a simple intuition of what it means to be a friend. A friend of Augustus cares about Augustus more than other people do. And, if we see Augustus, then we infer to see friends(s) of Augustus also. Let’s translate it into statistical language.
+There is a simple intuition of what it means to be a friend. A friend of Augustus cares about Augustus more than other people do. And, if we see Augustus, then we infer to see friends(s) of Augustus also. \textcolor{navyblue}{Let’s translate it into statistical language.}
 
 Consider a set of genes and their loads in a set of expression patterns. Each pattern represents a biological process by the expression levels of the involved genes. 
 
@@ -140,11 +135,15 @@ Let's recall the intuition that starts the introduction. A friend of Augustus ca
 We express how much a cloud $c_j$ cares about a tag $t_i$ in terms of the rank of $a_{ij}$ in column $\mathcal{A}_{:j}$. So, if a cloud $c_j$ cares about a tag $t_i$ more than other clouds, the rank of $a_{ij}$ in $\mathcal{A}_{:j}$ is higher than the rank of $a_{il}$ in $\mathcal{A}_{:l}$ for all $l \neq j$. 
 
 A question naturally arises: whether $c_j$ is a real best friend of $t_i$ or $c_j$ appeared at the top of the ranking just because there is always something at the top.
- 
-\textcolor{blue}{We intend to statistically answer the question.}
 
-Under $H_0$ we assume that all the clouds do not tell tags from each other.
+To answer this question we formulate $H_0$ as "all the clouds do not tell tags from each other".
 In other words, all the $n \times k$ attention values from clouds to tags are independent (all $a_{ij}$ are independent). Moreover, all the $n$ attention values that a cloud pays to tags are identically distributed (all $a_{ij} \in \mathcal{A}_{:j}$ are i.i.d).
+
+% \textcolor{blue}{We intend to statistically answer the question.}
+
+
+% Under $H_0$ we assume that all the clouds do not tell tags from each other.
+% In other words, all the $n \times k$ attention values from clouds to tags are independent (all $a_{ij}$ are independent). Moreover, all the $n$ attention values that a cloud pays to tags are identically distributed (all $a_{ij} \in \mathcal{A}_{:j}$ are i.i.d).
 
 \textcolor{red}{Explain $H_1$! : The event "c is a friend of t" is a property of the entire $\mathcal{A}$ rather than of specific indices}
 
@@ -346,7 +345,7 @@ We correct $r_{ij}$ for continuity and redefine them as normalized ranks,
 r_{ij} := \frac{r_{ij} - \frac{1}{2}}{n}.
 \end{equation}
 
-Of note, mapping \eqref{def:correction} coincides with the semi-discreet optimal transportation (under quadratic Euclidean cost) of a uniform distribution on an equally-spaced grid of integers to continuous uniform distribution on $[0, 1]$ (see \cite{Solomon2018OptimalTO}).
+Of note, mapping \eqref{def:correction} coincides with the semi-discreet optimal transportation (under quadratic Euclidean cost) of a uniform distribution on an equally-spaced grid of integers to the continuous uniform distribution on $[0, 1]$ (see \cite{Solomon2018OptimalTO}).
 
 To construct the test for a tag $t_i$, we consider the $i$-th row of $\mathcal{R}$, $\mathcal{R}_{i:} = (r_{i1}, \dots, r_{ik})$. For simplicity, we omit the first index $i$ and write
 \[
@@ -368,18 +367,25 @@ $k-1$ half-spaces, which are defined by linear constraints $r_{\sigma(1)} \le r_
 Fig.\ref{fig:polytop} depicts $P_3$. 
 \begin{figure}
      \centering
-     \begin{subfigure}[b]{0.45\textwidth}
-         \centering       \includegraphics[width=\textwidth]{trololo}
-         \caption{Support of $r_{\sigma}$ for $k=3$.}
+     \begin{subfigure}[b]{0.3\textwidth}
+         \centering 
+         \scalebox{.4}{\import{}{cube-volume}}
+         \caption{Support of $r_{\sigma}$ for \\\hspace{\textwidth}$k=3$.}
          \label{fig:polytop}
      \end{subfigure}
-     \hfill
-     \begin{subfigure}[b]{0.45\textwidth}
-         \centering
-\includegraphics[width=\textwidth]{trololo1}
-         \caption{Support of $r_{\sigma}$ if $r_{\sigma(2)} - r_{\sigma(1)} \ge w$}
-         \label{fig:small_polytope}
+     \begin{subfigure}[b]{0.3\textwidth}
+         \centering 
+         \scalebox{.4}{\import{}{cube-w_1}}
+         \caption{Support of $r_{\sigma}$ if\\\hspace{\textwidth}$r_{\sigma(2)} - r_{\sigma(1)} \ge w$}
+         \label{fig:polytop}
      \end{subfigure}
+     \begin{subfigure}[b]{0.3\textwidth}
+         \centering 
+         \scalebox{.4}{\import{}{cube-w_2}}
+         \caption{Support of $r_{\sigma}$ if\\\hspace{\textwidth}$r_{\sigma(3)} - r_{\sigma(2)} \ge w$}
+         \label{fig:polytop}
+     \end{subfigure}
+    \caption{Hmm....}
 \end{figure}
 
 
@@ -420,6 +426,8 @@ We formulated a statistical test that to detest reliable pairs of marker feature
 \textcolor{red}{Symmetric case and $H_0$}
 
 \textcolor{airforceblue}{For a symmetric case, sometimes it makes sense to remove the main diagonal before ranking not to obtain trivial self-relations. The functions of the package receive a parameter for that case; actually, this parameter set to TRUE decreases the dimensionality $k$ to $k-1$.}
+
+\textcolor{darkgreen}{Dimension reduction}
 
 \section{Conflict of interest}
 The authors declare no conflict of interest.
