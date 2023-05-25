@@ -29,15 +29,9 @@
 \draw[black] (0,0,\a) -- ++(\a,0,0) -- ++(0,\a,0) -- ++(-\a,0,0) -- cycle;
 \draw[black] (0,\a,0) -- ++(0,0,\a) -- ++(\a,0,0) -- ++(0,0,-\a) -- cycle;
 % draw the cube edges
-\draw[black,dashed] (0,0,0) --  ++(\a,0,0) -- ++(0,0,\a) ;
-\draw[black,dashed] (\a,0,0) --  ++(0,\a,0) -- ++(0,0,\a) ;
+\draw[black!75,dashed] (0,0,0) --  ++(\a,0,0) -- ++(0,0,\a) ;
+\draw[black!75,dashed] (\a,0,0) --  ++(0,\a,0) -- ++(0,0,\a) ;
 
-
-\draw[black] (0,0,0) -- ++(0,\a,0) -- ++(0,0,\a) -- ++(0,-\a,0) -- cycle;
-\draw[black] (0,0,\a) -- ++(\a,0,0) -- ++(0,\a,0) -- ++(-\a,0,0) -- cycle;
-\draw[black] (0,\a,0) -- ++(0,0,\a) -- ++(\a,0,0) -- ++(0,0,-\a) -- cycle;
-\draw[black,dashed] (0,0,0) --  ++(\a,0,0) -- ++(0,0,\a) ;
-\draw[black,dashed] (\a,0,0) --  ++(0,\a,0) -- ++(0,0,\a) ;
 
 %volume faces
 \draw[green!0,fill=green!50,opacity=.2] (0,0,0) --  ++(0,0,\a) -- ++ (0,\a,0) -- cycle;
@@ -52,7 +46,7 @@
 \draw[green!0,fill=green!50,opacity=.7] (0,0,\a) -- ++(0,0,-\a+\a*\w) -- ++ (0,\a-\a*\w,\a-\a*\w) -- cycle;
 %first point is new, all the rel shifts are similar to volume with coef (1-w)
 \draw[green!0,fill=green!50,opacity=.7] (0,0,\a) --  ++(\a-\a*\w,\a-\a*\w,0) --  ++(-\a+\a*\w,0,0) -- cycle ;
-\draw[green!0,dashed,fill=green!50,opacity=.4] (0,0,\a*\w) --  ++(0,\a-\a*\w,\a-\a*\w) --  ++ (\a-\a*\w,0,0) -- cycle;
+\draw[green!0,dashed,fill=green!50,opacity=.5] (0,0,\a*\w) --  ++(0,\a-\a*\w,\a-\a*\w) --  ++ (\a-\a*\w,0,0) -- cycle;
 
 %polytope edges
 \draw[darkpastelgreen] (0,0,\a) -- ++(0,0,-\a+\a*\w) -- ++ (0,\a-\a*\w,\a-\a*\w) -- cycle;
