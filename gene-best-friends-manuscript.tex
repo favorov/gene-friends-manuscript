@@ -57,7 +57,7 @@ Vavilov Institute of General Genetics, RAS, \\ Moscow, 119333, Russia,
 \maketitle              % typeset the title of the contribution
 
 \renewcommand{\tag}{tag}
-\newcommand{\cloud}{cloud}
+\newcommand{\collection}{collection}
 \newcommand{\T}{T}
 \newcommand{\C}{C}
 \newcommand{\tl}{t}
@@ -72,9 +72,9 @@ Vavilov Institute of General Genetics, RAS, \\ Moscow, 119333, Russia,
 
 \begin{abstract}
 
-\textcolor{green}{We define a tag's most friendly cloud as a cloud that pays maximal rank-normalized attention to the tag.}
+\textcolor{green}{We define a tag's most friendly collection as a collection that pays maximal rank-normalized attention to the tag.}
 \textcolor{blue}{ -- we will return here --} \textcolor{purple}{
-Suppose we have a set of {\tag}s and a set of fuzzy set of {\tag}s, which we will refer to as {\cloud}s, and we have the {\tag}-to-{\cloud} relation quantified as a scalar for each $\left( {\tag},{\cloud}\right)$ pair. An example is: {\tag}s are genes, {\cloud}s are gene expression patterns, and the scalars are loads of the genes in the patterns. Sometimes, an observation that a gene is expressed implies the expression of a particular pattern (the simplest case is: the gene has nonzero load only in that pattern). If so, we say that the gene marks the pattern. Here we describe a statistical test that identifies pairs of a marker {\tag} and the marked {\cloud}. The test is based on rank statistics and it does not rely on propositions about the distribution of the relation quantity. The marked {\cloud} is referred to as the {\tag}'s best friend, and the test is named "the best friends test" or "the gene's best friends test". The statistics naturally expand to the case when a {\tag} selects (separates) a subset of {\cloud}s, thus having more than one best friend. The code (currently, only R) is available at \url{https://github.com/favorov/best-friends}
+Suppose we have a set of {\tag}s and a set of fuzzy set of {\tag}s, which we will refer to as {\collection}s, and we have the {\tag}-to-{\collection} relation quantified as a scalar for each $\left( {\tag},{\collection}\right)$ pair. An example is: {\tag}s are genes, {\collection}s are gene expression patterns, and the scalars are loads of the genes in the patterns. Sometimes, an observation that a gene is expressed implies the expression of a particular pattern (the simplest case is: the gene has nonzero load only in that pattern). If so, we say that the gene marks the pattern. Here we describe a statistical test that identifies pairs of a marker {\tag} and the marked {\collection}. The test is based on rank statistics and it does not rely on propositions about the distribution of the relation quantity. The marked {\collection} is referred to as the {\tag}'s best friend, and the test is named "the best friends test" or "the gene's best friends test". The statistics naturally expand to the case when a {\tag} selects (separates) a subset of {\collection}s, thus having more than one best friend. The code (currently, only R) is available at \url{https://github.com/favorov/best-friends}
 \keywords{best friends, gene's best friends, specific gene regulation, pattern marker, rank statistics, marker feature, marked entity}
 }
 \end{abstract}
@@ -87,7 +87,7 @@ There is a simple intuition of what it means to be a friend. A friend of Augustu
 
 Sometimes, the expression of a single gene indicates the activity of the entire pattern. In the simplest case, the gene has a nonzero load in only one pattern. In more realistic, the gene has several nonzero loads, but all of them but one are relatively small. Then the gene (AKA Augustus) is the marker gene for the pattern, and the marked pattern is the best friend of this gene. We want to identify the marker genes and corresponding patterns statistically.  
 
-\paragraph{Model} The bipartite graph naturally fits this model. To generalise the example, we will refer to genes as \textit{{\tag}s}, to expression patterns, as \textit{{\cloud}s}, and to any load as \textit{attention}. Fig.\ref{fig:nice_name} illustrates the setting.
+\paragraph{Model} The bipartite graph naturally fits this model. To generalise the example, we will refer to genes as \textit{{\tag}s}, to expression patterns, as \textit{{\collection}s}, and to any load as \textit{attention}. Fig.\ref{fig:nice_name} illustrates the setting.
 
 \begin{figure}
     \centering
@@ -97,30 +97,30 @@ Sometimes, the expression of a single gene indicates the activity of the entire 
     \label{fig:nice_name}
 \end{figure}
 
-To be more specific, we are given a set of clouds $C = \{c_1, \dots, c_k\}$, and a set of tags $T = \{t_1, \dots, t_n\}$.
-Each tag $t_i \in T$ and cloud $c_j \in C$ are related by the attention---the real value $a_{ij}$---that the cloud pays to the tag.
+To be more specific, we are given a set of collections $C = \{c_1, \dots, c_k\}$, and a set of tags $T = \{t_1, \dots, t_n\}$.
+Each tag $t_i \in T$ and collection $c_j \in C$ are related by the attention---the real value $a_{ij}$---that the collection pays to the tag.
 Let's agree that the greater the value, the higher the attention is. Naturally, the absence of attention corresponds to $a_{ij} = 0$. 
 
-All the values $a_{ij}$ are stored in a matrix $\mathcal{A}$; its row $\mathcal{A}_{i:}$ corresponds to tag $t_i$, its column $\mathcal{A}_{:j}$ corresponds to cloud $c_j$.
+All the values $a_{ij}$ are stored in a matrix $\mathcal{A}$; its row $\mathcal{A}_{i:}$ corresponds to tag $t_i$, its column $\mathcal{A}_{:j}$ corresponds to collection $c_j$.
 
-This tag-cloud-attention metaphor applies to many problems in bioinformatics and statistics (see Tab.\ref{tab:examples} for examples).
+This tag-collection-attention metaphor applies to many problems in bioinformatics and statistics (see Tab.\ref{tab:examples} for examples).
 
 \begin{table}[h!]
 \centering
 \begin{tabular}{c|c|c|c}
-\textbf{Example} & \textbf{tag $t_i$} & \textbf{cloud $c_j$} & \textbf{attention $a_{ij}$} \\ 
+\textbf{Example} & \textbf{tag $t_i$} & \textbf{collection $c_j$} & \textbf{attention $a_{ij}$} \\ 
 \hline
 \begin{tabular}[c]{@{}c@{}}gene regulation\\  by TFs\end{tabular}     & gene             & \begin{tabular}[c]{@{}c@{}}genes under \\ TF regulation\end{tabular}     & \begin{tabular}[c]{@{}c@{}}strength of \\ regulation\end{tabular}       \\ \hline
 \begin{tabular}[c]{@{}c@{}}transcription \\ correlations\end{tabular} & gene             & \begin{tabular}[c]{@{}c@{}}genes coexpressed \\ with a gene\end{tabular} & \begin{tabular}[c]{@{}c@{}}transcription \\ correlation\end{tabular}    \\ \hline
 fuzzy clustering                                                      & object           & cluster                                                                  & \begin{tabular}[c]{@{}c@{}}object weight \\ in cluster\end{tabular}     \\ \hline
 \begin{tabular}[c]{@{}c@{}}transcription\\ decomposition\end{tabular} & transcript       & \begin{tabular}[c]{@{}c@{}}transcription \\ pattern\end{tabular}         & \begin{tabular}[c]{@{}c@{}}transcript's \\ load in pattern\end{tabular} \\ \hline
 
-\begin{tabular}[c]{@{}c@{}}weighted graph\end{tabular} & vertex       & \begin{tabular}[c]{@{}c@{}} another vertex \end{tabular}         & \begin{tabular}[c]{@{}c@{}}weight of edge between\\ cloud and tag \end{tabular} \\ \hline
+\begin{tabular}[c]{@{}c@{}}weighted graph\end{tabular} & vertex       & \begin{tabular}[c]{@{}c@{}} another vertex \end{tabular}         & \begin{tabular}[c]{@{}c@{}}weight of edge between\\ collection and tag \end{tabular} \\ \hline
 
 \begin{tabular}[c]{@{}c@{}}search engine\end{tabular} & query       & \begin{tabular}[c]{@{}c@{}} search result \end{tabular}         & \begin{tabular}[c]{@{}c@{}}relevant search output\\\end{tabular} \\ \hline
 \end{tabular}
 
-\caption{Tag-cloud metaphor deployment examples.}
+\caption{Tag-collection metaphor deployment examples.}
 \label{tab:examples}
 \end{table}
 
@@ -132,32 +132,32 @@ fuzzy clustering                                                      & object  
 
 
 
-% \textcolor{purple}{For each tag, we want to identify the cloud(s) that particularly prefer(s) the tag, if any. Then such a cloud is a friend (or the best friend if there is only one) for the tag. The simplest example: imagine that only one cloud pays attention to the tag in hand. }
+% \textcolor{purple}{For each tag, we want to identify the collection(s) that particularly prefer(s) the tag, if any. Then such a collection is a friend (or the best friend if there is only one) for the tag. The simplest example: imagine that only one collection pays attention to the tag in hand. }
 
 Let's recall the intuition that starts the introduction. A friend of Augustus cares about Augustus more than other people do. 
 
-We express how much a cloud $c_j$ cares about a tag $t_i$ in terms of the rank of $a_{ij}$ in column $\mathcal{A}_{:j}$. So, if a cloud $c_j$ cares about a tag $t_i$ more than other clouds, the rank of $a_{ij}$ in $\mathcal{A}_{:j}$ is higher than the rank of $a_{il}$ in $\mathcal{A}_{:l}$ for all $l \neq j$. 
+We express how much a collection $c_j$ cares about a tag $t_i$ in terms of the rank of $a_{ij}$ in column $\mathcal{A}_{:j}$. So, if a collection $c_j$ cares about a tag $t_i$ more than other collections, the rank of $a_{ij}$ in $\mathcal{A}_{:j}$ is higher than the rank of $a_{il}$ in $\mathcal{A}_{:l}$ for all $l \neq j$. 
 
 A question naturally arises: whether $c_j$ is a real best friend of $t_i$ or $c_j$ appeared at the top of the ranking just because there is always something at the top.
 
-To answer this question we formulate $H_0$ as "all the clouds do not tell tags from each other".
-In other words, all the $n \times k$ attention values from clouds to tags are independent (all $a_{ij}$ are independent). Moreover, all the $n$ attention values that a cloud pays to tags are identically distributed (all $a_{ij} \in \mathcal{A}_{:j}$ are i.i.d).
+To answer this question we formulate $H_0$ as "all the collections do not tell tags from each other".
+In other words, all the $n \times k$ attention values from collections to tags are independent (all $a_{ij}$ are independent). Moreover, all the $n$ attention values that a collection pays to tags are identically distributed (all $a_{ij} \in \mathcal{A}_{:j}$ are i.i.d).
 
 % \textcolor{blue}{We intend to statistically answer the question.}
 
 
-% Under $H_0$ we assume that all the clouds do not tell tags from each other.
-% In other words, all the $n \times k$ attention values from clouds to tags are independent (all $a_{ij}$ are independent). Moreover, all the $n$ attention values that a cloud pays to tags are identically distributed (all $a_{ij} \in \mathcal{A}_{:j}$ are i.i.d).
+% Under $H_0$ we assume that all the collections do not tell tags from each other.
+% In other words, all the $n \times k$ attention values from collections to tags are independent (all $a_{ij}$ are independent). Moreover, all the $n$ attention values that a collection pays to tags are identically distributed (all $a_{ij} \in \mathcal{A}_{:j}$ are i.i.d).
 
 \textcolor{red}{Explain $H_1$! : The event "c is a friend of t" is a property of the entire $\mathcal{A}$ rather than of specific indices}
 
 \textcolor{blue}{Here, we suggest a computational method...}
 
 \textcolor{violet}{\begin{itemize}
-    \item The {\cloud} is referred to as the {\tag}'s best friend and the test is named "the best friends test" or "the gene's best friends test".
+    \item The {\collection} is referred to as the {\tag}'s best friend and the test is named "the best friends test" or "the gene's best friends test".
     \item Marker
-    \item Above, we consider only one possible best friend (cloud) per tag. The statistics naturally expand to the case when a {\tag} selects (separates) a subset of {\cloud}s, thus having more than one best friend.
-    \item double-ranking is applicable to the case of clouds of different nature (e.g. different data modalities such as ATACSeq and RNASeq)
+    \item Above, we consider only one possible best friend (collection) per tag. The statistics naturally expand to the case when a {\tag} selects (separates) a subset of {\collection}s, thus having more than one best friend.
+    \item double-ranking is applicable to the case of collections of different nature (e.g. different data modalities such as ATACSeq and RNASeq)
 \end{itemize}}
 
 
@@ -167,7 +167,7 @@ Ranking methods appear in many applications, such as relevant feature selection 
 marker selection \cite{vargo2020rank}, \cite{pullin2022comparison},
 information retrieval \cite{jimenez2021multivariate}, etc.
 
-For information retrieval the tags are usually (see, e.g. \cite{liu2009learning}) queries and clouds are documents. 
+For information retrieval the tags are usually (see, e.g. \cite{liu2009learning}) queries and collections are documents. 
 
 Another established term "cloud" is a representation of the text content of a collection of the document to be annotated and queried. This actually means a set of tags \cite{venetis2011selection}, it is also referred to as a "tag cloud". Here, tags are words found in or associated with the underlying content (e.g., annotations) and they are typically listed alphabetically or based on their importance. Technically, tags in such a cloud can be shown as hyperlinks. The user can click on a tag and thus query the related documents from the collection. Our terminology was inspired by this term, but we do not use it directly.
 
@@ -210,11 +210,11 @@ This framework is related to the clustering of clouds \cite{bernstein2020cluster
 
 %We formulated \cite{best_friends:2015} the similar task in a symmetric form on gene expression data as searching for genes that are best friends of genes. Best friend of a gene $G_i$ is another gene $G_j$ that is expressed concertedly with the gene $G_i$, while other genes $G_k, k\neq i, k \neq j$ are (almost) not. The best friend is unique, while one gene can be the best friend for more than one gene. The solution we proposed (rank backwards ranking) showed the putative pairs of marker and its best friend, but it did not provide either statistical measure or an effect size estimate. Later, the problem was also formulated in an asymmetric setup \cite{patternmarkers:2017} for genes and expression patterns, and the solution was to scale each gene's loads to $max((\mbox{all loads for this gene})==1$ and calculate the Euclidean distance between the scaled vector of loads and the ideal $(0,0,...,1,...0$). The less the distance is, the better the marker is. 
 
-% Now, the question. For each tag, we want to identify the cloud(s) that specifically prefer(s) the tag. We say that such a cloud is a friend (or the best friend if it is the only one) for the tag. The simplest example: imagine that only one cloud pays attention to our tag. 
+% Now, the question. For each tag, we want to identify the collection(s) that specifically prefer(s) the tag. We say that such a collection is a friend (or the best friend if it is the only one) for the tag. The simplest example: imagine that only one collection pays attention to our tag. 
 
 
 % 
-%For a similar test that splits all the clouds into $m$ friends of the tag and the remaining $|C|-k$ clouds uses the difference  $r(t_i,c_{(m+1)}(t_i))$ and $r(t_i,c_{(m)}(t_i))$. If we obtain the p-value that is small enough, we claim that the clouds $c_{(1)}(t_i)$..$c_{(m)}(t_i)$ are friends of $t_i$ and $t_i$ is their marker.
+%For a similar test that splits all the collections into $m$ friends of the tag and the remaining $|C|-k$ collections uses the difference  $r(t_i,c_{(m+1)}(t_i))$ and $r(t_i,c_{(m)}(t_i))$. If we obtain the p-value that is small enough, we claim that the collections $c_{(1)}(t_i)$..$c_{(m)}(t_i)$ are friends of $t_i$ and $t_i$ is their marker.
 
 
 
@@ -223,7 +223,7 @@ This framework is related to the clustering of clouds \cite{bernstein2020cluster
 \label{sec:method}
 
 
-We recall that the attention matrix $\mathcal{A}$ is the only input for the statistical test. Each its element $a_{ij}$ is the value of attention that a cloud $c_j \in C$ pays to a tag $t_i \in T$
+We recall that the attention matrix $\mathcal{A}$ is the only input for the statistical test. Each its element $a_{ij}$ is the value of attention that a collection $c_j \in C$ pays to a tag $t_i \in T$
 \[
 \mathcal{A} = \begin{pmatrix}
 a_{11} & a_{12} & \dots & a_{1k} \\
@@ -231,13 +231,13 @@ a_{11} & a_{12} & \dots & a_{1k} \\
 a_{n1} & a_{n2} & \dots & a_{nk}
 \end{pmatrix}.
 \]
-Its $i$-th row corresponds to tag $t_i$, and we denote it as $\mathcal{A}_{i:} = (a_{i1}, \dots, a_{ik})$. Its $j$-th  corresponds to cloud $c_j$, and we denote it as $\mathcal{A}_{:j} =(a_{1j}, \dots a_{nj})'$ (with $'$ being transposition).
+Its $i$-th row corresponds to tag $t_i$, and we denote it as $\mathcal{A}_{i:} = (a_{i1}, \dots, a_{ik})$. Its $j$-th  corresponds to collection $c_j$, and we denote it as $\mathcal{A}_{:j} =(a_{1j}, \dots a_{nj})'$ (with $'$ being transposition).
 
-%from intro We express how much a cloud $c_j$ cares about a tag $t_i$ in terms of the rank of $a_{ij}$ in column $\mathcal{A}_{:j}$. So, if a cloud $c_j$ cares about a tag $t_i$ more than other clouds, the rank of $a_{ij}$ in $\mathcal{A}_{:j}$ is higher than the rank of $a_{il}$ in $\mathcal{A}_{:l}$ for all $l \neq j$. 
+%from intro We express how much a collection $c_j$ cares about a tag $t_i$ in terms of the rank of $a_{ij}$ in column $\mathcal{A}_{:j}$. So, if a collection $c_j$ cares about a tag $t_i$ more than other collections, the rank of $a_{ij}$ in $\mathcal{A}_{:j}$ is higher than the rank of $a_{il}$ in $\mathcal{A}_{:l}$ for all $l \neq j$. 
 
-We do the following procedure to identify the cloud, which is the putative best friend (or, in other words, the most friendly cloud) for each tag.
+We do the following procedure to identify the collection, which is the putative best friend (or, in other words, the most friendly collection) for each tag.
 
-For each cloud $c_j \in C$, we decreasingly rank the elements inside $\mathcal{A}_{:j}$. Thus, for each $a_{ij} \in \mathcal{A}_{:j}$, we get the ordinal number $r_{ij}:=\text{rank}\left(a_{ij}|\text{inside}~\mathcal{A}_{:j}\right)$. We resolve ties by the mean rank of the tied elements. 
+For each collection $c_j \in C$, we decreasingly rank the elements inside $\mathcal{A}_{:j}$. Thus, for each $a_{ij} \in \mathcal{A}_{:j}$, we get the ordinal number $r_{ij}:=\text{rank}\left(a_{ij}|\text{inside}~\mathcal{A}_{:j}\right)$. We resolve ties by the mean rank of the tied elements. 
 
 Let's denote the rank matrix as 
 \begin{equation}
@@ -252,17 +252,17 @@ r_{ij} =\text{rank}\left(a_{ij}|\text{inside}~\mathcal{A}_{:j}\right).
 \end{equation}
 We denote its $i$-th row as $\mathcal{R}_{i:} = (r_{i1}, \dots, r_{ik})$.
 
-To quantitatively express friendliness, we order the attention ranks to the same tag $t_i$ from different clouds. We decreasingly rank the elements in $\mathcal{R}_{i:}$ and the minimal element
-corresponds to the cloud that is the putative best friend of $t_i$.
+To quantitatively express friendliness, we order the attention ranks to the same tag $t_i$ from different collections. We decreasingly rank the elements in $\mathcal{R}_{i:}$ and the minimal element
+corresponds to the collection that is the putative best friend of $t_i$.
 
-Let's denote the cloud-index (the second index) of the smallest entry in $\mathcal{R}_{i:}$ as $\sigma_i(1)$, the cloud-index of the second smallest entry as ${\sigma_i(2)}$, etc. The corresponding clouds are $c_{\sigma_{i}(1)}$, $c_{\sigma_{i}(2)}$, etc. 
+Let's denote the collection-index (the second index) of the smallest entry in $\mathcal{R}_{i:}$ as $\sigma_i(1)$, the collection-index of the second smallest entry as ${\sigma_i(2)}$, etc. The corresponding collections are $c_{\sigma_{i}(1)}$, $c_{\sigma_{i}(2)}$, etc. 
 
-So the putative best friend for the tag $t_i$ is the cloud $c_{\sigma_{i}(1)}$.
+So the putative best friend for the tag $t_i$ is the collection $c_{\sigma_{i}(1)}$.
 
 \subsection{The best friend test}
 \label{sec:best_friend_test}
 
-For a cloud to be a tag's best friend, it is \textit{necessary} to be the putative best friend, but it is \textit{not enough}. Indeed, in any ranking, there is the first element. We aim to statistically estimate whether the most friendly tag is the most friendly by chance. 
+For a collection to be a tag's best friend, it is \textit{necessary} to be the putative best friend, but it is \textit{not enough}. Indeed, in any ranking, there is the first element. We aim to statistically estimate whether the most friendly tag is the most friendly by chance. 
 
 We recall that under $H_0$ all $a_{ij}$ are independent and all $a_{ij} \in \mathcal{A}_{:j}$ are i.i.d. So, by the construction, under $H_0$ all $r_{i\sigma(j)}$ are independent and uniformly distributed.
 Thus, under $H_0$, each $\mathcal{R}_{i:}$ entries are independently uniformly distributed. 
@@ -295,18 +295,18 @@ p = P\left(U \ge u_1(t_i)~|~H_0\right).
 
 % We estimate $p$-value for the pair of $t_i$ and its putative best friend $c_{\sigma_{i}(1)}$ using $u_1(t_i)$,
 
-If $p$-value is small enough, we reject the null and claim that the friendliness of the cloud $c_{\sigma_{i}(1)}$ is unlikely to observe by random, and so we refer to it as the best friend of $t_i$. In this case, $t_i$ is a marker of its best friend cloud $c_{\sigma_{i}(1)}$.
+If $p$-value is small enough, we reject the null and claim that the friendliness of the collection $c_{\sigma_{i}(1)}$ is unlikely to observe by random, and so we refer to it as the best friend of $t_i$. In this case, $t_i$ is a marker of its best friend collection $c_{\sigma_{i}(1)}$.
 
 \subsection{The friends test}
 \label{sec:friends_test}
 
-In some cases, a tag has several clouds that are almost equally friendly to it. 
-For example, a gene (tag) has a high load in two patterns (two clouds), and all other genes are low in both clouds. The tag (let it be $t_i$) is a marker for two clouds $c_{\sigma_{i}(1)}$ and $c_{\sigma_{i}(2)}$. However, the best friend statistics for $t_i$ cannot find either of the two. 
+In some cases, a tag has several collections that are almost equally friendly to it. 
+For example, a gene (tag) has a high load in two patterns (two collections), and all other genes are low in both collections. The tag (let it be $t_i$) is a marker for two collections $c_{\sigma_{i}(1)}$ and $c_{\sigma_{i}(2)}$. However, the best friend statistics for $t_i$ cannot find either of the two. 
 Indeed, $c_{\sigma_{i}(1)}$ is better than $c_{\sigma_{i}(2)}$ just by chance and $H_0$ is correctly not rejected by the best friend test.
 
-Still, it is possible that there are two consecutive clouds $c_{\sigma_i(l)}$ and $c_{\sigma_i(l+1)}$, and the gap between these is statistically significant.
+Still, it is possible that there are two consecutive collections $c_{\sigma_i(l)}$ and $c_{\sigma_i(l+1)}$, and the gap between these is statistically significant.
 
-We denote the first $l$ clouds that are most friendly as $F_{i}(l) = \left\{ c_{\sigma_i(1)} \dots c_{\sigma_i(l)} \right\}$.
+We denote the first $l$ collections that are most friendly as $F_{i}(l) = \left\{ c_{\sigma_i(1)} \dots c_{\sigma_i(l)} \right\}$.
 We aim to check whether $F_{i}(l)$ is really a set of friends of the tag $t_i$. Numerically, it means that the gap 
 \begin{equation}
 \label{def:u_l}
@@ -327,11 +327,11 @@ this test---we will refer to it as \test{friends test}---with $l = 1$.
 
 
 % The \test{friends test} possibly rejects $H_0$
-% for the decomposition of $C$ into two group, $ F_{i}(l)$ and all the other clouds.
+% for the decomposition of $C$ into two group, $ F_{i}(l)$ and all the other collections.
 
 \textcolor{red}{Section \ref{sec:theory} proves that for any $i$ and $l$ $u_l(t_i)$ is a realization of $U$ mentioned in Section~\ref{sec:best_friend_test}.}
 By analogy with \test{best friend test}, we asses $p$-value for $u_{l}(t_i)$,
-%for the pair of $t_i$ and the population $l$ of the subset of clouds $ \left\{ c_{\sigma_i(1)} \dots c_{\sigma_i(l)} \right\},$ that are putative friends between using $u_{l}(t_i)$,
+%for the pair of $t_i$ and the population $l$ of the subset of collections $ \left\{ c_{\sigma_i(1)} \dots c_{\sigma_i(l)} \right\},$ that are putative friends between using $u_{l}(t_i)$,
 \[
 p = P\left(U \ge u_l(t_i)~|~H_0\right). 
 \]
@@ -347,9 +347,9 @@ In practice, the tests are run for each tag or even for each tag and the friend 
 
 \paragraph*{Multiplicity correction} All the tests rely on the ranking of the elements inside the same attention matrix $\mathcal{A}$. Thus, the assumption of test independence does not hold. In this case, the standard Bonferroni correction on the set of corresponding $p$-values is possibly too strong (\cite{cabin2000bonferroni}). However, some correction is still necessary. We leave it to the scope of the particular application.
 
-\paragraph*{Multimarkers} Note that after the multiple hypothesis correction, a cloud \textcolor{red}{may happen}
+\paragraph*{Multimarkers} Note that after the multiple hypothesis correction, a collection \textcolor{red}{may happen}
 %can appear 
-to be the best friend (or an element of the true friends set) for more than one tag. The set of tags is thus a multimarker for the cloud. In practice, a multimarker tags a cloud more specific than each of its elements.
+to be the best friend (or an element of the true friends set) for more than one tag. The set of tags is thus a multimarker for the collection. In practice, a multimarker tags a collection more specific than each of its elements.
 
 
 
@@ -581,11 +581,11 @@ V_{l}(w) & = \displaystyle \int\limits_0^{1-w}\int\limits_{{u_1}}^{1-w}...\int\l
 %\end{subappendices}
 \begin{comment}
 \subsection{ex-abstract}
-Suppose we have set of {\tag}s $\T$ and a set of {\cloud}s $\C$ of this {\tag}s with some fuzzy membership, e.g. there is a numeric measure of how an {\tag} is represented in a {\cloud} $A(\tl,\cl)$ for each pair $(\tl,\cl):\tl \in \T, \cl \in \C$. The higher the $A(\tl,\cl)$ value is, the more the {\tag} $\tl$ is involved in the {\cloud} $\cl$. The absence of the {\tag} in the {\cloud} is shown by the value that is minimal for the {\cloud}.
+Suppose we have set of {\tag}s $\T$ and a set of {\collection}s $\C$ of this {\tag}s with some fuzzy membership, e.g. there is a numeric measure of how an {\tag} is represented in a {\collection} $A(\tl,\cl)$ for each pair $(\tl,\cl):\tl \in \T, \cl \in \C$. The higher the $A(\tl,\cl)$ value is, the more the {\tag} $\tl$ is involved in the {\collection} $\cl$. The absence of the {\tag} in the {\collection} is shown by the value that is minimal for the {\collection}.
 
-An example that is easy to think about is: genes are {\tag}s and their groups under regulation by same transcription factors (TF’s) form {\cloud}s, and A shows the strength of the regulation. We look at a gene and we want to know whether a TF is its friend, i.e. whether the TF specifically prefers (regulates) the gene. The na\"ive idea is to look for a TF that the gene is the most sensitive for. Still, it’s possible that this TF is the strongest for the most of the genes. Sometimes, it is what we want to find, but now we want to answer other questions, namely, what TF is the most specific factor for the gene and is the specificity enough to say that is does not look like a random outcome?
+An example that is easy to think about is: genes are {\tag}s and their groups under regulation by same transcription factors (TF’s) form {\collection}s, and A shows the strength of the regulation. We look at a gene and we want to know whether a TF is its friend, i.e. whether the TF specifically prefers (regulates) the gene. The na\"ive idea is to look for a TF that the gene is the most sensitive for. Still, it’s possible that this TF is the strongest for the most of the genes. Sometimes, it is what we want to find, but now we want to answer other questions, namely, what TF is the most specific factor for the gene and is the specificity enough to say that is does not look like a random outcome?
 
-Sometimes, the {\cloud}s are in in one-to-one relation with the {\tag}s, e.g. each {\cloud} is a set of {\tag}s, which are neighbours of {\tag} in some graph. For this example, A is a weighted adjacency matrix of this graph. The friendship terminology emerges naturally from this case. The friendship relation itself is asymmetric: a friend cares about Augustus, while Augustus does not.
+Sometimes, the {\collection}s are in in one-to-one relation with the {\tag}s, e.g. each {\collection} is a set of {\tag}s, which are neighbours of {\tag} in some graph. For this example, A is a weighted adjacency matrix of this graph. The friendship terminology emerges naturally from this case. The friendship relation itself is asymmetric: a friend cares about Augustus, while Augustus does not.
 \end{comment}
 \end{document}
 
