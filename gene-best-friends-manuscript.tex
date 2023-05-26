@@ -157,37 +157,56 @@ In other words, all the $n \times k$ attention values from clouds to tags are in
     \item The {\cloud} is referred to as the {\tag}'s best friend and the test is named "the best friends test" or "the gene's best friends test".
     \item Marker
     \item Above, we consider only one possible best friend (cloud) per tag. The statistics naturally expand to the case when a {\tag} selects (separates) a subset of {\cloud}s, thus having more than one best friend.
+    \item double-ranking is applicable to the case of clouds of different nature (e.g. different data modalities such as ATACSeq and RNASeq)
 \end{itemize}}
 
 
 \section{Literature survey}
+
 Ranking methods appear in many applications, such as relevant feature selection \cite{venetis2011selection}, 
 marker selection \cite{vargo2020rank}, \cite{pullin2022comparison},
 information retrieval \cite{jimenez2021multivariate}, etc.
 
-For information retrieval the tags are usually queries and clouds are documents. 
-The tags are representative of clouds; they help search output to be relevant
-\cite{venetis2011selection}. 
-This framework is related to the clustering of clouds \cite{bernstein2020cluster}.
+For information retrieval the tags are usually (see, e.g. \cite{liu2009learning}) queries and clouds are documents. 
 
-There are three main strategies used for  \textcolor{red}{relevance judgement} between a tag and the clouds in natural language processing \cite{liu2009learning}: 
-\begin{enumerate}
-    \item To specify whether a cloud is relevant or not to the tag
-(binary judgment or with a certain degree (cf. \textit{attention})).
-Then for a fixed tag, compare directly the relevance of two clouds.
-\item To estimate the relative preference
-between clouds for a given tag, and then to compare.
-\item To establish the clouds' partial (or total) order for a tag.
-\end{enumerate}
+Another established term "cloud" is a representation of the text content of a collection of the document to be annotated and queried. This actually means a set of tags \cite{venetis2011selection}, it is also referred to as a "tag cloud". Here, tags are words found in or associated with the underlying content (e.g., annotations) and they are typically listed alphabetically or based on their importance. Technically, tags in such a cloud can be shown as hyperlinks. The user can click on a tag and thus query the related documents from the collection. Our terminology was inspired by this term, but we do not use it directly.
+
+The tags are references to the clouds; they help the documents in the search output to be relevant. 
+
+In the case of information retrieval, the clouds (texts, photos) represent similar objects and thus can be naturally compared with each other by a tag's relevance \cite{liu2009learning}. This might be not the case for clouds being biological processes.
 
 
-We formulated \cite{best_friends:2015} the similar task in a symmetric form on gene expression data as searching for genes that are best friends of genes. Best friend of a gene $G_i$ is another gene $G_j$ that is expressed concertedly with the gene $G_i$, while other genes $G_k, k\neq i, k \neq j$ are (almost) not. The best friend is unique, while one gene can be the best friend for more than one gene. The solution we proposed (rank backwards ranking) showed the putative pairs of marker and its best friend, but it did not provide either statistical measure or an effect size estimate. Later, the problem was also formulated in an asymmetric setup \cite{patternmarkers:2017} for genes and expression patterns, and the solution was to scale each gene's loads to $max((\mbox{all loads for this gene})==1$ and calculate the Euclidean distance between the scaled vector of loads and the ideal $(0,0,...,1,...0$). The less the distance is, the better the marker is. 
+
+
+Markers: \cite{stein-obrien_patternmarkers_2017}
+
+
+ \cite{stein-obrien_patternmarkers_2017} for genes and expression patterns, and the solution was to scale each gene's loads to $max((\mbox{all loads for this gene})==1$ and calculate the Euclidean distance between the scaled vector of loads and the ideal $(0,0,...,1,...0$). The less the distance is, the better the marker is. 
 
 \textcolor{blue}{+ Friedman test }
 %\url{https://en.wikipedia.org/wiki/Friedman_test}
 
 \textcolor{blue}{+ \cite{Gut:2009}}
 
+\subsection{sklad}
+
+
+There are three main strategies used for  \textcolor{red}{relevance judgement} between a tag and the clouds in natural language processing \cite{liu2009learning}: 
+\begin{enumerate}
+    \item To specify whether a cloud is relevant or not to the tag
+(binary judgment or with a certain degree (cf. \textit{attention})).
+Then for a fixed tag, compare the relevance of two clouds directly.
+\item To estimate the relative preference between clouds for a given tag, and then to compare.
+\item To establish the clouds' partial (or total) order for a tag.
+\end{enumerate}
+
+This framework is related to the clustering of clouds \cite{bernstein2020cluster}.
+
+
+%\section{Introduction: friends and markers}
+
+
+% Let's picture a set of genes and their loads in expression patterns. Each pattern describes the expression of the genes in some process. Sometimes, we can conclude that a pattern is expressed from the expression of a single gene. The simplest case that allows this inference is when the gene has a nonzero load in only one pattern. The situation when other loads are just relatively small also fits the inference. We will refer to the gene as a marker gene and to the pattern as the best friend of the gene. Given the load matrix, we want to identify the marker genes and their best friends.
 
 %We formulated \cite{best_friends:2015} the similar task in a symmetric form on gene expression data as searching for genes that are best friends of genes. Best friend of a gene $G_i$ is another gene $G_j$ that is expressed concertedly with the gene $G_i$, while other genes $G_k, k\neq i, k \neq j$ are (almost) not. The best friend is unique, while one gene can be the best friend for more than one gene. The solution we proposed (rank backwards ranking) showed the putative pairs of marker and its best friend, but it did not provide either statistical measure or an effect size estimate. Later, the problem was also formulated in an asymmetric setup \cite{patternmarkers:2017} for genes and expression patterns, and the solution was to scale each gene's loads to $max((\mbox{all loads for this gene})==1$ and calculate the Euclidean distance between the scaled vector of loads and the ideal $(0,0,...,1,...0$). The less the distance is, the better the marker is. 
 
@@ -198,12 +217,6 @@ We formulated \cite{best_friends:2015} the similar task in a symmetric form on g
 %For a similar test that splits all the clouds into $m$ friends of the tag and the remaining $|C|-k$ clouds uses the difference  $r(t_i,c_{(m+1)}(t_i))$ and $r(t_i,c_{(m)}(t_i))$. If we obtain the p-value that is small enough, we claim that the clouds $c_{(1)}(t_i)$..$c_{(m)}(t_i)$ are friends of $t_i$ and $t_i$ is their marker.
 
 
-
-
-%\section{Introduction: friends and markers}
-
-
-% Let's picture a set of genes and their loads in expression patterns. Each pattern describes the expression of the genes in some process. Sometimes, we can conclude that a pattern is expressed from the expression of a single gene. The simplest case that allows this inference is when the gene has a nonzero load in only one pattern. The situation when other loads are just relatively small also fits the inference. We will refer to the gene as a marker gene and to the pattern as the best friend of the gene. Given the load matrix, we want to identify the marker genes and their best friends.
 
 
 \section{Method}
