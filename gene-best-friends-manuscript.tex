@@ -79,50 +79,88 @@ Suppose we have a set of {\tag}s and a set of fuzzy set of {\tag}s, which we wil
 }
 \end{abstract}
 %
-\section{Introduction: Augustus and his friend}
+\section{Introduction: Augustus and his friends}
 
 There is a simple intuition of what it means to be a friend. A friend of Augustus cares about Augustus more than other people do. And, if we see Augustus, then we infer to see friends(s) of Augustus also. 
 
-\textcolor{airforceblue}{Let's first introduce the friendship concept by an example---a set of genes and their loads in a set of expression patterns. Each pattern represents a biological process by the expression levels of the involved genes, and we know all the loads of genes in patterns.}
+Let's introduce the friendship concept with several examples.
+The first example comes from information retrieval. The goal is to find the documents that are most relevant to the user's query among all available documents \cite{liu2009learning}. 
 
-Sometimes, the expression of a single gene indicates the activity of the entire pattern. In the simplest case, the gene has a nonzero load in only one pattern. In more realistic, the gene has several nonzero loads, but all of them but one are relatively small. Then the gene (AKA Augustus) is the marker gene for the pattern, and the marked pattern is the best friend of this gene. We want to identify the marker genes and corresponding patterns statistically.  
+In the second example, we consider a set of genes and their loads in a set of expression patterns ( \cite{fertig_cogaps_2010,Fertig_2016,stein-obrien_enter_2018}). Each pattern represents a biological process by the expression levels of the involved genes, and we know all the loads of genes in patterns. \textcolor{red}{examples????}
 
-\paragraph{Model} The bipartite graph naturally fits this model. To generalise the example, we will refer to genes as \textit{{\tag}s}, to expression patterns, as \textit{{\collection}s}, and to any load as \textit{attention}. Fig.\ref{fig:nice_name} illustrates the setting.
+Sometimes, the expression of a single gene indicates the activity of the entire pattern. In the simplest case, the gene has a nonzero load in only one pattern. In more realistic, the gene has several nonzero loads, but all of them but one are relatively small. Then the gene (AKA Augustus) is the marker gene \cite{patternmarkers:2017} for the pattern, and the marked pattern is the best friend of this gene. We want to identify the marker genes and corresponding patterns statistically.  
+
+
+The third example deals with gene-to-gene correlation matrix (e.g. correlation of expression). High correlation indicates high similarity between genes. For a given gene, the goal is to indicate its ``best-friend'' genes among genes. \textcolor{red}{examples????}
+
+
+
+
+
+
+
+
+% There are three main strategies for dealing with this problem
+% \begin{itemize}
+% \item To specify whether a document is relevant the query
+% (using binary judgment or judgment with a certain degree). Then for a fixed query, directly compare the relevance of two documents.
+% \item To estimate the relative relevance between documents for a given query.
+% \item To establish the documents' partial (or total) order for a query.
+% \end{itemize}
+
+
+
+%\textcolor{airforceblue}{RANKING -- The method is distribution free.  Ranking appears in many applications, such as relevant feature selection \cite{venetis2011selection}, marker selection \cite{vargo2020rank}, \cite{pullin2022comparison}, information retrieval \cite{jimenez2021multivariate}, etc. Ranking relaxes the same-nature and same-distribution assumptions.} 
+
+%\textcolor{green}{A na\"ive approach is to rank all the genes by the correlation with our gene. However, the ranking cannot tell between specifically correlated genes and network hub genes (i.e. with genes that carelessly correlate with all the other genes)}. 
+
+
+%We suggest using double-ranking approach. It is distribution-free and can distiguish between \textcolor{red}{friends and true friends}.
+
+
+The bipartite graph suits well to describe the problem setups. To generalise the examples, we will refer to genes/queries as \textit{{\tag}s}, to expression patterns/documents as \textit{{\collection}s}, and to any load/relevance value as \textit{attention}. Of note, the attention is the weight of an edge connecting a tag and a collection. Fig.\ref{fig:nice_name} illustrates the setting.
 
 \begin{figure}
     \centering
     %\includegraphics[scale=.25]{bipartite.jpg}
     \import{}{bipartite}
-    \caption{The bipartite graph picture shows only edges with nonzero values.}
+    \caption{Bipartite graph presenting tag-collection model. $A(t,c)$ is the attention that a collection pays to a tag. Arrows are nonzero $A(t,c)$.}
     \label{fig:nice_name}
 \end{figure}
 
-To be more specific, we are given a set of collections $C = \{c_1, \dots, c_k\}$, and a set of tags $T = \{t_1, \dots, t_n\}$.
+To be more specific, we consider a set of collections $C = \{c_1, \dots, c_k\}$, and a set of tags $T = \{t_1, \dots, t_n\}$.
 Each tag $t_i \in T$ and collection $c_j \in C$ are related by the attention---the real value $a_{ij}$---that the collection pays to the tag.
 Let's agree that the greater the value, the higher the attention is. Naturally, the absence of attention corresponds to $a_{ij} = 0$. 
 
 All the values $a_{ij}$ are stored in a matrix $\mathcal{A}$; its row $\mathcal{A}_{i:}$ corresponds to tag $t_i$, its column $\mathcal{A}_{:j}$ corresponds to collection $c_j$.
 
-This tag-collection-attention metaphor applies to many problems in bioinformatics and statistics (see Tab.\ref{tab:examples} for examples).
+This tag-collection-attention metaphor applies to many setups (see Tab.\ref{tab:examples} for examples).
 
 \begin{table}[h!]
 \centering
 \begin{tabular}{c|c|c|c}
 \textbf{Example} & \textbf{tag $t_i$} & \textbf{collection $c_j$} & \textbf{attention $a_{ij}$} \\ 
 \hline
+
+\begin{tabular}[c]{@{}c@{}}search engine\end{tabular} & query       & \begin{tabular}[c]{@{}c@{}} search result \end{tabular}         & \begin{tabular}[c]{@{}c@{}}relevant search output\\\end{tabular} \\ \hline
+
 \begin{tabular}[c]{@{}c@{}}gene regulation\\  by TFs\end{tabular}     & gene             & \begin{tabular}[c]{@{}c@{}}genes under \\ TF regulation\end{tabular}     & \begin{tabular}[c]{@{}c@{}}strength of \\ regulation\end{tabular}       \\ \hline
+
+\begin{tabular}[c]{@{}c@{}}transcription\\ decomposition\end{tabular} & transcript       & \begin{tabular}[c]{@{}c@{}}transcription \\ pattern\end{tabular}         & \begin{tabular}[c]{@{}c@{}}transcript's \\ load in pattern\end{tabular} \\ \hline
+
 \begin{tabular}[c]{@{}c@{}}transcription \\ correlations\end{tabular} & gene             & \begin{tabular}[c]{@{}c@{}}genes coexpressed \\ with a gene\end{tabular} & \begin{tabular}[c]{@{}c@{}}transcription \\ correlation\end{tabular}    \\ \hline
 fuzzy clustering                                                      & object           & cluster                                                                  & \begin{tabular}[c]{@{}c@{}}object weight \\ in cluster\end{tabular}     \\ \hline
-\begin{tabular}[c]{@{}c@{}}transcription\\ decomposition\end{tabular} & transcript       & \begin{tabular}[c]{@{}c@{}}transcription \\ pattern\end{tabular}         & \begin{tabular}[c]{@{}c@{}}transcript's \\ load in pattern\end{tabular} \\ \hline
+
 
 \begin{tabular}[c]{@{}c@{}}weighted graph\end{tabular} & vertex       & \begin{tabular}[c]{@{}c@{}} another vertex \end{tabular}         & \begin{tabular}[c]{@{}c@{}}weight of edge between\\ collection and tag \end{tabular} \\ \hline
 
-\begin{tabular}[c]{@{}c@{}}search engine\end{tabular} & query       & \begin{tabular}[c]{@{}c@{}} search result \end{tabular}         & \begin{tabular}[c]{@{}c@{}}relevant search output\\\end{tabular} \\ \hline
+
 \end{tabular}
 
 \caption{Tag-collection metaphor deployment examples.}
 \label{tab:examples}
 \end{table}
+
 
 
 % \paragraph{Goal} 
@@ -134,73 +172,96 @@ fuzzy clustering                                                      & object  
 
 % \textcolor{purple}{For each tag, we want to identify the collection(s) that particularly prefer(s) the tag, if any. Then such a collection is a friend (or the best friend if there is only one) for the tag. The simplest example: imagine that only one collection pays attention to the tag in hand. }
 
-Let's recall the intuition that starts the introduction. A friend of Augustus cares about Augustus more than other people do. 
+% \textcolor{airforceblue}{ 
+% Partial or total ranking of documents 
+% In the information retrieval a popular solution is to establish the documents' partial or total order for a query, and then to pick up the most relevant \cite{liu2009learning}.}
 
-We express how much a collection $c_j$ cares about a tag $t_i$ in terms of the rank of $a_{ij}$ in column $\mathcal{A}_{:j}$. So, if a collection $c_j$ cares about a tag $t_i$ more than other collections, the rank of $a_{ij}$ in $\mathcal{A}_{:j}$ is higher than the rank of $a_{il}$ in $\mathcal{A}_{:l}$ for all $l \neq j$. 
+% \textcolor{airforceblue}{Ranking approach is distribution-free. In other words, it relaxes modelling assumptions if there are any. However, in some cases it is not enough.}
 
-A question naturally arises: whether $c_j$ is a real best friend of $t_i$ or $c_j$ appeared at the top of the ranking just because there is always something at the top.
+Let's recall the intuition that starts the introduction. A friend of Augustus cares about Augustus more than other people do. In the following, we depict the concept of care using ranking. Indeed, the ranking approach widely appears in our scope of interest.
+Partial or total ranking of documents for a given query is a popular strategy in information retrieval \cite{liu2009learning}. In bioinformatics, many methods rely on ranking, e.g. feature selection \cite{venetis2011selection}, marker selection \cite{vargo2020rank}, \cite{pullin2022comparison}, \cite{jimenez2021multivariate}, etc.
 
-To answer this question we formulate $H_0$ as "all the collections do not tell tags from each other".
-In other words, all the $n \times k$ attention values from collections to tags are independent (all $a_{ij}$ are independent). Moreover, all the $n$ attention values that a collection pays to tags are identically distributed (all $a_{ij} \in \mathcal{A}_{:j}$ are i.i.d).
+The idea of ranking can be applied in a na\"ive way: the higher the attention of a collection to a tag is, the more friendly the collection is to the tag. But in some cases this is not enough.
 
-% \textcolor{blue}{We intend to statistically answer the question.}
+Let's recall the example of gene-to-gene correlation. The na\"ive approach is to fix a gene of interest and rank other genes according to their correlation. This ranking cannot tell between the genes, which specifically correlate with the gene of interest, and the network hub genes (i.e., genes that carelessly correlate with all the genes). 
 
+Therefore, we suggest using double-ranking approach. As any ranking approach, it is distribution-free. Moreover, it allows us to define the concept of friendship via the concept of care in accordance with the Augustus intuition, and thus to point to the most friendly collection for each tag. \textcolor{airforceblue}{Below, we will see how the concept allows us to statistically distinguish between the friends-by-accident and the real best friends.}
 
-% Under $H_0$ we assume that all the collections do not tell tags from each other.
-% In other words, all the $n \times k$ attention values from collections to tags are independent (all $a_{ij}$ are independent). Moreover, all the $n$ attention values that a collection pays to tags are identically distributed (all $a_{ij} \in \mathcal{A}_{:j}$ are i.i.d).
+%The rank-backwards-rank (RBR) approach we propose here is based on a simple proposition that for a gene that is a good friend of our gene (to be more formal, it is specifically correlated with our gene), the rank of our gene in the tested gene's correlations list is to be rather high. Otherwise, if the tested gene is a friend-of-everybody, our gene's rank in his list can be quite low, while the tester's gene rank in our list is still high. Thus, we gather the the 'where we are in his list' ranks and then we sort this ranks to create the best-friend
 
-\textcolor{red}{Explain $H_1$! : The event "c is a friend of t" is a property of the entire $\mathcal{A}$ rather than of specific indices}
+First, we fix a collection $c_j$ and rank the attention values $a_{1j}, \dots, a_{nj}$. This ranking indicates how much the collection $c_j$ cares about any tag $t_i$. Thus, any collection $c_{j}$ and any tag $t_i$ are connected by the rank $r_{ij}$.
 
-\textcolor{blue}{Here, we suggest a computational method...}
+Second, we fix a tag $t_i$ and rank all collections by the tag's ranks in a collection $r_{i1}, \dots, r_{ik}$.
+This step expresses the intuition of Augustus numerically: the collection $c_j$ with the highest rank $r_{ij}$ among $r_{i1}, \dots, r_{ik}$ can be the best friend of $t_i$. However, having the highest rank is necessary, but not sufficient to be the real best friend.
 
-\textcolor{violet}{\begin{itemize}
-    \item The {\collection} is referred to as the {\tag}'s best friend and the test is named "the best friends test" or "the gene's best friends test".
-    \item Marker
-    \item Above, we consider only one possible best friend (collection) per tag. The statistics naturally expand to the case when a {\tag} selects (separates) a subset of {\collection}s, thus having more than one best friend.
-    \item double-ranking is applicable to the case of collections of different nature (e.g. different data modalities such as ATACSeq and RNASeq)
-\end{itemize}}
+Of note, friendship in this notation is a property of the whole matrix $\mathcal{A}$. Thus, the null-hypothesis $H_0$ claiming no friendship at all, consists of assumptions on all the values in $\mathcal{A}$.
 
+Under $H_0$, we assume that the attention values from a cloud $c_j$ to all tags are independent and identically distributed.
+This distribution can vary from cloud to cloud. Moreover, all the $n \times k$ attention values $a_{ij}$ from collections to tags are independent.
 
-\section{Literature survey}
+To check $H_0$ we suggest a $p$-value based test comparing the ordered ranks for a given tag $t_i$. It indicates who is the best friend.
 
-Ranking methods appear in many applications, such as relevant feature selection \cite{venetis2011selection}, 
-marker selection \cite{vargo2020rank}, \cite{pullin2022comparison},
-information retrieval \cite{jimenez2021multivariate}, etc.
+It may happen, that the same 
 
-For information retrieval the tags are usually (see, e.g. \cite{liu2009learning}) queries and collections are documents. 
+\textcolor{airforceblue}{Above, we consider only one possible best friend (collection) per tag. The statistics naturally expand to the case when a {\tag} selects (separates) a subset of {\collection}s, thus having more than one best friend. Multi?marker}
+%For a similar test that splits all the collections into $m$ friends of the tag and the remaining $|C|-k$ collections uses the difference  $r(t_i,c_{(m+1)}(t_i))$ and $r(t_i,c_{(m)}(t_i))$. If we obtain the p-value that is small enough, we claim that the collections $c_{(1)}(t_i)$..$c_{(m)}(t_i)$ are friends of $t_i$ and $t_i$ is their marker.
 
-Another established term "cloud" is a representation of the text content of a collection of the document to be annotated and queried. This actually means a set of tags \cite{venetis2011selection}, it is also referred to as a "tag cloud". Here, tags are words found in or associated with the underlying content (e.g., annotations) and they are typically listed alphabetically or based on their importance. Technically, tags in such a cloud can be shown as hyperlinks. The user can click on a tag and thus query the related documents from the collection. Our terminology was inspired by this term, but we do not use it directly.
+\textcolor{purple}{Marker}
 
-The tags are references to the clouds; they help the documents in the search output to be relevant. 
+% \textcolor{yellow}{We have vector of ranks of the tag in different collections. We can say whether the best is the best friend (AKA real best friend). We also can say it about each split}
 
-In the case of information retrieval, the clouds (texts, photos) represent similar objects and thus can be naturally compared with each other by a tag's relevance \cite{liu2009learning}. This might be not the case for clouds being biological processes.
+\textcolor{airforceblue}{Of note, the test for the same $H_0$ is runs for different tags $t_i$ separately. It is possible to run it only for one tag of interest.}
 
-
-
-
-Markers: \cite{stein-obrien_patternmarkers_2017}
+\textcolor{airforceblue}{To check $H_0$ for a given tag $t_i$, we suggest a test comparing the ordered ranks. The \textcolor{red}{procedure} allows multiple testing for several tags simultaneously. In this case, one should use the multiplicity correction for non-independent tests.} 
 
 
- \cite{stein-obrien_patternmarkers_2017} for genes and expression patterns, and the solution was to scale each gene's loads to $max((\mbox{all loads for this gene})==1$ and calculate the Euclidean distance between the scaled vector of loads and the ideal $(0,0,...,1,...0$). The less the distance is, the better the marker is. 
-
-\textcolor{blue}{+ Friedman test }
-%\url{https://en.wikipedia.org/wiki/Friedman_test}
-
-\textcolor{blue}{+ \cite{Gut:2009}}
-
-\subsection{sklad}
+%\textcolor{violet}{\begin{itemize}
+    %\item The {\collection} is referred to as the {\tag}'s best friend and the test is named "the best friends test" or "the gene's best friends test".
+%    \item Marker
+%    \item Above, we consider only one possible best friend (collection) per tag. The statistics naturally expand to the case when a {\tag} selects (separates) a subset of {\collection}s, thus having more than one best friend.
+    %\item double-ranking is applicable to the case of collections of different nature (e.g. different data modalities such as ATACSeq and RNASeq)
+%\end{itemize}}
 
 
-There are three main strategies used for  \textcolor{red}{relevance judgement} between a tag and the clouds in natural language processing \cite{liu2009learning}: 
-\begin{enumerate}
-    \item To specify whether a cloud is relevant or not to the tag
-(binary judgment or with a certain degree (cf. \textit{attention})).
-Then for a fixed tag, compare the relevance of two clouds directly.
-\item To estimate the relative preference between clouds for a given tag, and then to compare.
-\item To establish the clouds' partial (or total) order for a tag.
-\end{enumerate}
+% \section{Literature survey}
 
-This framework is related to the clustering of clouds \cite{bernstein2020cluster}.
+% Ranking methods appear in many applications, such as relevant feature selection \cite{venetis2011selection}, 
+% marker selection \cite{vargo2020rank}, \cite{pullin2022comparison},
+% information retrieval \cite{jimenez2021multivariate}, etc.
+
+% For information retrieval the tags are usually (see, e.g. \cite{liu2009learning}) queries and collections are documents. 
+% Sometimes, the attention matrix for a set of documents is represented as a "tag cloud" \cite{venetis2011selection}. Tags in such a cloud can be shown as hyperlinks to the subset of the documents related to the tag.
+% In the case of information retrieval, the collections represent similar objects and thus can be naturally compared with each other by a tag's relevance \cite{liu2009learning}. 
+
+
+% This might be not the case for clouds being biological processes.
+
+
+
+
+% Markers: \cite{stein-obrien_patternmarkers_2017}
+
+
+%  \cite{stein-obrien_patternmarkers_2017} for genes and expression patterns, and the solution was to scale each gene's loads to $max((\mbox{all loads for this gene})==1$ and calculate the Euclidean distance between the scaled vector of loads and the ideal $(0,0,...,1,...0$). The less the distance is, the better the marker is. 
+
+% \textcolor{blue}{+ Friedman test }
+% %\url{https://en.wikipedia.org/wiki/Friedman_test}
+
+% \textcolor{blue}{+ \cite{Gut:2009}}
+
+% \subsection{sklad}
+
+
+% There are three main strategies used for  \textcolor{red}{relevance judgement} between a tag and the clouds in natural language processing \cite{liu2009learning}: 
+% \begin{enumerate}
+%     \item To specify whether a cloud is relevant or not to the tag
+% (binary judgment or with a certain degree (cf. \textit{attention})).
+% Then for a fixed tag, compare the relevance of two clouds directly.
+% \item To estimate the relative preference between clouds for a given tag, and then to compare.
+% \item To establish the clouds' partial (or total) order for a tag.
+% \end{enumerate}
+
+% This framework is related to the clustering of clouds \cite{bernstein2020cluster}.
 
 
 %\section{Introduction: friends and markers}
@@ -329,7 +390,7 @@ this test---we will refer to it as \test{friends test}---with $l = 1$.
 % The \test{friends test} possibly rejects $H_0$
 % for the decomposition of $C$ into two group, $ F_{i}(l)$ and all the other collections.
 
-\textcolor{red}{Section \ref{sec:theory} proves that for any $i$ and $l$ $u_l(t_i)$ is a realization of $U$ mentioned in Section~\ref{sec:best_friend_test}.}
+\textcolor{red}{Section \ref{sec:theory} proves that for any $i$ and $l$, $u_l(t_i)$ is a realization of $U$ mentioned in Section~\ref{sec:best_friend_test}.}
 By analogy with \test{best friend test}, we asses $p$-value for $u_{l}(t_i)$,
 %for the pair of $t_i$ and the population $l$ of the subset of collections $ \left\{ c_{\sigma_i(1)} \dots c_{\sigma_i(l)} \right\},$ that are putative friends between using $u_{l}(t_i)$,
 \[
@@ -465,18 +526,22 @@ Since all $U_l$ have the same distribution, we use $U$-notation for $p$-value ca
 
 
 \section{Discussion}
+\textcolor{blue}{Here, we suggest a computational method...}
 
+
+\textcolor{airforceblue}{For instance, the attention matrix for a set of documents is represented as a "tag cloud" \cite{venetis2011selection}}. 
 
 \begin{itemize}
     \item Main idea of the paper 1 : best friend - something specifically prefer a tag despite of hubs
     \item Main ide 2 -- statistical test on it
     \item we single out the \test{best friend test} (we have the paragraph below)
-    \item symmetric case: the independece assumption for $u_i$ some not hold; our analitical form for $U | H_0$ works only approximately
+    \item symmetric case: the independence assumption for $u_i$ some not hold; our analytical form for $U | H_0$ works only approximately
     \item square $\mathcal{A}$ : sometimes, we are replace the diagonal with series by the construction, there is a special case for the software (we have the paragraph below)
     \item all the stuff can be dimension reduction
     \item clustering
     \item potential research direction: degree of relevance?
     \item related tags help to form 
+    \item naive approach and why we need this stuff
 \end{itemize}
 
 We formulated a statistical test that to detest reliable pairs of marker feature and the marked entity. Nevertheless the formulation of the problem looks abstract, its solution provides numerous straightforward application. 
