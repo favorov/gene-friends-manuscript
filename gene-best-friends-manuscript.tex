@@ -86,36 +86,12 @@ There is a simple intuition of what it means to be a friend. A friend of Augustu
 Let's introduce the friendship concept with several examples.
 The first example comes from information retrieval. The goal is to find the documents that are most relevant to the user's query among all available documents \cite{liu2009learning}. 
 
-In the second example, we consider a set of genes and their loads in a set of expression patterns ( \cite{fertig_cogaps_2010,Fertig_2016,stein-obrien_enter_2018}). Each pattern represents a biological process by the expression levels of the involved genes, and we know all the loads of genes in patterns. \textcolor{red}{examples????}
+In the second example, we consider a set of genes and their loads in a set of expression patterns (\cite{fertig_cogaps_2010,Fertig_2016,stein-obrien_enter_2018}). Each pattern represents a biological process by the expression levels of the involved genes, and we know all the loads of genes in patterns.
 
-Sometimes, the expression of a single gene indicates the activity of the entire pattern. In the simplest case, the gene has a nonzero load in only one pattern. In more realistic, the gene has several nonzero loads, but all of them but one are relatively small. Then the gene (AKA Augustus) is the marker gene \cite{patternmarkers:2017} for the pattern, and the marked pattern is the best friend of this gene. We want to identify the marker genes and corresponding patterns statistically.  
+Sometimes, the expression of a single gene indicates the activity of the entire pattern. In the simplest case, the gene has a nonzero load in only one pattern. In more realistic, the gene has several nonzero loads, but all of them but one are relatively small. Then the gene (AKA Augustus) is the marker gene \cite{stein-obrien_patternmarkers_2017} for the pattern, and the marked pattern is the best friend of this gene. We want to identify the marker genes and corresponding patterns statistically.  
 
 
 The third example deals with gene-to-gene correlation matrix (e.g. correlation of expression). High correlation indicates high similarity between genes. For a given gene, the goal is to indicate its ``best-friend'' genes among genes. \textcolor{red}{examples????}
-
-
-
-
-
-
-
-
-% There are three main strategies for dealing with this problem
-% \begin{itemize}
-% \item To specify whether a document is relevant the query
-% (using binary judgment or judgment with a certain degree). Then for a fixed query, directly compare the relevance of two documents.
-% \item To estimate the relative relevance between documents for a given query.
-% \item To establish the documents' partial (or total) order for a query.
-% \end{itemize}
-
-
-
-%\textcolor{airforceblue}{RANKING -- The method is distribution free.  Ranking appears in many applications, such as relevant feature selection \cite{venetis2011selection}, marker selection \cite{vargo2020rank}, \cite{pullin2022comparison}, information retrieval \cite{jimenez2021multivariate}, etc. Ranking relaxes the same-nature and same-distribution assumptions.} 
-
-%\textcolor{green}{A na\"ive approach is to rank all the genes by the correlation with our gene. However, the ranking cannot tell between specifically correlated genes and network hub genes (i.e. with genes that carelessly correlate with all the other genes)}. 
-
-
-%We suggest using double-ranking approach. It is distribution-free and can distiguish between \textcolor{red}{friends and true friends}.
 
 
 The bipartite graph suits well to describe the problem setups. To generalise the examples, we will refer to genes/queries as \textit{{\tag}s}, to expression patterns/documents as \textit{{\collection}s}, and to any load/relevance value as \textit{attention}. Of note, the attention is the weight of an edge connecting a tag and a collection. Fig.\ref{fig:nice_name} illustrates the setting.
@@ -161,23 +137,6 @@ fuzzy clustering                                                      & object  
 \label{tab:examples}
 \end{table}
 
-
-
-% \paragraph{Goal} 
-
-%There is a simple intuition of what it means to be a friend. A friend of Augustus cares about Augustus more than about other people. And, if we see Augustus, then we infer to see friends(s) of Augustus also. Let’s translate it into statistical language.
-% We remember that a friend of Augustus cares about Augustus more than about other people.
-
-
-
-% \textcolor{purple}{For each tag, we want to identify the collection(s) that particularly prefer(s) the tag, if any. Then such a collection is a friend (or the best friend if there is only one) for the tag. The simplest example: imagine that only one collection pays attention to the tag in hand. }
-
-% \textcolor{airforceblue}{ 
-% Partial or total ranking of documents 
-% In the information retrieval a popular solution is to establish the documents' partial or total order for a query, and then to pick up the most relevant \cite{liu2009learning}.}
-
-% \textcolor{airforceblue}{Ranking approach is distribution-free. In other words, it relaxes modelling assumptions if there are any. However, in some cases it is not enough.}
-
 Let's recall the intuition that starts the introduction. A friend of Augustus cares about Augustus more than other people do. In the following, we depict the concept of care using ranking. Indeed, the ranking approach widely appears in our scope of interest.
 Partial or total ranking of documents for a given query is a popular strategy in information retrieval \cite{liu2009learning}. In bioinformatics, many methods rely on ranking, e.g. feature selection \cite{venetis2011selection}, marker selection \cite{vargo2020rank}, \cite{pullin2022comparison}, \cite{jimenez2021multivariate}, etc.
 
@@ -185,9 +144,7 @@ The idea of ranking can be applied in a na\"ive way: the higher the attention of
 
 Let's recall the example of gene-to-gene correlation. The na\"ive approach is to fix a gene of interest and rank other genes according to their correlation. This ranking cannot tell between the genes, which specifically correlate with the gene of interest, and the network hub genes (i.e., genes that carelessly correlate with all the genes). 
 
-Therefore, we suggest using double-ranking approach. As any ranking approach, it is distribution-free. Moreover, it allows us to define the concept of friendship via the concept of care in accordance with the Augustus intuition, and thus to point to the most friendly collection for each tag. \textcolor{airforceblue}{Below, we will see how the concept allows us to statistically distinguish between the friends-by-accident and the real best friends.}
-
-%The rank-backwards-rank (RBR) approach we propose here is based on a simple proposition that for a gene that is a good friend of our gene (to be more formal, it is specifically correlated with our gene), the rank of our gene in the tested gene's correlations list is to be rather high. Otherwise, if the tested gene is a friend-of-everybody, our gene's rank in his list can be quite low, while the tester's gene rank in our list is still high. Thus, we gather the the 'where we are in his list' ranks and then we sort this ranks to create the best-friend
+Therefore, we suggest using double-ranking approach. As any ranking approach, it is distribution-free. Moreover, it allows us to define the concept of friendship via the concept of care in accordance with the Augustus intuition, and thus to point to the most friendly collection for each tag. \textcolor{airforceblue}{Below, we will see how the concept helps us to statistically distinguish between the friends-by-accident and real best friends.}
 
 First, we fix a collection $c_j$ and rank the attention values $a_{1j}, \dots, a_{nj}$. This ranking indicates how much the collection $c_j$ cares about any tag $t_i$. Thus, any collection $c_{j}$ and any tag $t_i$ are connected by the rank $r_{ij}$.
 
@@ -199,86 +156,16 @@ Of note, friendship in this notation is a property of the whole matrix $\mathcal
 Under $H_0$, we assume that the attention values from a cloud $c_j$ to all tags are independent and identically distributed.
 This distribution can vary from cloud to cloud. Moreover, all the $n \times k$ attention values $a_{ij}$ from collections to tags are independent.
 
-To check $H_0$ we suggest a $p$-value based test comparing the ordered ranks for a given tag $t_i$. It indicates who is the best friend.
+We suggest a test checking whether $c_j$ is really the best friend of $t_i$ or $c_j$ appears at the top of the ranking by chance (according to $H_0$). The test is $p$-value based and compares the ordered ranks for $t_i$ in different collections. We name it the \test{best friend test}.
 
-It may happen, that the same 
+Looking for a possible best friend and statistically assessing the friendship, we start with a data set represented by a bipartite graph of vertices representing tags and collections and edges representing attention from collection to tag.
+To start with, we choose a tag and then we look for a collection. As we see, the procedure is asymmetric by design. If it succeeds, we refer to the collection $c_j$ as the best friend of the tag $t_i$; $t_i$ selects $c_j$ and we refer to $t_i$ as a marker for $c_j$. The term is consistent with the pattern marker term \cite{stein-obrien_patternmarkers_2017}.
 
-\textcolor{airforceblue}{Above, we consider only one possible best friend (collection) per tag. The statistics naturally expand to the case when a {\tag} selects (separates) a subset of {\collection}s, thus having more than one best friend. Multi?marker}
-%For a similar test that splits all the collections into $m$ friends of the tag and the remaining $|C|-k$ collections uses the difference  $r(t_i,c_{(m+1)}(t_i))$ and $r(t_i,c_{(m)}(t_i))$. If we obtain the p-value that is small enough, we claim that the collections $c_{(1)}(t_i)$..$c_{(m)}(t_i)$ are friends of $t_i$ and $t_i$ is their marker.
+Before, we consider only one possible best friend $c_j$ per tag $t_i$. The procedure naturally expands to the case when the tag selects/marks a subset of {\collection}s, thus having more than one friend. In other words, the \test{best friend test} expands to the \test{friends test}.
 
-\textcolor{purple}{Marker}
+Here, the tag split the set of all collections into two subsets, e.g. the friends of the tag and all the others. The split occurs by a chosen threshold for ordered ranks. The \test{friends test} estimates the statistical significance of this split.
 
-% \textcolor{yellow}{We have vector of ranks of the tag in different collections. We can say whether the best is the best friend (AKA real best friend). We also can say it about each split}
-
-\textcolor{airforceblue}{Of note, the test for the same $H_0$ is runs for different tags $t_i$ separately. It is possible to run it only for one tag of interest.}
-
-\textcolor{airforceblue}{To check $H_0$ for a given tag $t_i$, we suggest a test comparing the ordered ranks. The \textcolor{red}{procedure} allows multiple testing for several tags simultaneously. In this case, one should use the multiplicity correction for non-independent tests.} 
-
-
-%\textcolor{violet}{\begin{itemize}
-    %\item The {\collection} is referred to as the {\tag}'s best friend and the test is named "the best friends test" or "the gene's best friends test".
-%    \item Marker
-%    \item Above, we consider only one possible best friend (collection) per tag. The statistics naturally expand to the case when a {\tag} selects (separates) a subset of {\collection}s, thus having more than one best friend.
-    %\item double-ranking is applicable to the case of collections of different nature (e.g. different data modalities such as ATACSeq and RNASeq)
-%\end{itemize}}
-
-
-% \section{Literature survey}
-
-% Ranking methods appear in many applications, such as relevant feature selection \cite{venetis2011selection}, 
-% marker selection \cite{vargo2020rank}, \cite{pullin2022comparison},
-% information retrieval \cite{jimenez2021multivariate}, etc.
-
-% For information retrieval the tags are usually (see, e.g. \cite{liu2009learning}) queries and collections are documents. 
-% Sometimes, the attention matrix for a set of documents is represented as a "tag cloud" \cite{venetis2011selection}. Tags in such a cloud can be shown as hyperlinks to the subset of the documents related to the tag.
-% In the case of information retrieval, the collections represent similar objects and thus can be naturally compared with each other by a tag's relevance \cite{liu2009learning}. 
-
-
-% This might be not the case for clouds being biological processes.
-
-
-
-
-% Markers: \cite{stein-obrien_patternmarkers_2017}
-
-
-%  \cite{stein-obrien_patternmarkers_2017} for genes and expression patterns, and the solution was to scale each gene's loads to $max((\mbox{all loads for this gene})==1$ and calculate the Euclidean distance between the scaled vector of loads and the ideal $(0,0,...,1,...0$). The less the distance is, the better the marker is. 
-
-% \textcolor{blue}{+ Friedman test }
-% %\url{https://en.wikipedia.org/wiki/Friedman_test}
-
-% \textcolor{blue}{+ \cite{Gut:2009}}
-
-% \subsection{sklad}
-
-
-% There are three main strategies used for  \textcolor{red}{relevance judgement} between a tag and the clouds in natural language processing \cite{liu2009learning}: 
-% \begin{enumerate}
-%     \item To specify whether a cloud is relevant or not to the tag
-% (binary judgment or with a certain degree (cf. \textit{attention})).
-% Then for a fixed tag, compare the relevance of two clouds directly.
-% \item To estimate the relative preference between clouds for a given tag, and then to compare.
-% \item To establish the clouds' partial (or total) order for a tag.
-% \end{enumerate}
-
-% This framework is related to the clustering of clouds \cite{bernstein2020cluster}.
-
-
-%\section{Introduction: friends and markers}
-
-
-% Let's picture a set of genes and their loads in expression patterns. Each pattern describes the expression of the genes in some process. Sometimes, we can conclude that a pattern is expressed from the expression of a single gene. The simplest case that allows this inference is when the gene has a nonzero load in only one pattern. The situation when other loads are just relatively small also fits the inference. We will refer to the gene as a marker gene and to the pattern as the best friend of the gene. Given the load matrix, we want to identify the marker genes and their best friends.
-
-%We formulated \cite{best_friends:2015} the similar task in a symmetric form on gene expression data as searching for genes that are best friends of genes. Best friend of a gene $G_i$ is another gene $G_j$ that is expressed concertedly with the gene $G_i$, while other genes $G_k, k\neq i, k \neq j$ are (almost) not. The best friend is unique, while one gene can be the best friend for more than one gene. The solution we proposed (rank backwards ranking) showed the putative pairs of marker and its best friend, but it did not provide either statistical measure or an effect size estimate. Later, the problem was also formulated in an asymmetric setup \cite{patternmarkers:2017} for genes and expression patterns, and the solution was to scale each gene's loads to $max((\mbox{all loads for this gene})==1$ and calculate the Euclidean distance between the scaled vector of loads and the ideal $(0,0,...,1,...0$). The less the distance is, the better the marker is. 
-
-% Now, the question. For each tag, we want to identify the collection(s) that specifically prefer(s) the tag. We say that such a collection is a friend (or the best friend if it is the only one) for the tag. The simplest example: imagine that only one collection pays attention to our tag. 
-
-
-% 
-%For a similar test that splits all the collections into $m$ friends of the tag and the remaining $|C|-k$ collections uses the difference  $r(t_i,c_{(m+1)}(t_i))$ and $r(t_i,c_{(m)}(t_i))$. If we obtain the p-value that is small enough, we claim that the collections $c_{(1)}(t_i)$..$c_{(m)}(t_i)$ are friends of $t_i$ and $t_i$ is their marker.
-
-
-
+Of note, both tests run for only one tag of interest. However, we can run the tests for all the tags simultaneously. In this case, one should consider the multiplicity correction. 
 
 \section{Method}
 \label{sec:method}
@@ -377,21 +264,11 @@ is too large to be observed by chance if the null hypothesis $H_0$ holds. We not
 Moreover, \test{best friend test} is a particular case of
 this test---we will refer to it as \test{friends test}---with $l = 1$.
 
-% In these cases, we extend the best friends test (see Section \ref{sec:best_friend_test}) to the friends test. 
-
- 
-
-% To possibly reject $H_0$ in these cases, we extend the best friends test (see Section \ref{sec:best_friend_test}) to the friends test. 
-
-
-
-
-
 % The \test{friends test} possibly rejects $H_0$
 % for the decomposition of $C$ into two group, $ F_{i}(l)$ and all the other collections.
 
 \textcolor{red}{Section \ref{sec:theory} proves that for any $i$ and $l$, $u_l(t_i)$ is a realization of $U$ mentioned in Section~\ref{sec:best_friend_test}.}
-By analogy with \test{best friend test}, we asses $p$-value for $u_{l}(t_i)$,
+By analogy with the \test{best friend test}, we asses $p$-value for $u_{l}(t_i)$,
 %for the pair of $t_i$ and the population $l$ of the subset of collections $ \left\{ c_{\sigma_i(1)} \dots c_{\sigma_i(l)} \right\},$ that are putative friends between using $u_{l}(t_i)$,
 \[
 p = P\left(U \ge u_l(t_i)~|~H_0\right). 
@@ -399,42 +276,9 @@ p = P\left(U \ge u_l(t_i)~|~H_0\right).
 Again, we reject the null if the $p$-value is small enough. So, $F_{i}(l)$ are friends of $t_i$, and $t_i$ is their marker.
 
 
-\subsection{Multiple tests, multi-markers}
-\label{sec:multimurkers}
-
-All the tests we formulated here are not corrected for the multiplicity of hypotheses. Namely, they work directly if we \textit{a-priori} know what tag $t_i$ and what size $l$ of friends set we run the test for. 
-
-In practice, the tests are run for each tag or even for each tag and the friend set population. Two important observations follow.
-
-\paragraph*{Multiplicity correction} All the tests rely on the ranking of the elements inside the same attention matrix $\mathcal{A}$. Thus, the assumption of test independence does not hold. In this case, the standard Bonferroni correction on the set of corresponding $p$-values is possibly too strong (\cite{cabin2000bonferroni}). However, some correction is still necessary. We leave it to the scope of the particular application.
-
-\paragraph*{Multimarkers} Note that after the multiple hypothesis correction, a collection \textcolor{red}{may happen}
-%can appear 
-to be the best friend (or an element of the true friends set) for more than one tag. The set of tags is thus a multimarker for the collection. In practice, a multimarker tags a collection more specific than each of its elements.
-
-
-
-\subsection{The code availability}
-
-
-
-
-
-
-
-
-%(they come from the same distribution).
-
-%\subsection{Asymmetric $\mathcal{A}$}
-
-%In case of asymmetric $\mathcal{A}$ the ...
-
-%\subsection{Symmetric $\mathcal{A}$}
-
-
-\section{Calculation of $p$-value}
+\subsection{Calculation of $p$-value}
 \label{sec:theory}
-The only data structure we use in the test is matrix $\mathcal{R}$ defined in \eqref{def:R}.  
+The only data structure we use in the test is the matrix $\mathcal{R}$ defined in \eqref{def:R}.  
 Its elements $r_{ij}$ are ranks of attention to $t_i$ paid by $c_j$.
 We correct $r_{ij}$ for continuity and redefine them as normalized ranks,
 \begin{equation}
@@ -525,39 +369,84 @@ p(w) = (1-w)^k.
 Since all $U_l$ have the same distribution, we use $U$-notation for $p$-value calculations for the \test{best friend test} and the \test{friends test}.
 
 
+
+
+
+\subsection{Symmetric attention matrix $\mathcal{A}$}
+The $p$-value calculation relies on the assumption of the independence of attention values in different collections. If the attention matrix $\mathcal{A}$ is symmetric by the nature of the underlying bipartite graph, this assumption does not hold. Thus, the theoretical inference \textcolor{red}{does not work}.
+
+\textcolor{purple}{Still, the numerical procedure works. We show this in more detail in Supplement~\ref{seq:symmetric_a}.}
+
+\subsection{Multiple testing}
+\label{sec:multimurkers}
+
+All the tests we formulated here are not corrected for the multiplicity of hypotheses. Namely, they work directly if we \textit{a-priori} know what tag $t_i$ and what size $l$ of friends set we run the test for. 
+
+In practice, the tests are run for each tag or even for each tag and the friend set population. Two important observations follow.
+
+\paragraph*{Multiplicity correction} All the tests rely on the ranking of the elements inside the same attention matrix $\mathcal{A}$. Thus, the assumption of test independence does not hold. In this case, the standard Bonferroni correction on the set of corresponding $p$-values is possibly too strong (\cite{cabin2000bonferroni}). However, some correction is still necessary. We leave it to the scope of the particular application.
+
+\paragraph*{Multimarkers} Note that after the multiple hypothesis correction, a collection \textcolor{red}{may happen}
+%can appear 
+to be the best friend (or an element of the true friends set) for more than one tag. The set of tags is thus a multimarker for the collection. In practice, a multimarker tags (selects) a collection more specific than each of its elements.
+
+
+
+
+
+
+\subsection{The code availability}
+
+
+
+
+
 \section{Discussion}
-\textcolor{blue}{Here, we suggest a computational method...}
 
+A great phrase!!!
 
-\textcolor{airforceblue}{For instance, the attention matrix for a set of documents is represented as a "tag cloud" \cite{venetis2011selection}}. 
+We introduced a statistical procedure test that
+validates the hypothesis of 
+
+We formulated a statistical test that to detest reliable pairs of marker features and the marked entity. Nevertheless, the formulation of the problem looks abstract, its solution provides numerous straightforward applications. 
+
+to detest reliable pairs of marker features and the marked entity. Nevertheless, the formulation of the problem looks abstract, its solution provides numerous straightforward applications. 
+
+The motivating example we started with was to detect the marker genes for expression patterns. The patterns could be obtained from the CoGAPS (scCoGAPS) \cite{Fertig_2016} or other matrix factorization method \cite{Stein_2018}. The identification of the marker genes can critically simplify biological interpretation. If the matrix is the amplitude component from  the decomposition, the marker time points (or, the marker cells for scCoGAPS) can also be very informative for analysis. If the matrix contains the expression correlation for two gene sets, annotated best friends of a non-annotated gene extend the existing annotation.
 
 \begin{itemize}
-    \item Main idea of the paper 1 : best friend - something specifically prefer a tag despite of hubs
+    \item Main idea of the paper 1: best friend - something specifically prefer a tag despite of hubs
     \item Main ide 2 -- statistical test on it
     \item we single out the \test{best friend test} (we have the paragraph below)
     \item symmetric case: the independence assumption for $u_i$ some not hold; our analytical form for $U | H_0$ works only approximately
     \item square $\mathcal{A}$ : sometimes, we are replace the diagonal with series by the construction, there is a special case for the software (we have the paragraph below)
     \item all the stuff can be dimension reduction
-    \item clustering
+    \item clustering / This framework is related to the clustering of clouds \cite{bernstein2020cluster}.
     \item potential research direction: degree of relevance?
     \item related tags help to form 
     \item naive approach and why we need this stuff
+    \item Dimension reduction
 \end{itemize}
 
-We formulated a statistical test that to detest reliable pairs of marker feature and the marked entity. Nevertheless the formulation of the problem looks abstract, its solution provides numerous straightforward application. 
-
-We introduced a statistical procedure test that
-validates the hypothesis of 
-
-
-
-to detest reliable pairs of marker feature and the marked entity. Nevertheless the formulation of the problem looks abstract, its solution provides numerous straightforward application. 
 
 
 
 
 
-The motivating example we started with was to detect the marker genes for expression patterns. The patterns could be obtained from the CoGAPS (scCoGAPS) \cite{Fertig_2016} or other matrix factorization method \cite{Stein_2018}. The identification of the marker genes can critically simplify biological interpretation. If the matrix is the amplitude component from  the decomposition, the marker time points (or, the marker cells for scCoGAPS) can also be very informative for analysis. If the matrix contains the expression correlation for two gene sets, annotated best friends of an non-annotated gene extend the existing annotation.
+\begin{itemize}
+\item\textcolor{blue}{Here, we suggest a computational method...}
+\item\textcolor{blue}{Mutliple hyp, independes}
+\item\textcolor{blue}{best is a particular case of friends: computational cost, multiplicity, sometimes it's enough}
+\item\textcolor{blue}{One $H_0$, a lot of tests}
+\end{itemize}
+
+% \textcolor{blue}{+ Friedman test }
+% %\url{https://en.wikipedia.org/wiki/Friedman_test}
+
+%The rank-backwards-rank (RBR) approach we propose here is based on a simple proposition that for a gene that is a good friend of our gene (to be more formal, it is specifically correlated with our gene), the rank of our gene in the tested gene's correlations list is to be rather high. Otherwise, if the tested gene is a friend-of-everybody, our gene's rank in his list can be quite low, while the tester's gene rank in our list is still high. Thus, we gather the the 'where we are in his list' ranks and then we sort this ranks to create the best-friend
+
+
+
 
 \textcolor{darkgreen}{Actually, we single out the \test{best friend test} despite it being a particular case of \test{friends test} because in some applications the \test{best friend test} is enough and it requires less multiple hypotheses correction. Moreover, to assess the p-value for a feature $i$ by \test{best friend test}, we do not need to rank the whole $\mathcal{R}_{:j}$; it is enough to find the maximal and the second values, that is more effective computationally.}
 
@@ -587,7 +476,8 @@ AF acknowledges support by National Institutes of Health (NIH) P30CA006973 and 1
 \newpage
 \section*{Supplement}
 \beginsupplement
-\subsection*{Estimation of volumes and p-value}
+\subsection{Estimation of volumes and p-value}
+\label{seq:inference}
 %\renewcommand{\thesection}{\Alph{section}}%
 % or try \arabic{section}
 First, we recall that for any $m > 0$,
@@ -627,6 +517,8 @@ V_{l}(w) & = \displaystyle \int\limits_0^{1-w}\int\limits_{{u_1}}^{1-w}...\int\l
 & =  \displaystyle \frac{1}{(k-1)!} \int\limits_0^{1-w}\left( 1-w-u_1 \right)^{k-1} du_1 = \frac{(1-w)^k}{k!} \label{eq:p_k}
 \end{align}
 
+\subsection{Symmetric $\mathcal{A}$}
+\label{seq:symmetric_a} 
 
 % \begin{eqnarray}
 % & p(w) =  \displaystyle \frac{1}{Q}\displaystyle \int_0^{1-w}\int_{{u_1}+w}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{k-1}}^1 du_k...du_2 du_1 =  \nonumber \\ 
@@ -652,6 +544,10 @@ An example that is easy to think about is: genes are {\tag}s and their groups un
 
 Sometimes, the {\collection}s are in in one-to-one relation with the {\tag}s, e.g. each {\collection} is a set of {\tag}s, which are neighbours of {\tag} in some graph. For this example, A is a weighted adjacency matrix of this graph. The friendship terminology emerges naturally from this case. The friendship relation itself is asymmetric: a friend cares about Augustus, while Augustus does not.
 \end{comment}
+
+
+
+
 \end{document}
 
 
