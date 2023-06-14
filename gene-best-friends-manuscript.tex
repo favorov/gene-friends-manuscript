@@ -23,7 +23,7 @@
 %
 
 
-\title{Telling the story of best friends: marker rank statistics}
+\title{Telling the story of best friends}
 %
 \titlerunning{Best friends}  
 % abbreviated title (for running head)
@@ -81,7 +81,7 @@ Suppose we have a set of {\tag}s and a set of fuzzy set of {\tag}s, which we wil
 %
 \section{Introduction: Augustus and his friends}
 
-There is a simple intuition of what it means to be a friend. A friend of Augustus cares about Augustus more than other people do. And, if we see Augustus, then we infer to see friends(s) of Augustus also. 
+There is a simple intuition of what does it mean to be a friend. A friend of Augustus cares about Augustus more than other people do. And, if we see Augustus, then we infer to see friends(s) of Augustus also. 
 
 Let's introduce the friendship concept with several examples.
 The first example comes from information retrieval. The goal is to find the documents that are most relevant to the user's query among all available documents \cite{liu2009learning}. 
@@ -140,7 +140,7 @@ fuzzy clustering                                                      & object  
 Let's recall the intuition that starts the introduction. A friend of Augustus cares about Augustus more than other people do. In the following, we depict the concept of care using ranking. Indeed, the ranking approach widely appears in our scope of interest.
 Partial or total ranking of documents for a given query is a popular strategy in information retrieval \cite{liu2009learning}. In bioinformatics, many methods rely on ranking, e.g. feature selection \cite{venetis2011selection}, marker selection \cite{vargo2020rank}, \cite{pullin2022comparison}, \cite{jimenez2021multivariate}, etc.
 
-The idea of ranking can be applied in a na\"ive way: the higher the attention of a collection to a tag is, the more friendly the collection is to the tag. But in some cases this is not enough.
+The idea of ranking can be applied in a na\"ive way: the higher the attention of a collection to a tag is, the more friendly the collection is to the tag. But in some cases, this is not enough.
 
 Let's recall the example of gene-to-gene correlation. The na\"ive approach is to fix a gene of interest and rank other genes according to their correlation. This ranking cannot tell between the genes, which specifically correlate with the gene of interest, and the network hub genes (i.e., genes that carelessly correlate with all the genes). 
 
@@ -149,19 +149,20 @@ Therefore, we suggest using double-ranking approach. As any ranking approach, it
 First, we fix a collection $c_j$ and rank the attention values $a_{1j}, \dots, a_{nj}$. This ranking indicates how much the collection $c_j$ cares about any tag $t_i$. Thus, any collection $c_{j}$ and any tag $t_i$ are connected by the rank $r_{ij}$.
 
 Second, we fix a tag $t_i$ and rank all collections by the tag's ranks in a collection $r_{i1}, \dots, r_{ik}$.
-This step expresses the intuition of Augustus numerically: the collection $c_j$ with the highest rank $r_{ij}$ among $r_{i1}, \dots, r_{ik}$ can be the best friend of $t_i$. However, having the highest rank is necessary, but not sufficient to be the real best friend.
+This step expresses the intuition of Augustus numerically: the collection $c_j$ with the highest rank $r_{ij}$ among $r_{i1}, \dots, r_{ik}$ 
+ \textcolor{purple}{cares the most about $t_i$ and it }can be the best friend of $t_i$. However, having the highest rank is necessary, but not sufficient to be the real best friend.
 
 Of note, friendship in this notation is a property of the whole matrix $\mathcal{A}$. Thus, the null-hypothesis $H_0$ claiming no friendship at all, consists of assumptions on all the values in $\mathcal{A}$.
 
 Under $H_0$, we assume that the attention values from a cloud $c_j$ to all tags are independent and identically distributed.
 This distribution can vary from cloud to cloud. Moreover, all the $n \times k$ attention values $a_{ij}$ from collections to tags are independent.
 
-We suggest a test checking whether $c_j$ is really the best friend of $t_i$ or $c_j$ appears at the top of the ranking by chance (according to $H_0$). The test is $p$-value based and compares the ordered ranks for $t_i$ in different collections. We name it the \test{best friend test}.
+We suggest a test checking whether $c_j$ is really the best friend of $t_i$ or $c_j$ appears at the top of the ranking by chance (i.e. according to $H_0$). The test is $p$-value based and compares the ordered ranks for $t_i$ in different collections. We name it the \test{best friend test}.
 
 Looking for a possible best friend and statistically assessing the friendship, we start with a data set represented by a bipartite graph of vertices representing tags and collections and edges representing attention from collection to tag.
 To start with, we choose a tag and then we look for a collection. As we see, the procedure is asymmetric by design. If it succeeds, we refer to the collection $c_j$ as the best friend of the tag $t_i$; $t_i$ selects $c_j$ and we refer to $t_i$ as a marker for $c_j$. The term is consistent with the pattern marker term \cite{stein-obrien_patternmarkers_2017}.
 
-Before, we consider only one possible best friend $c_j$ per tag $t_i$. The procedure naturally expands to the case when the tag selects/marks a subset of {\collection}s, thus having more than one friend. In other words, the \test{best friend test} expands to the \test{friends test}.
+Before, we consider only one possible best friend $c_j$ per tag $t_i$. The procedure naturally expands to the case when the tag selects/marks a subset of collections, thus having more than one friend. In other words, the \test{best friend test} expands to the \test{friends test}.
 
 Here, the tag split the set of all collections into two subsets, e.g. the friends of the tag and all the others. The split occurs by a chosen threshold for ordered ranks. The \test{friends test} estimates the statistical significance of this split.
 
@@ -317,7 +318,8 @@ Fig.\ref{fig:polytop} depicts $P_3$.
          \centering 
          \scalebox{.4}{\import{}{cube-volume}}
          \caption{Support of $u$.
-         \\\hspace{\textwidth} }
+         \\\hspace{\textwidth} 
+        }
          \label{fig:polytop}
      \end{subfigure}
      \begin{subfigure}[b]{0.3\textwidth}
@@ -397,20 +399,45 @@ to be the best friend (or an element of the true friends set) for more than one 
 
 \subsection{The code availability}
 
-
+\url{https://github.com/favorov/best-friends}
 
 
 
 \section{Discussion}
 
-A great phrase!!!
+\subsection*{\textcolor{red}{A great phrase!!!}}
+In this manuscript, we develop a method to detect noteworthy edges in a weighted bipartite graph. We suppose all edges of the graph to be co-directed. The graph models a directed relation (referred to as attention) from the vertices of one part (collections) to the vertices of  another part (tags).
 
-We introduced a statistical procedure test that
-validates the hypothesis of 
+to detest reliable pairs of marker features and the marked entity. Nevertheless, the formulation of the problem looks abstract, its solution provides numerous straightforward applications. 
+
+This model describes a wide spectrum of problems, where one is interested in detecting specific markers characterizing a process or a data set in hand.
+
+
+In this manuscript, we suggest a novel method of analyzing the bipartite graph modeling tag-collection relationship. 
+
+
+Namely, we formulated a statistical test that detects specific markers (tags) that characterizes a given collection.  
+
+The proposed model covers numerous straightforward applications. 
+
+% key markers
+% key features 
+% patterns
+
+
+
+
+analyzing the relationships between two partitions of 
+
+In this manuscript, we numerically express the concept of friendship. We start with a matrix of the values of the attention paid by $k$ collections to $n$ tags, then 
+
+
+We introduced a statistical procedure test that validates the hypothesis of 
 
 We formulated a statistical test that to detest reliable pairs of marker features and the marked entity. Nevertheless, the formulation of the problem looks abstract, its solution provides numerous straightforward applications. 
 
 to detest reliable pairs of marker features and the marked entity. Nevertheless, the formulation of the problem looks abstract, its solution provides numerous straightforward applications. 
+\subsection*{\textcolor{red}{End of great phrase!!!}}
 
 The motivating example we started with was to detect the marker genes for expression patterns. The patterns could be obtained from the CoGAPS (scCoGAPS) \cite{Fertig_2016} or other matrix factorization method \cite{Stein_2018}. The identification of the marker genes can critically simplify biological interpretation. If the matrix is the amplitude component from  the decomposition, the marker time points (or, the marker cells for scCoGAPS) can also be very informative for analysis. If the matrix contains the expression correlation for two gene sets, annotated best friends of a non-annotated gene extend the existing annotation.
 
