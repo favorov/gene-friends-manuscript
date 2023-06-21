@@ -34,23 +34,25 @@
 %                                     \toctitle is used
 %
 \author{
-Alexandra Suvorikova \inst{1} \and Vasiliy Ramensky \inst{2} \and Vera Mukhina \inst{3} 
-\and Andrey Mironov \inst{4} \and Alexander Favorov\inst{5}\textsuperscript,\inst{6}}
+Alexandra Suvorikova \inst{1} \and Vasily Ramensky \inst{2,3,5} \and Vera Mukhina \inst{4} 
+\and Andrey Mironov \inst{5} \and Alexander Favorov\inst{6}\textsuperscript,\inst{7}}
 %
 \authorrunning{A. Suvorikova et al.} % abbreviated author list (for running head)
 %
 %%%% list of authors for the TOC (use if author list has to be modified)
-\tocauthor{Alexandra Suvorikova, Vasiliy Ramensky, Vera Mukhina, Andrey Mironov, and Alexander Favorov}
+\tocauthor{Alexandra Suvorikova, Vasily Ramensky, Vera Mukhina, Andrey Mironov, and Alexander Favorov}
 %
 \institute{
 Weierstrass Institute, \\ Berlin, Germany, 
 \email{suvorikova@wias-berlin.de}
 \and
-National Health and Research Center of Preventive Healthcare, \\ Moscow, 101990, Russia
+MSU Institute for Artificial Intelligence, Lomonosov Moscow State University, \\ Moscow, 119992, Russia
+\and
+National Medical Research Center for Therapy and Preventive Medicine of the Ministry of Healthcare of Russian Federation, \\ Moscow, 101990, Russia, \email{ramensky@gmail.com}
 \and
 University of Maryland School of Medicine, \\ Baltimore, MD 21205, USA,
 \and
-Department of Bioengineering and Bioinformatics, MSU, \\ Moscow, 119992, Russia
+Department of Bioengineering and Bioinformatics, Lomonosov Moscow State University, \\ Moscow, 119992, Russia
 \and
 Johns Hopkins University School of Medicine, \\ Baltimore, MD 21205, USA,
 \and
@@ -75,14 +77,14 @@ Vavilov Institute of General Genetics, RAS, \\ Moscow, 119333, Russia,
 \vspace{-0.2in}
 
 \begin{abstract}
-
-\textcolor{green}{We define a tag's most friendly collection as a collection that pays maximal rank-normalized attention to the tag.}
-\textcolor{blue}{ -- we will return here --} \textcolor{purple}{
-Suppose we have a set of {\tag}s and a set of fuzzy set of {\tag}s, which we will refer to as {\collection}s, and we have the {\tag}-to-{\collection} relation quantified as a scalar for each $\left( {\tag},{\collection}\right)$ pair. An example is: {\tag}s are genes, {\collection}s are gene expression patterns, and the scalars are loads of the genes in the patterns. Sometimes, an observation that a gene is expressed implies the expression of a particular pattern (the simplest case is: the gene has nonzero load only in that pattern). If so, we say that the gene marks the pattern. Here we describe a statistical test that identifies pairs of a marker {\tag} and the marked {\collection}. The test is based on rank statistics and it does not rely on propositions about the distribution of the relation quantity. The marked {\collection} is referred to as the {\tag}'s best friend, and the test is named "the best friends test" or "the gene's best friends test". The statistics naturally expand to the case when a {\tag} selects (separates) a subset of {\collection}s, thus having more than one best friend. The code (currently, only R) is available at \url{https://github.com/favorov/best-friends}
-\keywords{best friends, gene's best friends, specific gene regulation, pattern marker, rank statistics, marker feature, marked entity}
-}
+The weighted bipartite graph model fits many practical problems, such as gene regulation by a set of TFs or loads of genes in transcription patterns. Suppose one is interested in detecting the specific (i.e. noteworthy) connections between the nodes. To quantify the specificity, we introduce a numerical definition of \textit{friendship} between the nodes from one set (set of \textit{collections}) and another (set of \textit{tags}). 
+The method relies on the double ranking of elements inside the weighted adjacency matrix of the graph (\textit{Matrix of attention} from collections to tags) combined with a novel statistical test. 
+We implemented the method in \textsf{R} package \textsf{best.friends}.
+As possible areas of application, we consider feature selection, interpretable clustering, and knowledge transfer. 
 \end{abstract}
-%
+
+\keywords{specific gene regulation, pattern marker, weighted bipartite graph, noteworthy edges, rank statistics, feature selection, clustering, knowledge transfer}
+
 \section{Introduction: Augustus and his friends}
 
 There is a simple intuition of what does it mean to be a friend. A friend of Augustus cares about Augustus more than other people do. And, if we see Augustus, then we infer to see friends(s) of Augustus also. 
@@ -90,7 +92,7 @@ There is a simple intuition of what does it mean to be a friend. A friend of Aug
 Let's introduce the friendship concept with several examples.
 The first example comes from information retrieval. The goal is to find the documents that are most relevant to the user's query among all available documents \cite{liu2009learning}. 
 
-In the second example, we consider a set of genes and their loads in a set of expression patterns (\cite{fertig_cogaps_2010,Fertig_2016,stein-obrien_enter_2018}). Each pattern represents a biological process by the expression levels of the involved genes, and we know all the loads of genes in patterns.
+In the second example, we consider a set of genes and their loads in a set of expression patterns (\cite{fertig_cogaps_2010, Fertig_2016,stein-obrien_enter_2018}). Each pattern represents a biological process by the expression levels of the involved genes, and we know all the loads of genes in patterns.
 
 Sometimes, the expression of a single gene indicates the activity of the entire pattern. In the simplest case, the gene has a nonzero load in only one pattern. In more realistic, the gene has several nonzero loads, but all of them but one are relatively small. Then the gene (AKA Augustus) is the marker gene \cite{stein-obrien_patternmarkers_2017} for the pattern, and the marked pattern is the best friend of this gene. We want to identify the marker genes and corresponding patterns statistically.  
 
@@ -405,7 +407,7 @@ to be the best friend (or an element of the true friends set) for more than one 
 
 \subsection{The code availability}
 
-\url{https://github.com/favorov/best-friends}
+The software that implements the \text{best friend test} and \text{friends test} is currently available as an \textsf{R} package \textsf{best.friends} at \url{https://github.com/favorov/best-friends/R/best.friends}.
 
 
 \section{Discussion}
@@ -418,7 +420,7 @@ Along with the single collection procedure (\test{best friend test}), we suggest
 
 The \text{best friend test} is a particular case of the \test{friends test}, but we consider it separately in the software and, hence, in the methods. Namely, \test{friends test} has higher computational costs and it requires multiplicity correction even for one tag (Section \ref{sec:multimurkers}). In many cases, the \text{best friend test} is enough for practical applications. 
 
-Although the problem looks abstract, its solution has numerous straightforward applications. For instance, the detection of the marker genes \cite{stein-obrien_patternmarkers_2017} for expression patterns critically simplifies the biological interpretation of the results of transcription matrix factorization \cite{Stein_2018},\cite{Fertig_2016}. Here, the genes are tags and the patterns are collections. If a pattern is a friend of a gene (see Section \ref{sec:method}), the gene is the marker of the pattern.
+Although the problem looks abstract, its solution has numerous straightforward applications. For instance, the detection of the marker genes \cite{stein-obrien_patternmarkers_2017} for expression patterns critically simplifies the biological interpretation of the results of transcription matrix factorization (\cite{Stein_2018}, \cite{Fertig_2016}). Here, the genes are tags and the patterns are collections. If a pattern is a friend of a gene (see Section \ref{sec:method}), the gene is the marker of the pattern.
 
 However, the theoretical result is limited to the case of an asymmetric attention matrix. If the matrix is symmetric by the design, the null hypothesis does not hold. However, the computational experiment \textcolor{red}{(see Supplement)} shows that the independence proposition \textcolor{red}{can be used}. Thus, the method applies to the analysis of, e.g. distance matrices. 
 
@@ -438,6 +440,7 @@ The authors declare no conflict of interest.
 
 \section{Acknowledgements}
 AF acknowledges support by National Institutes of Health (NIH) P30CA006973 and 1U01CA253403-01.
+Thanks to Daniel Shu and Caedmon Haas for the translation of the motto to gold Latin. 
 
 \bibliography{gene-best-friends}
 
