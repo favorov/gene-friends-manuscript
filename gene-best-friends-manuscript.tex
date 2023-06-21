@@ -1,4 +1,7 @@
 \documentclass{llncs}
+%\usepackage{fancyhdr}
+\pagestyle{plain}
+%\pagestyle{headings}
 \usepackage{standalone}
 \usepackage{graphicx} 
 \usepackage{comment}
@@ -40,7 +43,8 @@ Alexandra Suvorikova \inst{1} \and Vasiliy Ramensky \inst{2} \and Vera Mukhina \
 \tocauthor{Alexandra Suvorikova, Vasiliy Ramensky, Vera Mukhina, Andrey Mironov, and Alexander Favorov}
 %
 \institute{
-\textcolor{red}{Weierstrass institute, \\ Berlin, Germany,} 
+Weierstrass Institute, \\ Berlin, Germany, 
+\email{suvorikova@wias-berlin.de}
 \and
 National Health and Research Center of Preventive Healthcare, \\ Moscow, 101990, Russia
 \and
@@ -66,7 +70,7 @@ Vavilov Institute of General Genetics, RAS, \\ Moscow, 119333, Russia,
 %\setlength\epigraphwidth{.8\textwidth}
 \setlength\epigraphrule{0pt}
 
-\epigraph{SI AUGUSTUM VIDEAT AMICOS EIUS VIDEATI}
+\epigraph{SI AUGUSTUS CERNATUR, CERNANTUR QOUQUE AMICI}
 
 \vspace{-0.2in}
 
@@ -186,7 +190,7 @@ Its $i$-th row corresponds to tag $t_i$, and we denote it as $\mathcal{A}_{i:} =
 
 We do the following procedure to identify the collection, which is the putative best friend (or, in other words, the most friendly collection) for each tag.
 
-For each collection $c_j \in C$, we decreasingly rank the elements inside $\mathcal{A}_{:j}$. Thus, for each $a_{ij} \in \mathcal{A}_{:j}$, we get the ordinal number $r_{ij}:=\text{rank}\left(a_{ij}|\text{inside}~\mathcal{A}_{:j}\right)$. We resolve ties by the mean rank of the tied elements. 
+For each collection $c_j \in C$, we decreasingly rank the elements inside $\mathcal{A}_{:j}$. Thus, for each $a_{ij} \in \mathcal{A}_{:j}$, we get the ordinal number $r_{ij}:=\text{rank}\left(a_{ij}|\text{inside}~\mathcal{A}_{:j}\right)$. We resolve the ties by the mean rank of the tied elements. 
 
 Let's denote the rank matrix as 
 \begin{equation}
@@ -364,20 +368,25 @@ V_{k}(w) = \frac{(1-w)^k}{k!},
 see \eqref{eq:p_1} and \eqref{eq:p_k} for the inference. We omit the $l$ index for the volume because it does not depend on $l$. The intuition is the following: the smaller polytope $P^{l}_{k}(w)$ is geometrically similar to $P_{k}$ with the scaling factor $(1-w)^k$. 
 
 Finally, we recall that $u = r_{\sigma}$ (see \eqref{def:u}). Thus, under $H_0$ the probability for random vector $r_{\sigma}$ to satisfy the condition $U_{l} \ge w$ is the same for all $l\leq k-1$; it is equal to the ratio of $V_{k}(w)$ and $V_k$,
-\[
-p(w) = (1-w)^k.
-\]
+\begin{equation}
+\label{eq:pw}
+    p(w) = (1-w)^k.
+\end{equation}
+
+
 
 Since all $U_l$ have the same distribution, we use $U$-notation for $p$-value calculations for the \test{best friend test} and the \test{friends test}.
-
-
-
 
 
 \subsection{Symmetric attention matrix $\mathcal{A}$}
 The $p$-value calculation relies on the assumption of the independence of attention values in different collections. If the attention matrix $\mathcal{A}$ is symmetric by the nature of the underlying bipartite graph, this assumption does not hold. Thus, the theoretical inference \textcolor{red}{does not work}.
 
-\textcolor{purple}{Still, the numerical procedure works. We show this in more detail in Supplement~\ref{seq:symmetric_a}.}
+\textcolor{purple}{Still, the numerical procedure works. We show this in more detail in Supplement~\ref{seq:symmetric_a}}. Of note, sometimes we know that all the diagonal elements are $0$ by construction. In this case, both tests use 
+\[
+p(w) = (1-w)^{k-1}, ~~\text{cf. equation \eqref{eq:pw}.}
+\]
+
+% \textcolor{airforceblue}{For a symmetric case, sometimes it makes sense to remove the main diagonal before ranking not to obtain trivial self-relations. The functions of the package receive a parameter for that case; actually, this parameter set to TRUE decreases the dimensionality $k$ to $k-1$.}
 
 \subsection{Multiple testing}
 \label{sec:multimurkers}
@@ -386,98 +395,42 @@ All the tests we formulated here are not corrected for the multiplicity of hypot
 
 In practice, the tests are run for each tag or even for each tag and the friend set population. Two important observations follow.
 
-\paragraph*{Multiplicity correction} All the tests rely on the ranking of the elements inside the same attention matrix $\mathcal{A}$. Thus, the assumption of test independence does not hold. In this case, the standard Bonferroni correction on the set of corresponding $p$-values is possibly too strong (\cite{cabin2000bonferroni}). However, some correction is still necessary. We leave it to the scope of the particular application.
+\paragraph*{Multiplicity correction} 
+To run the \test{best friend test} on all the $n$ tags, we 
+calculate $n$ $p$-values. To run the \test{friends test}, we calculate $n \cdot k$ $p$-values. However, all the tests rely on the ranking of the elements inside the same attention matrix $\mathcal{A}$. Thus, the assumption of test independence does not hold. In this case, the standard Bonferroni correction on the set of corresponding $p$-values is possibly too strong (\cite{cabin2000bonferroni}). However, some correction is still necessary. We leave it to the scope of the particular application.
 
 \paragraph*{Multimarkers} Note that after the multiple hypothesis correction, a collection \textcolor{red}{may happen}
 %can appear 
 to be the best friend (or an element of the true friends set) for more than one tag. The set of tags is thus a multimarker for the collection. In practice, a multimarker tags (selects) a collection more specific than each of its elements.
-
-
-
-
-
 
 \subsection{The code availability}
 
 \url{https://github.com/favorov/best-friends}
 
 
-
 \section{Discussion}
 
-\subsection*{\textcolor{red}{A great phrase!!!}}
-In this manuscript, we develop a method to detect noteworthy edges in a weighted bipartite graph. We suppose all edges of the graph to be co-directed. The graph models a directed relation (referred to as attention) from the vertices of one part (collections) to the vertices of  another part (tags).
+In this manuscript, we develop a method and software to detect noteworthy edges in a weighted bipartite graph. We suppose all edges of the graph to be co-directed. The graph models a directed relation (referred to as attention) from the vertices of one part (collections) to the vertices of another part (tags).
 
-to detest reliable pairs of marker features and the marked entity. Nevertheless, the formulation of the problem looks abstract, its solution provides numerous straightforward applications. 
+Essentially, the method consists of two steps. First, we use a double-ranking approach to find the putative friends. Then, to validate the friendship hypothesis, we perform a novel statistical test that is distribution-free.
 
-This model describes a wide spectrum of problems, where one is interested in detecting specific markers characterizing a process or a data set in hand.
+Along with the single collection procedure (\test{best friend test}), we suggest its extension for a subset of collections (\test{friends test}).
 
+The \text{best friend test} is a particular case of the \test{friends test}, but we consider it separately in the software and, hence, in the methods. Namely, \test{friends test} has higher computational costs and it requires multiplicity correction even for one tag (Section \ref{sec:multimurkers}). In many cases, the \text{best friend test} is enough for practical applications. 
 
-In this manuscript, we suggest a novel method of analyzing the bipartite graph modeling tag-collection relationship. 
+Although the problem looks abstract, its solution has numerous straightforward applications. For instance, the detection of the marker genes \cite{stein-obrien_patternmarkers_2017} for expression patterns critically simplifies the biological interpretation of the results of transcription matrix factorization \cite{Stein_2018},\cite{Fertig_2016}. Here, the genes are tags and the patterns are collections. If a pattern is a friend of a gene (see Section \ref{sec:method}), the gene is the marker of the pattern.
 
+However, the theoretical result is limited to the case of an asymmetric attention matrix. If the matrix is symmetric by the design, the null hypothesis does not hold. However, the computational experiment \textcolor{red}{(see Supplement)} shows that the independence proposition \textcolor{red}{can be used}. Thus, the method applies to the analysis of, e.g. distance matrices. 
 
-Namely, we formulated a statistical test that detects specific markers (tags) that characterizes a given collection.  
+The first possible area of application is feature selection. By identification of markers, instead of all tags, we can use a relatively small subset for further analysis. Moreover, the identification of friend-marker pairs helps to remove non-specific connections from a graph. 
 
-The proposed model covers numerous straightforward applications. 
+Second, the proposed method is useful for efficient clustering of a set of selected features. Also, the friendship concept provides a new similarity measure that possibly generates more interpretable clustering, than the clustering with $\mathcal{A}$ being a similarity measure.
 
-% key markers
-% key features 
-% patterns
+Another possible direction is knowledge transfer: if we know something new about Augustus, we know something new about his friends. 
 
-
-
-
-analyzing the relationships between two partitions of 
-
-In this manuscript, we numerically express the concept of friendship. We start with a matrix of the values of the attention paid by $k$ collections to $n$ tags, then 
-
-
-We introduced a statistical procedure test that validates the hypothesis of 
-
-We formulated a statistical test that to detest reliable pairs of marker features and the marked entity. Nevertheless, the formulation of the problem looks abstract, its solution provides numerous straightforward applications. 
-
-to detest reliable pairs of marker features and the marked entity. Nevertheless, the formulation of the problem looks abstract, its solution provides numerous straightforward applications. 
-\subsection*{\textcolor{red}{End of great phrase!!!}}
-
-The motivating example we started with was to detect the marker genes for expression patterns. The patterns could be obtained from the CoGAPS (scCoGAPS) \cite{Fertig_2016} or other matrix factorization method \cite{Stein_2018}. The identification of the marker genes can critically simplify biological interpretation. If the matrix is the amplitude component from  the decomposition, the marker time points (or, the marker cells for scCoGAPS) can also be very informative for analysis. If the matrix contains the expression correlation for two gene sets, annotated best friends of a non-annotated gene extend the existing annotation.
-
-\begin{itemize}
-    \item Main idea of the paper 1: best friend - something specifically prefer a tag despite of hubs
-    \item Main ide 2 -- statistical test on it
-    \item we single out the \test{best friend test} (we have the paragraph below)
-    \item symmetric case: the independence assumption for $u_i$ some not hold; our analytical form for $U | H_0$ works only approximately
-    \item square $\mathcal{A}$ : sometimes, we are replace the diagonal with series by the construction, there is a special case for the software (we have the paragraph below)
-    \item all the stuff can be dimension reduction
-    \item clustering / This framework is related to the clustering of clouds \cite{bernstein2020cluster}.
-    \item potential research direction: degree of relevance?
-    \item related tags help to form 
-    \item naive approach and why we need this stuff
-    \item Dimension reduction
-\end{itemize}
-
-
-
-
-
-
-\begin{itemize}
-\item\textcolor{blue}{Here, we suggest a computational method...}
-\item\textcolor{blue}{Mutliple hyp, independes}
-\item\textcolor{blue}{best is a particular case of friends: computational cost, multiplicity, sometimes it's enough}
-\item\textcolor{blue}{One $H_0$, a lot of tests}
-\end{itemize}
 
 % \textcolor{blue}{+ Friedman test }
 % %\url{https://en.wikipedia.org/wiki/Friedman_test}
-
-%The rank-backwards-rank (RBR) approach we propose here is based on a simple proposition that for a gene that is a good friend of our gene (to be more formal, it is specifically correlated with our gene), the rank of our gene in the tested gene's correlations list is to be rather high. Otherwise, if the tested gene is a friend-of-everybody, our gene's rank in his list can be quite low, while the tester's gene rank in our list is still high. Thus, we gather the the 'where we are in his list' ranks and then we sort this ranks to create the best-friend
-
-
-
-
-\textcolor{darkgreen}{Actually, we single out the \test{best friend test} despite it being a particular case of \test{friends test} because in some applications the \test{best friend test} is enough and it requires less multiple hypotheses correction. Moreover, to assess the p-value for a feature $i$ by \test{best friend test}, we do not need to rank the whole $\mathcal{R}_{:j}$; it is enough to find the maximal and the second values, that is more effective computationally.}
-
-\textcolor{airforceblue}{For a symmetric case, sometimes it makes sense to remove the main diagonal before ranking not to obtain trivial self-relations. The functions of the package receive a parameter for that case; actually, this parameter set to TRUE decreases the dimensionality $k$ to $k-1$.}
 
 
 \section{Conflict of interest}
