@@ -10,6 +10,7 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
+\usepackage{cite}
 %\usepackage{natbib}
 %\usepackage[title]{appendix}
 \usepackage{caption}
@@ -48,7 +49,7 @@ Weierstrass Institute, \\ Berlin, Germany,
 \and
 MSU Institute for Artificial Intelligence, Lomonosov Moscow State University, \\ Moscow, 119992, Russia
 \and
-National Medical Research Center for Therapy and Preventive Medicine of the Ministry of Healthcare of Russian Federation, \\ Moscow, 101990, Russia, \email{ramensky@gmail.com}
+National Medical Research Center for Therapy and Preventive Medicine of the Ministry of Healthcare of Russian Federation, \\ Moscow, 101990, Russia,
 \and
 University of Maryland School of Medicine, \\ Baltimore, MD 21205, USA,
 \and
@@ -77,8 +78,9 @@ Vavilov Institute of General Genetics, RAS, \\ Moscow, 119333, Russia,
 \vspace{-0.2in}
 
 \begin{abstract}
-The weighted bipartite graph model fits many practical problems, such as gene regulation by a set of TFs or loads of genes in transcription patterns. Suppose one is interested in detecting the specific (i.e. noteworthy) connections between the nodes. To quantify the specificity, we introduce a numerical definition of \textit{friendship} between the nodes from one set (set of \textit{collections}) and another (set of \textit{tags}). 
-The method relies on the double ranking of elements inside the weighted adjacency matrix of the graph (\textit{Matrix of attention} from collections to tags) combined with a novel statistical test. 
+The weighted bipartite graph model fits many practical problems, such as gene expression regulation by a set of transcription factors. %or weights of genes in expression patterns. 
+Suppose one is interested in detecting the specific (i.e. noteworthy) connections between the nodes. To quantify the specificity, we introduce a numerical definition of \textit{friendship} between the nodes from one set (set of \textit{collections}) and another (set of \textit{tags}). 
+The method relies on the double ranking of elements inside the \textcolor{red}{weighted adjacency matrix of the graph} (\textit{matrix of attention} from collections to tags) combined with a novel statistical test. 
 We implemented the method in \textsf{R} package \textsf{best.friends}.
 As possible areas of application, we consider feature selection, interpretable clustering, and knowledge transfer. 
 \end{abstract}
@@ -89,18 +91,25 @@ As possible areas of application, we consider feature selection, interpretable c
 
 There is a simple intuition of what does it mean to be a friend. A friend of Augustus cares about Augustus more than other people do. And, if we see Augustus, then we infer to see friends(s) of Augustus also. 
 
-Let's introduce the friendship concept with several examples.
-The first example comes from information retrieval. The goal is to find the documents that are most relevant to the user's query among all available documents \cite{liu2009learning}. 
+% . \textcolor{red}{ \textit{Actually, we say nothing about friendship afterward. To rewrite the sentence?}}
+Let's consider several examples. The first one comes from information retrieval. The goal is to find the documents that are most relevant to the user's query among all available documents \cite{liu2009learning}. %friendship.
 
-In the second example, we consider a set of genes and their loads in a set of expression patterns (\cite{fertig_cogaps_2010, Fertig_2016,stein-obrien_enter_2018}). Each pattern represents a biological process by the expression levels of the involved genes, and we know all the loads of genes in patterns.
+% In the second example, we consider a set of genes and their weights in a set of expression patterns \cite{fertig_cogaps_2010, Fertig_2016,stein-obrien_enter_2018}. Each pattern represents a biological process by the expression levels of the involved genes, and we know all the weights of genes in patterns.
 
-Sometimes, the expression of a single gene indicates the activity of the entire pattern. In the simplest case, the gene has a nonzero load in only one pattern. In more realistic, the gene has several nonzero loads, but all of them but one are relatively small. Then the gene (AKA Augustus) is the marker gene \cite{stein-obrien_patternmarkers_2017} for the pattern, and the marked pattern is the best friend of this gene. We want to identify the marker genes and corresponding patterns statistically.  
+The second example deals with matrix factorization of a multisample and, possibly multimodal, omics matrix \cite{fertig_cogaps_2010, Fertig_2016,stein-obrien_enter_2018}. 
+The factorization results in an approximate  matrix product decomposition. One of the factors is an \textit{amplitude} matrix describing the structure of complex biological processes in terms of weights of the features (e.g., gene expressions) in the processes. 
+
+\textcolor{purple}{Sometimes, the expression of a single gene indicates the activity of the entire pattern. In the simplest case, the gene has a nonzero load in only one pattern. In a more realistic setting, the gene has several nonzero loads, but all of them except one are relatively small. Then the gene (AKA Augustus) is the marker gene \cite{stein-obrien_patternmarkers_2017} for the pattern, and the marked pattern is the best friend of this gene. We want to identify the statistically significant marker genes and corresponding patterns.}
+
+The third example deals with gene-to-gene correlation matrix (e.g. correlation of expression). High correlation indicates high similarity between genes. For a given gene, the goal is to indicate its ``best-friend'' genes among genes. 
+%friendship.
 
 
-The third example deals with gene-to-gene correlation matrix (e.g. correlation of expression). High correlation indicates high similarity between genes. For a given gene, the goal is to indicate its ``best-friend'' genes among genes. \textcolor{red}{examples????}
 
 
-The bipartite graph suits well to describe the problem setups. To generalise the examples, we will refer to genes/queries as \textit{{\tag}s}, to expression patterns/documents as \textit{{\collection}s}, and to any load/relevance value as \textit{attention}. Of note, the attention is the weight of an edge connecting a tag and a collection. Fig.\ref{fig:nice_name} illustrates the setting.
+
+
+The bipartite graph suits well to describe the problem setups. To generalize the examples, we will refer to genes/queries as \textit{{\tag}s}, to expression patterns/documents as \textit{{\collection}s}, and to any load/relevance value as \textit{attention}. Of note, the attention is the weight of an edge connecting a tag and a collection. Fig.\ref{fig:nice_name} illustrates the setting.
 
 \begin{figure}
     \centering
@@ -114,7 +123,7 @@ To be more specific, we consider a set of collections $C = \{c_1, \dots, c_k\}$,
 Each tag $t_i \in T$ and collection $c_j \in C$ are related by the attention---the real value $a_{ij}$---that the collection pays to the tag.
 Let's agree that the greater the value, the higher the attention is. Naturally, the absence of attention corresponds to $a_{ij} = 0$. 
 
-All the values $a_{ij}$ are stored in a matrix $\mathcal{A}$; its row $\mathcal{A}_{i:}$ corresponds to tag $t_i$, its column $\mathcal{A}_{:j}$ corresponds to collection $c_j$.
+All the values $a_{ij}$ are stored in a matrix $\mathcal{A}$ \textcolor{red}{(one may think of non-diagonal block a weighted adjacency matrix of the corresponding graph)}; its row $\mathcal{A}_{i:}$ corresponds to tag $t_i$, its column $\mathcal{A}_{:j}$ corresponds to collection $c_j$.
 
 This tag-collection-attention metaphor applies to many setups (see Tab.\ref{tab:examples} for examples).
 
@@ -124,11 +133,11 @@ This tag-collection-attention metaphor applies to many setups (see Tab.\ref{tab:
 \textbf{Example} & \textbf{tag $t_i$} & \textbf{collection $c_j$} & \textbf{attention $a_{ij}$} \\ 
 \hline
 
-\begin{tabular}[c]{@{}c@{}}search engine\end{tabular} & query       & \begin{tabular}[c]{@{}c@{}} search result \end{tabular}         & \begin{tabular}[c]{@{}c@{}}relevant search output\\\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}c@{}}search engine\end{tabular} & query       & \begin{tabular}[c]{@{}c@{}} search result \end{tabular}         & \begin{tabular}[c]{@{}c@{}}relevance of\\ search output\\\end{tabular} \\ \hline
 
 \begin{tabular}[c]{@{}c@{}}gene regulation\\  by TFs\end{tabular}     & gene             & \begin{tabular}[c]{@{}c@{}}genes under \\ TF regulation\end{tabular}     & \begin{tabular}[c]{@{}c@{}}strength of \\ regulation\end{tabular}       \\ \hline
 
-\begin{tabular}[c]{@{}c@{}}transcription\\ decomposition\end{tabular} & transcript       & \begin{tabular}[c]{@{}c@{}}transcription \\ pattern\end{tabular}         & \begin{tabular}[c]{@{}c@{}}transcript's \\ load in pattern\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}c@{}}transcription\\ decomposition\end{tabular} & transcript       & \begin{tabular}[c]{@{}c@{}}transcription \\ pattern\end{tabular}         & \begin{tabular}[c]{@{}c@{}}transcript's load \\ in pattern\end{tabular} \\ \hline
 
 \begin{tabular}[c]{@{}c@{}}transcription \\ correlations\end{tabular} & gene             & \begin{tabular}[c]{@{}c@{}}genes coexpressed \\ with a gene\end{tabular} & \begin{tabular}[c]{@{}c@{}}transcription \\ correlation\end{tabular}    \\ \hline
 fuzzy clustering                                                      & object           & cluster                                                                  & \begin{tabular}[c]{@{}c@{}}object weight \\ in cluster\end{tabular}     \\ \hline
@@ -144,7 +153,7 @@ fuzzy clustering                                                      & object  
 \end{table}
 
 Let's recall the intuition that starts the introduction. A friend of Augustus cares about Augustus more than other people do. In the following, we depict the concept of care using ranking. Indeed, the ranking approach widely appears in our scope of interest.
-Partial or total ranking of documents for a given query is a popular strategy in information retrieval \cite{liu2009learning}. In bioinformatics, many methods rely on ranking, e.g. feature selection \cite{venetis2011selection}, marker selection \cite{vargo2020rank}, \cite{pullin2022comparison}, \cite{jimenez2021multivariate}, etc.
+Partial or total ranking of documents for a given query is a popular strategy in information retrieval \cite{liu2009learning}. In bioinformatics, many methods rely on ranking, e.g. feature selection \cite{venetis2011selection}, marker selection \cite{vargo2020rank,pullin2022comparison,jimenez2021multivariate}, etc.
 
 The idea of ranking can be applied in a na\"ive way: the higher the attention of a collection to a tag is, the more friendly the collection is to the tag. But in some cases, this is not enough.
 
@@ -160,8 +169,8 @@ This step expresses the intuition of Augustus numerically: the collection $c_j$ 
 
 Of note, friendship in this notation is a property of the whole matrix $\mathcal{A}$. Thus, the null-hypothesis $H_0$ claiming no friendship at all, consists of assumptions on all the values in $\mathcal{A}$.
 
-Under $H_0$, we assume that the attention values from a cloud $c_j$ to all tags are independent and identically distributed.
-This distribution can vary from cloud to cloud. Moreover, all the $n \times k$ attention values $a_{ij}$ from collections to tags are independent.
+Under $H_0$, we assume that the attention values from a collection $c_j$ to all tags are independent and identically distributed.
+This distribution can vary from collection  to collection . Moreover, all the $n \times k$ attention values $a_{ij}$ from collections to tags are independent.
 
 We suggest a test checking whether $c_j$ is really the best friend of $t_i$ or $c_j$ appears at the top of the ranking by chance (i.e. according to $H_0$). The test is $p$-value based and compares the ordered ranks for $t_i$ in different collections. We name it the \test{best friend test}.
 
@@ -241,14 +250,15 @@ u_1(t_i) = \frac{r_{i\sigma(1)} -  r_{i\sigma(2)}}{n}.
 \end{equation}
 The $n$-normalization is technical. We explain it in more detail in Section \ref{sec:theory}.
 
-We note that $u_1(t_i)$ is an observed value of a random variable $U$. Moreover, under $H_0$ the distribution of $U$ is known. We write it explicitly in Section \ref{sec:theory}. 
+We note that $u_1(t_i)$ is a realization of a random variable $U$ with the distribution known under $H_0$.
 
-To test $H_0$ for any $t_i$ and its putative best friend $c_{\sigma_{i}(1)}$, we use $p$-value of the observed $u_1(t_i)$ in the distribution $U$,
+% We note that $u_1(t_i)$ is an observed value/\textcolor{red}{a realization} of a random variable $U$. Moreover, under $H_0$ the distribution of $U$ is known. We write it explicitly in Section \ref{sec:theory}. 
+
+To test $H_0$ for any $t_i$ and its putative best friend $c_{\sigma_{i}(1)}$, we use the $p$-value,
+%use $p$-value of the observed $u_1(t_i)$ in the distribution $U$,
 \[
 p = P\left(U \ge u_1(t_i)~|~H_0\right). 
 \]
-
-% We estimate $p$-value for the pair of $t_i$ and its putative best friend $c_{\sigma_{i}(1)}$ using $u_1(t_i)$,
 
 If $p$-value is small enough, we reject the null and claim that the friendliness of the collection $c_{\sigma_{i}(1)}$ is unlikely to observe by random, and so we refer to it as the best friend of $t_i$. In this case, $t_i$ is a marker of its best friend collection $c_{\sigma_{i}(1)}$.
 
@@ -350,6 +360,7 @@ The volume $V_k$ of the $P_k$ can be computed as follows
 V_k = &\displaystyle \int\limits_0^1\int\limits_{u_1}^1\int\limits_{u_2}^1\int\limits_{u_3}^1...\int\limits_{u_{k-1}}^1 du_k....du_4 du_3 du_2 du_1 =  \frac{1}{k!}~,
 \end{eqnarray*}
 see \eqref{eq:volume} for inference.
+\textcolor{blue}{\textit{This estimation is well known and can be find in textbooks}}
 
 Now we construct the random variable $U$ mentioned in Sections \ref{sec:best_friend_test} and \ref{sec:friends_test}. Given some fixed index $l\leq k-1$, we define
 \[
@@ -381,6 +392,7 @@ Since all $U_l$ have the same distribution, we use $U$-notation for $p$-value ca
 
 
 \subsection{Symmetric attention matrix $\mathcal{A}$}
+\textcolor{blue}{\textit{The matrix shows relation tags vs collection and it is not quadratic. How the non-quadratic matrix can be symmetric?}}
 The $p$-value calculation relies on the assumption of the independence of attention values in different collections. If the attention matrix $\mathcal{A}$ is symmetric by the nature of the underlying bipartite graph, this assumption does not hold. Thus, the theoretical inference \textcolor{red}{does not work}.
 
 \textcolor{purple}{Still, the numerical procedure works. We show this in more detail in Supplement~\ref{seq:symmetric_a}}. Of note, sometimes we know that all the diagonal elements are $0$ by construction. In this case, both tests use 
@@ -407,7 +419,8 @@ to be the best friend (or an element of the true friends set) for more than one 
 
 \subsection{The code availability}
 
-The software that implements the \text{best friend test} and \text{friends test} is currently available as an \textsf{R} package \textsf{best.friends} at \url{https://github.com/favorov/best-friends/R/best.friends}.
+The software that implements the \text{best friend test} and \text{friends test} is currently available as an \textsf{R} package \textsf{best.friends} at\\
+\url{https://github.com/favorov/best-friends/R/best.friends}.
 
 
 \section{Discussion}
@@ -420,7 +433,7 @@ Along with the single collection procedure (\test{best friend test}), we suggest
 
 The \text{best friend test} is a particular case of the \test{friends test}, but we consider it separately in the software and, hence, in the methods. Namely, \test{friends test} has higher computational costs and it requires multiplicity correction even for one tag (Section \ref{sec:multimurkers}). In many cases, the \text{best friend test} is enough for practical applications. 
 
-Although the problem looks abstract, its solution has numerous straightforward applications. For instance, the detection of the marker genes \cite{stein-obrien_patternmarkers_2017} for expression patterns critically simplifies the biological interpretation of the results of transcription matrix factorization (\cite{Stein_2018}, \cite{Fertig_2016}). Here, the genes are tags and the patterns are collections. If a pattern is a friend of a gene (see Section \ref{sec:method}), the gene is the marker of the pattern.
+Although the problem looks abstract, its solution has numerous straightforward applications. For instance, the detection of the marker genes \cite{stein-obrien_patternmarkers_2017} for expression patterns critically simplifies the biological interpretation of the results of transcription matrix factorization (\cite{Stein_2018,Fertig_2016}). Here, the genes are tags and the patterns are collections. If a pattern is a friend of a gene (see Section \ref{sec:method}), the gene is the marker of the pattern.
 
 However, the theoretical result is limited to the case of an asymmetric attention matrix. If the matrix is symmetric by the design, the null hypothesis does not hold. However, the computational experiment \textcolor{red}{(see Supplement)} shows that the independence proposition \textcolor{red}{can be used}. Thus, the method applies to the analysis of, e.g. distance matrices. 
 
