@@ -22,6 +22,7 @@
 \usetikzlibrary {arrows.meta}
 
 
+
 \begin{document}
 
 %
@@ -89,27 +90,39 @@ As possible areas of application, we consider feature selection, interpretable c
 
 \section{Introduction: Augustus and his friends}
 
-There is a simple intuition of what does it mean to be a friend. A friend of Augustus cares about Augustus more than other people do. And, if we see Augustus, then we infer to see friends(s) of Augustus also. 
+There is a simple intuition of what does it mean to be a friend. A friend of Augustus cares \textcolor{red}{importance} about Augustus more than other people. And if we see Augustus, then we also infer that we will see friend(s) of Augustus. 
 
-% . \textcolor{red}{ \textit{Actually, we say nothing about friendship afterward. To rewrite the sentence?}}
-Let's consider several examples. The first one comes from information retrieval. The goal is to find the documents that are most relevant to the user's query among all available documents \cite{liu2009learning}. %friendship.
+% % . \textcolor{red}{ \textit{Actually, we say nothing about friendship afterward. To rewrite the sentence?}}
+% Let's consider several examples. The first one comes from information retrieval. The goal is to find the documents that are most relevant to the user's query among all available documents \cite{liu2009learning}. %friendship.
 
 % In the second example, we consider a set of genes and their weights in a set of expression patterns \cite{fertig_cogaps_2010, Fertig_2016,stein-obrien_enter_2018}. Each pattern represents a biological process by the expression levels of the involved genes, and we know all the weights of genes in patterns.
 
-The second example deals with matrix factorization of a multisample and, possibly multimodal, omics matrix \cite{fertig_cogaps_2010, Fertig_2016,stein-obrien_enter_2018}. 
-The factorization results in an approximate  matrix product decomposition. One of the factors is an \textit{amplitude} matrix describing the structure of complex biological processes in terms of weights of the features (e.g., gene expressions) in the processes. 
 
-\textcolor{purple}{Sometimes, the expression of a single gene indicates the activity of the entire pattern. In the simplest case, the gene has a nonzero load in only one pattern. In a more realistic setting, the gene has several nonzero loads, but all of them except one are relatively small. Then the gene (AKA Augustus) is the marker gene \cite{stein-obrien_patternmarkers_2017} for the pattern, and the marked pattern is the best friend of this gene. We want to identify the statistically significant marker genes and corresponding patterns.}
+A motivating example comes from the decomposition of omics data 
+\cite{fertig_cogaps_2010, stein-obrien_enter_2018}. One of the results is a matrix of weights of experimentally measured features (e.g. gene expressions) in complex biological processes. If a feature has a substantial weight in only one process, it is referred to as a marker \cite{stein-obrien_patternmarkers_2017}. 
 
-The third example deals with gene-to-gene correlation matrix (e.g. correlation of expression). High correlation indicates high similarity between genes. For a given gene, the goal is to indicate its ``best-friend'' genes among genes. 
-%friendship.
+The presence of a marker indicates the activity of the marked process.
+This goal is to find all the marker features and the corresponding processes.
+Neither a feature with large weights in all processes nor a noise feature should be identified as a marker.
+
+To properly identify a pair (marker feature, process), we suggest comparing the weights of all features in all processes simultaneously. 
+The proposed statistical test eliminates noise and universal features (e.g. \textcolor{red}{gene hubs}).
+Of note, we say that a marked process is a friend of a marker.
+% To avoid mistakes in marker selection, we develop a method that looks for features that are more important for particular patterns than for others, and for these patterns at the same time. The patterns are referred to as friends of their marker feature. 
+
+%Мы хотим видеть пару маркер - друг не только тогда, когда у маркера самый большой вес внутри процеесса, мы хотим видеть, когда у маркера самый большой вес в процессе, если процессы сравнить между собой. Это даёт возможность убирать универсальные маркеры (хабы). Тут наверное можно сказать что если ген - маркер, то процесс - его друг (лучший друг)
+
+% % Factorization results in an approximate matrix product decomposition. One of the factors is an \textit{amplitude} matrix that describes the structure of complex biological processes in terms of weights of the features (e.g., gene expressions) in the processes. 
+
+% \textcolor{purple}{Sometimes, the expression of a single gene indicates the activity of the entire pattern. In the simplest case, the gene has a nonzero load in only one pattern. In a more realistic setting, the gene has several nonzero loads, but all of them except one are relatively small. Then the gene (AKA Augustus) is the marker gene \cite{stein-obrien_patternmarkers_2017} for the pattern, and the marked pattern is the best friend of this gene. We want to identify the statistically significant marker genes and corresponding patterns.}
+
+% The third example deals with gene-to-gene correlation matrix (e.g. correlation of expression). High correlation indicates high similarity between genes. For a given gene, the goal is to indicate its ``best-friend'' genes among genes. 
+% % %friendship.
 
 
 
 
-
-
-The bipartite graph suits well to describe the problem setups. To generalize the examples, we will refer to genes/queries as \textit{{\tag}s}, to expression patterns/documents as \textit{{\collection}s}, and to any load/relevance value as \textit{attention}. Of note, the attention is the weight of an edge connecting a tag and a collection. Fig.\ref{fig:nice_name} illustrates the setting.
+The bipartite graph suits well to the above mentioned setup. To generalize the setting, we will refer to features as \textit{{\tag}s}, to processes as \textit{{\collection}s}, and to weights as \textit{attention}. In terms of graphs, the attention is the weight of an edge between a tag and a collection. Fig.\ref{fig:nice_name} illustrates the setting.
 
 \begin{figure}
     \centering
@@ -119,13 +132,13 @@ The bipartite graph suits well to describe the problem setups. To generalize the
     \label{fig:nice_name}
 \end{figure}
 
-To be more specific, we consider a set of collections $C = \{c_1, \dots, c_k\}$, and a set of tags $T = \{t_1, \dots, t_n\}$.
-Each tag $t_i \in T$ and collection $c_j \in C$ are related by the attention---the real value $a_{ij}$---that the collection pays to the tag.
-Let's agree that the greater the value, the higher the attention is. Naturally, the absence of attention corresponds to $a_{ij} = 0$. 
+Let a set of collections be $C = \{c_1, \dots, c_k\}$, and a set of tags be $T = \{t_1, \dots, t_n\}$.
+We set the weight of an edge between $t_i \in T$ and $c_j \in C$ (attention) to be $a_{ij}$.
+Let's agree that the greater the $a_{ij}$, the higher the attention is. Naturally, the absence of attention corresponds to $a_{ij} = 0$. 
 
-All the values $a_{ij}$ are stored in a matrix $\mathcal{A}$ \textcolor{red}{(one may think of non-diagonal block a weighted adjacency matrix of the corresponding graph)}; its row $\mathcal{A}_{i:}$ corresponds to tag $t_i$, its column $\mathcal{A}_{:j}$ corresponds to collection $c_j$.
+Values $a_{ij}$ are stored in a matrix $\mathcal{A}$. One may think of $A$ as a non-diagonal block of a weighted adjacency matrix of the corresponding bipartite graph. Each row $\mathcal{A}_{i:}$ corresponds to attentions that a tag $t_i$ receives from all collections; thus, each column $\mathcal{A}_{:j}$ corresponds to attention from the collection $c_j$ to all tags.
 
-This tag-collection-attention metaphor applies to many setups (see Tab.\ref{tab:examples} for examples).
+This model applies to many setups (see Tab.\ref{tab:examples} for examples).
 
 \begin{table}[h!]
 \centering
@@ -135,7 +148,7 @@ This tag-collection-attention metaphor applies to many setups (see Tab.\ref{tab:
 
 \begin{tabular}[c]{@{}c@{}}search engine\end{tabular} & query       & \begin{tabular}[c]{@{}c@{}} search result \end{tabular}         & \begin{tabular}[c]{@{}c@{}}relevance of\\ search output\\\end{tabular} \\ \hline
 
-\begin{tabular}[c]{@{}c@{}}gene regulation\\  by TFs\end{tabular}     & gene             & \begin{tabular}[c]{@{}c@{}}genes under \\ TF regulation\end{tabular}     & \begin{tabular}[c]{@{}c@{}}strength of \\ regulation\end{tabular}       \\ \hline
+\begin{tabular}[c]{@{}c@{}}gene expression regulation\\  by TFs\end{tabular}     & gene             & \begin{tabular}[c]{@{}c@{}}genes under \\ TF regulation\end{tabular}     & \begin{tabular}[c]{@{}c@{}}strength of \\ regulation\end{tabular}       \\ \hline
 
 \begin{tabular}[c]{@{}c@{}}transcription\\ decomposition\end{tabular} & transcript       & \begin{tabular}[c]{@{}c@{}}transcription \\ pattern\end{tabular}         & \begin{tabular}[c]{@{}c@{}}transcript's load \\ in pattern\end{tabular} \\ \hline
 
@@ -155,17 +168,24 @@ fuzzy clustering                                                      & object  
 Let's recall the intuition that starts the introduction. A friend of Augustus cares about Augustus more than other people do. In the following, we depict the concept of care using ranking. Indeed, the ranking approach widely appears in our scope of interest.
 Partial or total ranking of documents for a given query is a popular strategy in information retrieval \cite{liu2009learning}. In bioinformatics, many methods rely on ranking, e.g. feature selection \cite{venetis2011selection}, marker selection \cite{vargo2020rank,pullin2022comparison,jimenez2021multivariate}, etc.
 
-The idea of ranking can be applied in a na\"ive way: the higher the attention of a collection to a tag is, the more friendly the collection is to the tag. But in some cases, this is not enough.
+The idea of ranking can be applied in a na\"ive way: the higher the attention of a collection to a tag is, the more friendly the collection is to the tag. But this ranking cannot tell between the tags that are specific markers, and the tags which are common features for all collections (e.g., gene hubs).
 
-Let's recall the example of gene-to-gene correlation. The na\"ive approach is to fix a gene of interest and rank other genes according to their correlation. This ranking cannot tell between the genes, which specifically correlate with the gene of interest, and the network hub genes (i.e., genes that carelessly correlate with all the genes). 
+% Let's recall the example of gene-to-gene correlation. The na\"ive approach is to fix a gene of interest and rank other genes according to their correlation. This ranking cannot tell between the genes, which specifically correlate with the gene of interest, and the network hub genes (i.e., genes that carelessly correlate with all the genes). 
 
-Therefore, we suggest using double-ranking approach. As any ranking approach, it is distribution-free. Moreover, it allows us to define the concept of friendship via the concept of care in accordance with the Augustus intuition, and thus to point to the most friendly collection for each tag. \textcolor{airforceblue}{Below, we will see how the concept helps us to statistically distinguish between the friends-by-accident and real best friends.}
+Therefore, we suggest using double-ranking approach. As any ranking approach, it is distribution-free. Moreover, it allows us to point to the most friendly collection for each tag. Below, we will see how double-ranking bring us to a statistical test that distinguishes between the friends-by-accident and real best friends.
 
-First, we fix a collection $c_j$ and rank the attention values $a_{1j}, \dots, a_{nj}$. This ranking indicates how much the collection $c_j$ cares about any tag $t_i$. Thus, any collection $c_{j}$ and any tag $t_i$ are connected by the rank $r_{ij}$.
+% to define the concept of friendship via the concept of care in accordance with the Augustus intuition, and thus 
 
-Second, we fix a tag $t_i$ and rank all collections by the tag's ranks in a collection $r_{i1}, \dots, r_{ik}$.
+First, we fix a collection $c_j$ and rank the attention values $a_{1j}, \dots, a_{nj}$. The position in ranking $r_{ij}$ of each tag $t_i$ indicates how much the collection $c_j$ cares about it. 
+
+% First, we fix a collection $c_j$ and rank the attention values $a_{1j}, \dots, a_{nj}$. This ranking indicates how much the collection $c_j$ cares about any tag $t_i$. Thus, any collection $c_{j}$ and any tag $t_i$ are connected by the rank $r_{ij}$.
+
+
+Second, we fix a tag $t_i$ and rank all collections by this tag's ranks in a collection $r_{i1}, \dots, r_{ik}$.
 This step expresses the intuition of Augustus numerically: the collection $c_j$ with the highest rank $r_{ij}$ among $r_{i1}, \dots, r_{ik}$ 
- \textcolor{purple}{cares the most about $t_i$ and it }can be the best friend of $t_i$. However, having the highest rank is necessary, but not sufficient to be the real best friend.
+ \textcolor{purple}{cares the most about $t_i$ and it }can be the best friend of $t_i$. However, having the highest rank is necessary, but not sufficient to be the real best friend. 
+
+
 
 Of note, friendship in this notation is a property of the whole matrix $\mathcal{A}$. Thus, the null-hypothesis $H_0$ claiming no friendship at all, consists of assumptions on all the values in $\mathcal{A}$.
 
@@ -179,9 +199,11 @@ To start with, we choose a tag and then we look for a collection. As we see, the
 
 Before, we consider only one possible best friend $c_j$ per tag $t_i$. The procedure naturally expands to the case when the tag selects/marks a subset of collections, thus having more than one friend. In other words, the \test{best friend test} expands to the \test{friends test}.
 
-Here, the tag split the set of all collections into two subsets, e.g. the friends of the tag and all the others. The split occurs by a chosen threshold for ordered ranks. The \test{friends test} estimates the statistical significance of this split.
+Here, the tag splits the set of all collections into two subsets, e.g. the friends of the tag and all the others. The split occurs by a chosen threshold for ordered ranks. The \test{friends test} estimates the statistical significance of this split.
 
-Of note, both tests run for only one tag of interest. However, we can run the tests for all the tags simultaneously. In this case, one should consider the multiplicity correction. 
+\textcolor{navyblue}{The test is complementary to the Friedman's test  cite{FRIEDMAN TEST}, which looks for the tags that overall rank is significantly high (in other words, for the hubs). Another test that is built on the bipartite graph and has a close ideology is the Gale-Shapley solution for the stable matching problem. The actual tasks are quite different: Gale-Shapley algorithm looks for a stable (i.e. locally optimal) matching subset of the set of all possible pairs, while our method looks for globally optimal matches (friends) for each tag and estimates the statistical reliability of the matching.}
+
+Both tests run for only one tag of interest. However, we can run the tests for all the tags simultaneously. In this case, one should consider the multiplicity correction. 
 
 \section{Method}
 \label{sec:method}
@@ -355,12 +377,12 @@ Fig.\ref{fig:polytop} depicts $P_3$.
     \caption{Polytopes $P_3$. The green area is the support of $u$, the dark-green area is the support of $u$ with additional coordinate constraints.}
 \end{figure}
 
-The volume $V_k$ of the $P_k$ can be computed as follows
+The volume $V_k$ of the $P_k$ is well-known,
 \begin{eqnarray*}
-V_k = &\displaystyle \int\limits_0^1\int\limits_{u_1}^1\int\limits_{u_2}^1\int\limits_{u_3}^1...\int\limits_{u_{k-1}}^1 du_k....du_4 du_3 du_2 du_1 =  \frac{1}{k!}~,
+V_k = &\displaystyle \int\limits_0^1\int\limits_{u_1}^1\int\limits_{u_2}^1\int\limits_{u_3}^1...\int\limits_{u_{k-1}}^1 du_k....du_4 du_3 du_2 du_1 =  \frac{1}{k!}~.
 \end{eqnarray*}
-see \eqref{eq:volume} for inference.
-\textcolor{blue}{\textit{This estimation is well known and can be find in textbooks}}
+% see \eqref{eq:volume} for inference.
+% \textcolor{blue}{\textit{This estimation is well known and can be find in textbooks}}
 
 Now we construct the random variable $U$ mentioned in Sections \ref{sec:best_friend_test} and \ref{sec:friends_test}. Given some fixed index $l\leq k-1$, we define
 \[
@@ -489,13 +511,14 @@ First, we recall that for any $m > 0$,
 %\begin{eqnarray}
 %&\displaystyle \int_0^b\left(b-x\right)^{m-1}dx=\displaystyle \frac{b^m}{m}  \label{eq:left}
 %\end{eqnarray}
-Applying \eqref{eq:intab} recursively from $k$ to $1$, we get
-\begin{align}
-V_k & = \displaystyle \int\limits_0^1\int\limits_{u_1}^1\int\limits_{u_2}^1\int\limits_{u_3}^1...\int\limits_{u_{k-1}}^1 du_k...du_4 du_3 du_2 du_1  \nonumber \\ 
-& =\displaystyle \frac{1}{(k-3)!}\int\limits_0^1\int\limits_{u_1}^1\int\limits_{u_2}^1 \left( 1-u_3 \right)^{k-3}du_3 du_2 du_1  \nonumber \\
-& =\displaystyle \frac{1}{(k-2)!}\int_0^1\int\limits_{u_1}^1\left( 1-u_2 \right)^{k-2} du_2 du_1  \nonumber \\
-& = \displaystyle \frac{1}{(k-1)!} \int\limits_0^1\left( 1-u_1 \right)^{k-1} du_1 = \frac{1}{k!}. \label{eq:volume}
-\end{align}
+
+% Applying \eqref{eq:intab} recursively from $k$ to $1$, we get
+% \begin{align}
+% V_k & = \displaystyle \int\limits_0^1\int\limits_{u_1}^1\int\limits_{u_2}^1\int\limits_{u_3}^1...\int\limits_{u_{k-1}}^1 du_k...du_4 du_3 du_2 du_1  \nonumber \\ 
+% & =\displaystyle \frac{1}{(k-3)!}\int\limits_0^1\int\limits_{u_1}^1\int\limits_{u_2}^1 \left( 1-u_3 \right)^{k-3}du_3 du_2 du_1  \nonumber \\
+% & =\displaystyle \frac{1}{(k-2)!}\int_0^1\int\limits_{u_1}^1\left( 1-u_2 \right)^{k-2} du_2 du_1  \nonumber \\
+% & = \displaystyle \frac{1}{(k-1)!} \int\limits_0^1\left( 1-u_1 \right)^{k-1} du_1 = \frac{1}{k!}. \label{eq:volume}
+% \end{align}
 
 First, we consider the case for $l = 1$,
 \begin{align}
