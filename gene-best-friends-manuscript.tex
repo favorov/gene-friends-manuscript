@@ -80,33 +80,30 @@ Johns Hopkins University School of Medicine, \\ Baltimore, MD 21205, USA, \email
 \vspace{-0.2in}
 
 \begin{abstract}
-The weighted bipartite graph model fits many practical problems, such as gene expression regulation by a set of transcription factors. %or weights of genes in expression patterns. 
-Suppose one is interested in detecting the specific (i.e. noteworthy) connections between the nodes. To quantify the specificity, we introduce a numerical definition of \textit{friendship} between the nodes from one set (set of \textit{collections}) and another (set of \textit{tags}). 
-The method relies on the double ranking of elements inside the \textcolor{red}{weighted adjacency matrix of the graph} (\textit{matrix of attention} from collections to tags) combined with a novel statistical test. 
-We implemented the method in \textsf{R} package \textsf{best.friends}.
-As possible areas of application, we consider feature selection, interpretable clustering, and knowledge transfer. 
+We propose a novel approach to select hidden specific relations in a dataset, which a bipartite graph can represent. 
+To describe the hidden specific relations in general, we use a concept of \textit{friendship}. The goal is to detect objects in the data that are more important to particular others, than to the rest of the dataset, i.e. to detect friends. The corresponding statistical tests are the \test{best friend test} and the \test{friends test}. Both tests are based on the double ranking of the entries in the block of the weighted adjacency matrix of the bipartite graph. This model fits many practical problems, such as gene expression regulation by a set of transcription factors, etc. The method is available as an \textsf{R} package at \url{https://github.com/favorov/best.friends}.
 \end{abstract}
 
-\keywords{specific gene regulation, pattern marker, weighted bipartite graph, noteworthy edges, rank statistics, feature selection, clustering, knowledge transfer}
+
+\keywords{weighted bipartite graph, hidden relations, rank statistics, feature selection, clustering, knowledge transfer, specific gene regulation, pattern marker}
 
 \section{Introduction: what it means to be a friend}
 
-There is a simple intuition of what does it mean to be a friend. Augustus is more important to his friend than to other people. And if we see Augustus, then we also infer that we will see friend(s) of Augustus. 
+There is a simple intuition of what it means to be a friend. Augustus is more important to his friend than to other people. And if we see Augustus, then we also infer that we will see friend(s) of Augustus. 
 
-In the following, we formulate this concept as a double ranking procedure and a statistical test that validates its result to create a multi-purpose numeric method that identifies highly specific interactions.
+In the following, we numerically formulate this concept as a double ranking procedure and a statistical test that validates its result to create a multi-purpose numeric method that identifies highly specific interactions.
 
 A motivating example comes from the decomposition of omics data 
 \cite{fertig_cogaps_2010, stein-obrien_enter_2018}. One of the results is a matrix of weights of experimentally measured features (e.g. gene expressions) in complex biological processes. If a feature has a substantial weight in only one process, it is referred to as a marker \cite{stein-obrien_patternmarkers_2017}. 
 The presence of a marker indicates the activity of the marked process.
 The goal is to find all the marker features and the corresponding processes.
 
-Of note, neither a noise feature nor a feature with large weights in all processes should be identified as a marker. Here, to achieve this, we redefine markers as features that are more important for a particular process than for others. The friend is a complementary concept to this definition of a marker. If a process is a friend to a feature, the feature is a marker to the process, and vice versa. To properly identify pairs friend-marker pairs,  we suggest comparing the weights of all features in all processes simultaneously.  
+Of note, neither a noise feature nor a feature with large weights in all processes should be identified as a marker. Here, to achieve this, we redefine markers as features that are more important for a particular process than for others. The friend is a complementary concept to this definition of a marker. If a process is a friend to a feature, the feature is a marker to the process, and vice versa. 
 
-The bipartite graph suits well to the above mentioned setup. To generalize the setting, we will refer to features as \textit{{\tag}s}, to processes as \textit{{\collection}s}, and to weights as \textit{attention}. In terms of graphs, the attention is the weight of an edge between a tag and a collection. Fig.\ref{fig:nice_name} illustrates the setting.
+The bipartite graph suits well to the above-mentioned setup. To generalize the setting, we will refer to features as \textit{{\tag}s}, to processes as \textit{{\collection}s}, and to weights as \textit{attention}. In terms of graphs, the attention is the weight of an edge between a tag and a collection. Fig.\ref{fig:nice_name} illustrates the setting.
 
 \begin{figure}
     \centering
-    %\includegraphics[scale=.25]{bipartite.jpg}
     \import{}{bipartite}
     \caption{Bipartite graph presenting tag-collection model. $A(t,c)$ is the attention that a collection pays to a tag. Arrows are nonzero $A(t,c)$.}
     \label{fig:nice_name}
@@ -122,36 +119,34 @@ This model applies to many setups (see Tab.\ref{tab:examples} for examples).
 
 \begin{table}[h!]
 \centering
-\begin{tabular}{c|c|c|c}
-\textbf{Example} & \textbf{tag $t_i$} & \textbf{collection $c_j$} & \textbf{attention $a_{ij}$} \\ 
-\hline
-
-\begin{tabular}[c]{@{}c@{}}search engine\end{tabular} & query       & \begin{tabular}[c]{@{}c@{}} search result \end{tabular}         & \begin{tabular}[c]{@{}c@{}}relevance of\\ search output\\\end{tabular} \\ \hline
-
-\begin{tabular}[c]{@{}c@{}}gene expression regulation\\  by transcription factors\end{tabular}     & gene             & \begin{tabular}[c]{@{}c@{}}genes under the  transcription \\ factor regulation\end{tabular}     & \begin{tabular}[c]{@{}c@{}}strength of \\ regulation\end{tabular}       \\ \hline
-
-\begin{tabular}[c]{@{}c@{}}transcription\\ decomposition\end{tabular} & transcript       & \begin{tabular}[c]{@{}c@{}}complex biological process\end{tabular}         & \begin{tabular}[c]{@{}c@{}}transcript's weights \\ in process\end{tabular} \\ \hline
-
-\begin{tabular}[c]{@{}c@{}}transcription \\ correlation\end{tabular} & transcript             & \begin{tabular}[c]{@{}c@{}}another transcript\end{tabular} & \begin{tabular}[c]{@{}c@{}}correlation of transcription values \\measured in different experiments\end{tabular}    \\ \hline
-fuzzy clustering                                                      & object           & cluster                                                                  & \begin{tabular}[c]{@{}c@{}}object weight \\ in cluster\end{tabular}     \\ \hline
-
-
-\begin{tabular}[c]{@{}c@{}}weighted graph\end{tabular} & vertex       & \begin{tabular}[c]{@{}c@{}} another vertex \end{tabular}         & \begin{tabular}[c]{@{}c@{}}weight of edge between\\ collection and tag \end{tabular} \\ \hline
-
-
-\end{tabular}
-
 \caption{Tag-collection metaphor deployment examples.}
 \label{tab:examples}
+\begin{tabular}{c|c|c|c}
+\textbf{Example} & \textbf{Tag $t_i$} & \textbf{Collection $c_j$} & \textbf{Attention $a_{ij}$} \\ 
+\hline
+
+\begin{tabular}[c]{@{}c@{}}Search engine\end{tabular} & Query       & \begin{tabular}[c]{@{}c@{}} Search result \end{tabular}         & \begin{tabular}[c]{@{}c@{}}Relevance of\\ search output\\\end{tabular} \\ \hline
+
+\begin{tabular}[c]{@{}c@{}}Gene expression regulation\\  by transcription factors\end{tabular}     & Gene             & \begin{tabular}[c]{@{}c@{}}Genes under regulation \\ by the transcription factor \end{tabular}     & \begin{tabular}[c]{@{}c@{}}Strength of \\ regulation\end{tabular}       \\ \hline
+
+\begin{tabular}[c]{@{}c@{}}Transcription\\ decomposition\end{tabular} & Transcript       & \begin{tabular}[c]{@{}c@{}}Complex biological process\end{tabular}         & \begin{tabular}[c]{@{}c@{}}Transcript's weights \\ in process\end{tabular} \\ \hline
+
+\begin{tabular}[c]{@{}c@{}}Transcription \\ correlation\end{tabular} & Transcript             & \begin{tabular}[c]{@{}c@{}}Another transcript\end{tabular} & \begin{tabular}[c]{@{}c@{}}Correlation of transcription values\\ measured in different experiments\end{tabular}    \\ \hline
+Fuzzy clustering                                                      & Object           & Cluster                                                                  & \begin{tabular}[c]{@{}c@{}}Object weight \\ in cluster\end{tabular}     \\ \hline
+
+
+\begin{tabular}[c]{@{}c@{}}Weighted graph\end{tabular} & Vertex       & \begin{tabular}[c]{@{}c@{}} Another vertex \end{tabular}         & \begin{tabular}[c]{@{}c@{}}Weight of edge between\\ collection and tag \end{tabular} \\ \hline
+
+\end{tabular}
 \end{table}
 
 A tag is more important to its friends than to other collections. In the following, we express the importance by ranking.  
 
-The ranking method can be applied in a na\"ive way: the higher the attention of a collection to a tag is, the more friendly the collection is to the tag. But this approach cannot tell between the tags that are specific markers and the tags which are important for all collections (e.g., gene hubs).
+The ranking method can be applied in a na\"ive way: the higher the attention of a collection to a tag is, the more friendly the collection is to the tag. But this approach cannot tell between the tags that are specific markers and the tags which are important for all collections (e.g., so-called network hubs).
 
 Therefore, we suggest using double-ranking. It points to the most friendly collection for a given tag. 
 
-First, for each collection $c_j$ we decreasingly rank the attention values $a_{1j}, \dots, a_{nj}$. As a result, we get the ranks $r_{1j}, \dots, r_{nj}$.  The lower $r_{ij}$ is, the higher the importance of the tag $t_i$ for the collection $c_j$. 
+First, for each collection $c_j$ we decreasingly rank the attention values $a_{1j}, \dots, a_{nj}$. As a result, we get the ranks $r_{1j}, \dots, r_{nj}$.  The lower $r_{ij}$ is, the higher the importance of the tag $t_i$ for the collection $c_j$. See Section~\ref{sec:method} for details.
 
 Second, we fix a tag $t_i$ and rank $r_{i1}, \dots, r_{ik}$. In other words, we rank all collections by this tag's importance for them.
 This step numerically expresses the friendship concept. Say the collection $c_j$ has  the highest rank $r_{ij}$ among $r_{i1}, \dots, r_{ik}$. Thus, the importance of $t_i$ to $c_j$ is higher than to other collections. Thus, the collection $c_j$ can be $t_i$'s best friend.
@@ -167,10 +162,9 @@ We suggest a test checking whether $c_j$ is really the best friend of $t_i$ or $
 Looking for a possible best friend and statistically assessing the friendship, we start with a data set represented by a bipartite graph of vertices representing tags and collections and edges representing attention from collection to tag.
 To start with, we choose a tag and then we look for a collection. As we see, the procedure is asymmetric by design. If it succeeds, we refer to the collection $c_j$ as the best friend of the tag $t_i$; $t_i$ selects $c_j$ and we refer to $t_i$ as a marker for $c_j$. The term is consistent with the pattern marker term \cite{stein-obrien_patternmarkers_2017}.
 
-Before, we consider only one possible best friend $c_j$ per tag $t_i$. The procedure naturally expands to the case when the tag selects/marks a subset of collections, thus having more than one friend. In other words, the \test{best friend test} expands to the \test{friends test}.
+So far, we consider only one possible best friend $c_j$ per tag $t_i$. The procedure naturally expands to the case when the tag selects/marks multiple collections, thus having more than one friend. In other words, the \test{best friend test} expands to the \test{friends test}.
 
-Here, the tag splits the set of all collections into two subsets, e.g. the friends of the tag and all the others. The split occurs by a chosen threshold for ordered ranks. The \test{friends test} estimates the statistical significance of this split.
-
+The tag splits the set of all collections into two subsets, e.g. the friends of the tag and all the others. The split occurs by a chosen threshold for ordered ranks. The \test{friends test} estimates the statistical significance of this split.
 
 Both tests run for only one tag of interest. However, we can run the tests for all the tags simultaneously. In this case, one should consider the multiplicity correction. 
 
@@ -275,7 +269,7 @@ this test---we will refer to it as \test{friends test}---with $l = 1$.
 % The \test{friends test} possibly rejects $H_0$
 % for the decomposition of $C$ into two group, $ F_{i}(l)$ and all the other collections.
 
-\textcolor{red}{Section \ref{sec:theory} proves that for any $i$ and $l$, $u_l(t_i)$ is a realization of $U$ mentioned in Section~\ref{sec:best_friend_test}.}
+Section \ref{sec:theory} proves that for any $i$ and $l$, $u_l(t_i)$ is a realization of $U$ introduced  in Section~\ref{sec:best_friend_test}.
 By analogy with the \test{best friend test}, we asses $p$-value for $u_{l}(t_i)$,
 %for the pair of $t_i$ and the population $l$ of the subset of collections $ \left\{ c_{\sigma_i(1)} \dots c_{\sigma_i(l)} \right\},$ that are putative friends between using $u_{l}(t_i)$,
 \[
@@ -383,15 +377,15 @@ Since all $U_l$ have the same distribution, we use $U$-notation for $p$-value ca
 
 
 \subsection{Symmetric attention matrix $\mathcal{A}$}
-\textcolor{blue}{\textit{The matrix shows relation tags vs collection and it is not quadratic. How the non-quadratic matrix can be symmetric?}}
-The $p$-value calculation relies on the assumption of the independence of attention values in different collections. If the attention matrix $\mathcal{A}$ is symmetric by the nature of the underlying bipartite graph, this assumption does not hold. Thus, the theoretical inference \textcolor{red}{does not work}.
+% \textcolor{blue}{\textit{The matrix shows relation tags vs collection and it is not quadratic. How the non-quadratic matrix can be symmetric?}}
+It may happen that the number of tags $n$ coincides with the number of collections $k$, $n = k$. The particular case of the symmetric (by construction) attention matrix $\mathcal{A}$ requires a more detailed investigation.
 
-\textcolor{purple}{Still, the numerical procedure works. We show this in more detail in Supplement~\ref{seq:symmetric_a}}. Of note, sometimes we know that all the diagonal elements are $0$ by construction. In this case, both tests use 
+The $p$-value calculation relies on the assumption of the independence of attention values in different collections. If the attention matrix $\mathcal{A}$ is symmetric by the nature of the underlying bipartite graph, this assumption does not hold. Thus, the theoretical inference presented in Section~\ref{sec:theory} is not valid anymore.
+
+Still, the numerical procedure works. We show this in more detail in Supplement~\ref{seq:symmetric_a}. Of note, sometimes we know that all the diagonal elements are $0$ by construction. In this case, both tests use 
 \[
 p(w) = (1-w)^{k-1}, ~~\text{cf. equation \eqref{eq:pw}.}
 \]
-
-% \textcolor{airforceblue}{For a symmetric case, sometimes it makes sense to remove the main diagonal before ranking not to obtain trivial self-relations. The functions of the package receive a parameter for that case; actually, this parameter set to TRUE decreases the dimensionality $k$ to $k-1$.}
 
 \subsection{Multiple testing}
 \label{sec:multimurkers}
@@ -404,15 +398,12 @@ In practice, the tests are run for each tag or even for each tag and the friend 
 To run the \test{best friend test} on all the $n$ tags, we 
 calculate $n$ $p$-values. To run the \test{friends test}, we calculate $n \cdot k$ $p$-values. However, all the tests rely on the ranking of the elements inside the same attention matrix $\mathcal{A}$. Thus, the assumption of test independence does not hold. In this case, the standard Bonferroni correction on the set of corresponding $p$-values is possibly too strong (\cite{cabin2000bonferroni}). However, some correction is still necessary. We leave it to the scope of the particular application.
 
-\paragraph*{Multimarkers} Note that after the multiple hypothesis correction, a collection \textcolor{red}{may happen}
-%can appear 
-to be the best friend (or an element of the true friends set) for more than one tag. The set of tags is thus a multimarker for the collection. In practice, a multimarker tags (selects) a collection more specific than each of its elements.
+\paragraph*{Multimarkers} Note that after the multiple hypothesis correction, a collection may be the best friend (or an element of the true friends set) for more than one tag. The set of tags is thus a multimarker for the collection. In practice, a multimarker tags (selects) a collection more specific than each of its elements.
 
 \subsection{The code availability}
 
-The software that implements the \text{best friend test} and \text{friends test} is currently available as an \textsf{R} package \textsf{best.friends} at\\
-\url{https://github.com/favorov/best-friends/R/best.friends}.
-
+The software that implements the \text{best friend test} and \text{friends test} is available as an \textsf{R} package \textsf{best.friends} at 
+\url{https://github.com/favorov/best.friends}. The vignette of the package shows simple usecases. 
 
 \section{Discussion}
 
