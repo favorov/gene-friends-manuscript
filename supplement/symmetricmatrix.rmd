@@ -20,17 +20,21 @@ We test whether we can use the independence of ranks of the same column element 
 First, we set up the parameters: number of runs, the size of the matrix, and whether the main diagonal is zero.
 
 ```{r parameters}
-msize<-10
-n<-10000
+n<-1000
 set.seed(42)
 ```
 
+```{r setmatsize100}
+msize<-100
+```
 
-# Symmetric square matrix
+
+# Symmetric square `r msize`x`r msize` matrix
 
 We make a symmetric random matrix n times and then we save the ranks of 3 row in 1 column and in second column for each permutation.
 
-```{r experiment_sym}
+```{r experiment_sym_100}
+
 zerodiag<-FALSE
 two_columns<-data.table('u31'=rep(-1,n),'u32'=rep(-1,n))
 for (i in 1:n) {
@@ -49,14 +53,14 @@ for (i in 1:n) {
 
 The Kendall correlation does not detect any correlation between the vectors.
 
-```{r correlation_sym}
+```{r correlation_sym_100}
 cor.test(two_columns[[1]],two_columns[[2]],method="kendall")
 ```
 
 
 Let's plot the results.
 
-```{r plot_sym}
+```{r plot_sym_100}
 two_columns<-two_columns %>% count (u31,u32,name="counter")
 scale<-median(two_columns$counter)/4
 dots <- ggplot(two_columns,aes(x=u31,y=u32)) + 
@@ -66,12 +70,117 @@ plot(dots)
 ```
 
 Let's test the uniformity.
-```{r uniformity_sym}
+```{r uniformity_sym_100}
 chisq.test(two_columns$counter)
 ```
 
 
-# Symmetric square matrix, zero diagonal
+```{r setmatsize50}
+msize<-50
+```
+
+
+# Symmetric square `r msize`x`r msize` matrix
+
+We make a symmetric random matrix n times and then we save the ranks of 3 row in 1 column and in second column for each permutation.
+
+```{r experiment_sym_50}
+
+zerodiag<-FALSE
+two_columns<-data.table('u31'=rep(-1,n),'u32'=rep(-1,n))
+for (i in 1:n) {
+  matr<-matrix(runif(msize**2),nrow=msize)
+  matr<-matr+t(matr)
+  if(zerodiag) {diag(matr)<-0}
+  else {diag(matr)<-runif(msize)+runif(msize)}
+  #we regenerate diag to be from the same distrib
+  #everything is now sum of two runif,
+  #and  the diag before we regenetate it is is from 2*runif 
+  two_columns[i,1]<-msize-rank(matr[,1])[3]
+  two_columns[i,2]<-msize-rank(matr[,2])[3]
+}
+
+```
+
+The Kendall correlation does not detect any correlation between the vectors.
+
+```{r correlation_sym_50}
+cor.test(two_columns[[1]],two_columns[[2]],method="kendall")
+```
+
+
+Let's plot the results.
+
+```{r plot_sym_50}
+two_columns<-two_columns %>% count (u31,u32,name="counter")
+scale<-median(two_columns$counter)/4
+dots <- ggplot(two_columns,aes(x=u31,y=u32)) + 
+  geom_point(size=two_columns$counter/scale,alpha=0.5,col="blue") + 
+  theme_classic()
+plot(dots)
+```
+
+Let's test the uniformity.
+```{r uniformity_sym_50}
+chisq.test(two_columns$counter)
+```
+
+```{r setmatsize10}
+msize<-10
+```
+
+
+# Symmetric square `r msize`x`r msize` matrix
+
+We make a symmetric random matrix n times and then we save the ranks of 3 row in 1 column and in second column for each permutation.
+
+```{r experiment_sym_10}
+
+zerodiag<-FALSE
+two_columns<-data.table('u31'=rep(-1,n),'u32'=rep(-1,n))
+for (i in 1:n) {
+  matr<-matrix(runif(msize**2),nrow=msize)
+  matr<-matr+t(matr)
+  if(zerodiag) {diag(matr)<-0}
+  else {diag(matr)<-runif(msize)+runif(msize)}
+  #we regenerate diag to be from the same distrib
+  #everything is now sum of two runif,
+  #and  the diag before we regenetate it is is from 2*runif 
+  two_columns[i,1]<-msize-rank(matr[,1])[3]
+  two_columns[i,2]<-msize-rank(matr[,2])[3]
+}
+
+```
+
+The Kendall correlation does not detect any correlation between the vectors.
+
+```{r correlation_sym_10}
+cor.test(two_columns[[1]],two_columns[[2]],method="kendall")
+```
+
+
+Let's plot the results.
+
+```{r plot_sym_10}
+two_columns<-two_columns %>% count (u31,u32,name="counter")
+scale<-median(two_columns$counter)/4
+dots <- ggplot(two_columns,aes(x=u31,y=u32)) + 
+  geom_point(size=two_columns$counter/scale,alpha=0.5,col="blue") + 
+  theme_classic()
+plot(dots)
+```
+
+Let's test the uniformity.
+```{r uniformity_sym_10}
+chisq.test(two_columns$counter)
+```
+
+
+```{r setmatsize100-bis}
+msize<-100
+```
+
+# Symmetric square `r msize`x`r msize` matrix, zero diagonal
 
 ```{r experiment_sym_zero_diag}
 zerodiag<-TRUE
@@ -108,7 +217,7 @@ plot(dots)
 chisq.test(two_columns$counter)
 ```
 
-# Asymmetric square matrix
+# Asymmetric square `r msize`x`r msize` matrix
 
 Let's run the procedure for a random asymmetric square matrix.
 
@@ -151,7 +260,7 @@ chisq.test(two_columns$counter)
 
 
 
-# Asymmetric square matrix, zero diagonal
+# Asymmetric square `r msize`x`r msize` matrix, zero diagonal
 
 Let's run the procedure for a random asymmetric square matrix.
 
@@ -195,7 +304,7 @@ chisq.test(two_columns$counter)
 
 
 
-# Nonsquare matrix
+# Nonsquare `r msize`x`r 2*msize`matrix
 
 For control, let's run the procedure for a nonsquare matrix.
 
@@ -205,7 +314,6 @@ two_columns<-data.table('u31'=rep(-1,n),'u32'=rep(-1,n))
 nsize=2*msize
 for (i in 1:n) {
   matr<-matrix(runif(msize*nsize),nrow=msize)
-  if(zerodiag) {diag(matr)<-0}
   two_columns[i,1]<-msize-rank(matr[,1])[3]
   two_columns[i,2]<-msize-rank(matr[,2])[3]
 }
