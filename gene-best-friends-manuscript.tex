@@ -28,21 +28,22 @@
 %
 
 
-\title{Telling the story of best friends}
+%\title{Telling the story of best friends}
 %
-\titlerunning{Best friends}  
+\title{Best friends test: differential importance statistical test reveals hidden specific relations}
+%
+\titlerunning{Best friends test}  
 % abbreviated title (for running head)
 %                                     also used for the TOC unless
 %                                     \toctitle is used
 %
 \author{
-Alexandra Suvorikova \inst{1} \and Vasily Ramensky \inst{2,3,4} \and Vera Mukhina \inst{5,6} 
-\and Andrey Mironov \inst{4,7} \and Alexander Favorov\inst{6,8}}
+Alexandra Suvorikova \inst{1} \and Vasily Ramensky \inst{2,3,4} \and Vera Mukhina \inst{5,6} \and Ludmila Danilova\inst{8} \and Andrey Mironov \inst{4,7} \and Alexander Favorov\inst{6,8}}
 %
 \authorrunning{A. Suvorikova et al.} % abbreviated author list (for running head)
 %
 %%%% list of authors for the TOC (use if author list has to be modified)
-\tocauthor{Alexandra Suvorikova, Vasily Ramensky, Vera Mukhina, Andrey Mironov, and Alexander Favorov}
+\tocauthor{Alexandra Suvorikova, Vasily Ramensky, Vera Mukhina, Ludmila Danilova, Andrey Mironov, and Alexander Favorov}
 %
 \institute{
 Weierstrass Institute, Berlin, Germany, 
@@ -56,11 +57,11 @@ Department of Bioengineering and Bioinformatics, \\Lomonosov Moscow State Univer
 \and
 University of Maryland School of Medicine,  Baltimore, MD 21205, USA
 \and
-Vavilov Institute of General Genetics, RAS,  Moscow, 119333, RF
+Johns Hopkins University School of Medicine, \\ Baltimore, MD 21205, USA, \email{favorov@sensi.org}
 \and
 The Institute for Information Transmission Problems,  Moscow, 127051, RF
 \and
-Johns Hopkins University School of Medicine, \\ Baltimore, MD 21205, USA, \email{favorov@sensi.org}
+Vavilov Institute of General Genetics, RAS,  Moscow, 119333, RF
 }
 
 \maketitle              % typeset the title of the contribution
@@ -81,7 +82,7 @@ Johns Hopkins University School of Medicine, \\ Baltimore, MD 21205, USA, \email
 
 \begin{abstract}
 We propose a novel approach to select hidden specific relations in a dataset, which a bipartite graph can represent. 
-To describe the hidden specific relations in general, we use a concept of \textit{friendship}. The goal is to detect objects in the data that are more important to particular others, than to the rest of the dataset, i.e. to detect friends. The corresponding statistical tests are the \test{best friend test} and the \test{friends test}. Both tests are based on the double ranking of the entries in the block of the weighted adjacency matrix of the bipartite graph. This model fits many practical problems, such as gene expression regulation by a set of transcription factors, etc. The method is available as an \textsf{R} package at \url{https://github.com/favorov/best.friends}.
+To describe the hidden specific relations in general, we use a concept of \textit{friendship}. The goal is to detect objects in the data that are more important to particular others, than to the rest of the dataset, i.e. to detect friends. To this end, we introduce two statistical tests, the \test{best friend test} and the \test{friends test}. Both tests are based on the double ranking of the entries in the block of the weighted adjacency matrix of the bipartite graph. This model fits many practical problems, such as gene expression regulation by a set of transcription factors, etc. The method is available as an \textsf{R} package at \url{https://github.com/favorov/best.friends}.
 \end{abstract}
 
 
@@ -89,37 +90,43 @@ To describe the hidden specific relations in general, we use a concept of \texti
 
 \section{Introduction: what it means to be a friend}
 
-There is a simple intuition of what it means to be a friend. Augustus is more important to his friend than to other people. And if we see Augustus, then we also infer that we will see friend(s) of Augustus. 
-
-In the following, we numerically formulate this concept as a double ranking procedure and a statistical test that validates its result to create a multi-purpose numeric method that identifies highly specific interactions.
+% There is a simple intuition of what it means to be a friend. Augustus is more important to his friend than to other people. And if we see 
+%Augustus, then we also infer that we will see friend(s) of Augustus. 
+There is a simple intuition of what it means to be a friend.  
+The friends of Augustus try to get together with him as often as possible. And if we meet August somewhere, we will likely meet his friends too.
+In the following, we numerically formulate this concept as a double-ranking procedure and a statistical test that validates the ranking result. This approach is multi-purpose and detects hidden specific interactions.
+% In the following, we numerically formulate this concept as a double ranking procedure and a statistical test that validates its result to create a multi-purpose numeric method that detects hidden specific interactions.
 
 A motivating example comes from the decomposition of omics data 
 \cite{fertig_cogaps_2010, stein-obrien_enter_2018}. One of the results is a matrix of weights of experimentally measured features (e.g. gene expressions) in complex biological processes. If a feature has a substantial weight in only one process, it is referred to as a marker \cite{stein-obrien_patternmarkers_2017}. 
 The presence of a marker indicates the activity of the marked process.
 The goal is to find all the marker features and the corresponding processes.
 
-Of note, neither a noise feature nor a feature with large weights in all processes should be identified as a marker. Here, to achieve this, we redefine markers as features that are more important for a particular process than for others. The friend is a complementary concept to this definition of a marker. If a process is a friend to a feature, the feature is a marker to the process, and vice versa. 
+Of note, neither a noise feature nor a feature with large weights in all processes should be identified as a marker. To achieve this, we redefine markers as features significantly more important for a particular process than for other processes. The friend is a complementary concept to this definition of a marker. If a process is a friend to a feature, the feature is a marker to the process, and vice versa. 
+Introducing terms for both friends and markers, we emphasize that the friendship relation is asymmetric. We will explain the idea later.
 
-The bipartite graph suits well to the above-mentioned setup. To generalize the setting, we will refer to features as \textit{{\tag}s}, to processes as \textit{{\collection}s}, and to weights as \textit{attention}. In terms of graphs, the attention is the weight of an edge between a tag and a collection. Fig.\ref{fig:nice_name} illustrates the setting.
+\textcolor{navyblue}{The approach we introduce here applies to numerous problems. So, to generalize the setting, we will refer to features as \textit{{\tag}s}, to processes as \textit{{\collection}s}, and to weights as \textit{attention}. A bipartite graph suits well to picture it (fig.\ref{fig:nice_name}).  The attention is the weight of an edge between two edges, a collection and a tag.}
+
+%The bipartite graph suits well to the above-mentioned setup. \textcolor{red}{The approach we will introduce applies to many setups}. So, to generalize the setting, we will refer to features as \textit{{\tag}s}, to processes as \textit{{\collection}s}, and to weights as \textit{attention}. Regarding graphs, attention is the weight of an edge between a tag and a collection. Fig.\ref{fig:nice_name} illustrates the setting.
 
 \begin{figure}
     \centering
     \import{}{bipartite}
-    \caption{Bipartite graph presenting tag-collection model. $A(t,c)$ is the attention that a collection pays to a tag. Arrows are nonzero $A(t,c)$.}
+    \caption{Bipartite graph presenting tag-collection model. $A(t,c)$ is a collection's attention to a tag. The arrows depict nonzero $A(t,c)$ .}
     \label{fig:nice_name}
 \end{figure}
 
 Let a set of collections be $C = \{c_1, \dots, c_k\}$, and a set of tags be $T = \{t_1, \dots, t_n\}$.
-We set the weight of an edge between $t_i \in T$ and $c_j \in C$ (attention) to be $a_{ij}$.
+We set attention $a_{ij}$ to be the weight of an edge between $t_i \in T$ and $c_j \in C$.
 Let's agree that the greater the $a_{ij}$, the higher the attention is. Naturally, the absence of attention corresponds to $a_{ij} = 0$. 
 
-Values $a_{ij}$ are stored in a matrix $\mathcal{A}$. One may think of $A$ as a non-diagonal block of a weighted adjacency matrix of the corresponding bipartite graph. Each row $\mathcal{A}_{i:}$ corresponds to attentions that a tag $t_i$ receives from all collections; thus, each column $\mathcal{A}_{:j}$ corresponds to attention from the collection $c_j$ to all tags.
+Values $a_{ij}$ are stored in a matrix $\mathcal{A}$. One may think of $A$ as a non-diagonal block of a weighted adjacency matrix of the corresponding bipartite graph. Each row $\mathcal{A}_{i:}$ corresponds to attention that a tag $t_i$ receives from all collections; each column $\mathcal{A}_{:j}$ corresponds to attention from the collection $c_j$ to all tags.
 
 This model applies to many setups (see Tab.\ref{tab:examples} for examples).
 
 \begin{table}[h!]
 \centering
-\caption{Tag-collection metaphor deployment examples.}
+\caption{Tag-collection model deployment examples.}
 \label{tab:examples}
 \begin{tabular}{c|c|c|c}
 \textbf{Example} & \textbf{Tag $t_i$} & \textbf{Collection $c_j$} & \textbf{Attention $a_{ij}$} \\ 
@@ -142,31 +149,34 @@ Fuzzy clustering                                                      & Object  
 
 A tag is more important to its friends than to other collections. In the following, we express the importance by ranking.  
 
-The ranking method can be applied in a na\"ive way: the higher the attention of a collection to a tag is, the more friendly the collection is to the tag. But this approach cannot tell between the tags that are specific markers and the tags which are important for all collections (e.g., so-called network hubs).
+The ranking can be applied in a na\"ive way: the higher the attention of a collection to a tag is, the more friendly the collection is to the tag. But this approach cannot distinguish between the tags that are specific markers and those that are important for all collections (e.g., so-called network hubs).
 
-Therefore, we suggest using double-ranking. It points to the most friendly collection for a given tag. 
+We suggest using double-ranking. It points to the most friendly collection for a given tag. 
 
-First, for each collection $c_j$ we decreasingly rank the attention values $a_{1j}, \dots, a_{nj}$. As a result, we get the ranks $r_{1j}, \dots, r_{nj}$.  The lower $r_{ij}$ is, the higher the importance of the tag $t_i$ for the collection $c_j$. See Section~\ref{sec:method} for details.
+First, for each collection $c_j$ we decreasingly rank the attention values $a_{1j}, \dots, a_{nj}$ and get the corresponding ranks $r_{1j}, \dots, r_{nj}$.  The lower $r_{ij}$ is, the higher the importance of the tag $t_i$ for the collection $c_j$. See Section~\ref{sec:method} for details.
 
 Second, we fix a tag $t_i$ and rank $r_{i1}, \dots, r_{ik}$. In other words, we rank all collections by this tag's importance for them.
-This step numerically expresses the friendship concept. Say the collection $c_j$ has  the highest rank $r_{ij}$ among $r_{i1}, \dots, r_{ik}$. Thus, the importance of $t_i$ to $c_j$ is higher than to other collections. Thus, the collection $c_j$ can be $t_i$'s best friend.
+This step numerically expresses the friendship concept. Say the collection $c_j$ has the highest rank $r_{ij}$ among $r_{i1}, \dots, r_{ik}$. Thus, the importance of $t_i$ to $c_j$ is higher than to other collections. Thus, the collection $c_j$ can be $t_i$'s best friend.
 
-However, having the highest rank is necessary, but not sufficient to be the real best friend. We can illustrate it as follows. Even in a randomly generated attention matrix $\mathcal{A}$, the ranking will bring up a collection for each tag. So, we suggest a novel statistical test that assesses the reliability of friendship in this setup.
+Having the highest rank is necessary but insufficient to be the real best friend. We can illustrate this as follows. Even in a randomly generated attention matrix $\mathcal{A}$, the double ranking will bring up a collection for each tag. So, we suggest a novel statistical test that assesses the reliability of friendship in this setup.
 
 Friendship in this notation is a property of the whole matrix $\mathcal{A}$.
 Under $H_0$, which suggests no friendship at all, we assume the attention values from a collection $c_j$ to all tags are independent and identically distributed.
-This distribution can vary from collection  to collection. Moreover, all the $n \times k$ attention values $a_{ij}$ from collections to tags are independent.
+This distribution can vary from collection to collection. Moreover, all the $n \times k$ attention values $a_{ij}$ from collections to tags are independent.
 
 We suggest a test checking whether $c_j$ is really the best friend of $t_i$ or $c_j$ appears at the top of the ranking by chance (i.e. according to $H_0$). The test is $p$-value based and compares the ordered ranks for $t_i$ in different collections. We name it the \test{best friend test}.
 
-Looking for a possible best friend and statistically assessing the friendship, we start with a data set represented by a bipartite graph of vertices representing tags and collections and edges representing attention from collection to tag.
-To start with, we choose a tag and then we look for a collection. As we see, the procedure is asymmetric by design. If it succeeds, we refer to the collection $c_j$ as the best friend of the tag $t_i$; $t_i$ selects $c_j$ and we refer to $t_i$ as a marker for $c_j$. The term is consistent with the pattern marker term \cite{stein-obrien_patternmarkers_2017}.
+%\textcolor{purple}{Looking for a possible best friend and statistically assessing the friendship, we start with a data set represented by a bipartite graph. Its vertices are tags and collections and its edges are attention from collection to tag. To start with, we choose a tag and then we look for a collection. As we see, the procedure is asymmetric by design. If it succeeds, we refer to the collection $c_j$ as the best friend of the tag $t_i$; $t_i$ selects $c_j$ and we refer to $t_i$ as a marker for $c_j$. The term is consistent with the pattern marker term \cite{stein-obrien_patternmarkers_2017}.}
+%\textcolor{red}{See the commented comment in Russian below}
+%Перечитала текст и не поняла что это за покемон и зачем он здесь????
+%ЭЭЭЭЭ фиг знает что это, наверное, из-под коммента выпрыгнуло без разрешения
+%надо проверить, не пригодится ли это в дискуссию - и всё
 
 So far, we consider only one possible best friend $c_j$ per tag $t_i$. The procedure naturally expands to the case when the tag selects/marks multiple collections, thus having more than one friend. In other words, the \test{best friend test} expands to the \test{friends test}.
 
 The tag splits the set of all collections into two subsets, e.g. the friends of the tag and all the others. The split occurs by a chosen threshold for ordered ranks. The \test{friends test} estimates the statistical significance of this split.
 
-Both tests run for only one tag of interest. However, we can run the tests for all the tags simultaneously. In this case, one should consider the multiplicity correction. 
+Both tests run for only one tag of interest. Since we usually have no apriori preferences for a tag, we can run the tests for all the tags simultaneously. In this case, we should consider the multiplicity correction. 
 
 \section{Method}
 \label{sec:method}
