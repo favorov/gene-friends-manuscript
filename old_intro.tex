@@ -1,0 +1,80 @@
+
+Let observed collections be $C = \{c_1, \dots, c_k\}$, and observed tags be $T = \{t_1, \dots, t_n\}$.
+The attention $A(t_i, c_j) = a_{ij}$ is the weight of an edge between $t_i \in T$ and $c_j \in C$.
+Let's agree that the greater the $a_{ij}$, the higher the attention is. Naturally, the absence of attention corresponds to $a_{ij} = 0$. 
+
+Values $a_{ij}$ are stored in a matrix $\mathcal{A}$. One may think of $\mathcal{A}$ as a non-diagonal block of a weighted adjacency matrix of the bipartite graph. Each row $\mathcal{A}_{i:}$ corresponds to attention that a tag $t_i$ receives from all collections; each column $\mathcal{A}_{:j}$ corresponds to attention from the collection $c_j$ to all tags.
+% \begin{center}
+
+% \begin{table}[]
+% $\mathcal{A}$ = 
+% \begin{tabular}{l|llll}
+%       & $c_1$    & $c_2$    & ... & $c_k$    \\ \hline
+% $t_1$ & $a_{11}$ & $a_{12}$ &     & $a_{1k}$ \\
+% $t_2$ & $a_{21}$ & $a_{21}$ &     & $a_{2k}$ \\
+% ...   &          &          &     &          \\
+% $t_n$ & $a_{n1}$ & $a_{n2}$ &     & $a_{nk}$
+% \end{tabular}
+% \end{table}
+% \end{center}
+
+The model applies to many setups (see Tab.\ref{tab:examples} for examples).
+
+\begin{table}[h!]
+\centering
+\caption{Tag-collection model deployment examples.}
+\label{tab:examples}
+\begin{tabular}{c|c|c|c}
+\textbf{Example} & \textbf{Tag $t_i$} & \textbf{Collection $c_j$} & \textbf{Attention $a_{ij}$} \\ 
+\hline
+
+\begin{tabular}[c]{@{}c@{}}Search engine\end{tabular} & Query       & \begin{tabular}[c]{@{}c@{}} Search result \end{tabular}         & \begin{tabular}[c]{@{}c@{}}Relevance of\\ search output\\\end{tabular} \\ \hline
+
+\begin{tabular}[c]{@{}c@{}}Gene expression regulation\\  by transcription factors\end{tabular}     & Gene             & \begin{tabular}[c]{@{}c@{}}Genes under regulation \\ by the transcription factor \end{tabular}     & \begin{tabular}[c]{@{}c@{}}Strength of \\ regulation\end{tabular}       \\ \hline
+
+\begin{tabular}[c]{@{}c@{}}Transcription\\ decomposition\end{tabular} & Transcript       & \begin{tabular}[c]{@{}c@{}}Complex biological process\end{tabular}         & \begin{tabular}[c]{@{}c@{}}Transcript's weights \\ in process\end{tabular} \\ \hline
+
+\begin{tabular}[c]{@{}c@{}}Transcription \\ correlation\end{tabular} & Transcript             & \begin{tabular}[c]{@{}c@{}}Another transcript\end{tabular} & \begin{tabular}[c]{@{}c@{}}Correlation of transcription values\\ measured in different experiments\end{tabular}    \\ \hline
+Fuzzy clustering                                                      & Object           & Cluster                                                                  & \begin{tabular}[c]{@{}c@{}}Object weight \\ in cluster\end{tabular}     \\ \hline
+
+
+\begin{tabular}[c]{@{}c@{}}Weighted graph\end{tabular} & Vertex       & \begin{tabular}[c]{@{}c@{}} Another vertex \end{tabular}         & \begin{tabular}[c]{@{}c@{}}Weight of edge between\\ collection and tag \end{tabular} \\ \hline
+
+\end{tabular}
+\end{table}
+
+
+
+Our procedure is two-step. First, for a fixed tag, we select the collections that are friend candidates. Then we carry out a statistical test to filter out noise, on the one hand, and nonspecific strong relations, on the other. 
+
+%The selection evaluates how important the tag is for a collection. In the following, we express the importance of ranking.
+ 
+The selection (the first step) is based on ranking. 
+The ranking can be applied in a na\"ive way: the higher the attention of a collection to a tag is, the more friendly the collection is to the tag. However, this approach cannot distinguish between the tags that are specific markers and those that are paid high attention by all the collections (e.g., so-called network hubs).
+
+So, we suggest a double-ranking method. It points to the most friendly collection(s) for a given tag. But even in a randomly generated attention matrix $\mathcal{A}$, the ranking will bring up a collection for each tag. So, we suggest a novel statistical test that assesses the reliability of friendship in this setup. Section~\ref{sec:method} introduces the procedure.
+
+% For each collection $c_j$ we decreasingly rank the attention values $a_{1j}, \dots, a_{nj}$ and get the corresponding ranks $r_{1j}, \dots, r_{nj}$.  The lower $r_{ij}$ is, the higher the importance of the tag $t_i$ for the collection $c_j$. See Section~\ref{sec:method} for details.
+
+% Then, we fix a tag $t_i$ and rank $r_{i1}, \dots, r_{ik}$. In other words, we rank all collections by this tag's importance for them.
+% This step numerically expresses the friendship concept. Say the collection $c_j$ has the highest rank $r_{ij}$ among $r_{i1}, \dots, r_{ik}$. Thus, the importance of $t_i$ to $c_j$ is higher than to other collections. Thus, the collection $c_j$ can be $t_i$'s best friend.
+
+% \textcolor{red}{However,} having the highest rank \textcolor{red}{after the double-ranking} is necessary but insufficient to be the real best friend. We can illustrate this as follows. Even in a randomly generated attention matrix $\mathcal{A}$, the double ranking will bring up a collection for each tag. So, we suggest a novel statistical test that assesses the reliability of friendship in this setup.
+
+In this model, the friendship between a collection and a tag is a property of the whole attention matrix $\mathcal{A}$.
+Under $H_0$, which states no friendship at all, we suggest the attention values from a collection $c_j$ to all tags are independent and identically distributed.
+This distribution can vary from collection to collection. Moreover, all the $n \times k$ attention values $a_{ij}$ from collections to tags are independent.
+
+We suggest a test checking whether $c_j$ is really the best friend of $t_i$ or $c_j$ appears at the top of the ranking by chance (i.e. according to $H_0$). The test is $p$-value based and compares the ordered ranks for $t_i$ in different collections. We name it the \test{best friend test}.
+
+%\textcolor{purple}{Looking for a possible best friend and statistically assessing the friendship, we start with a data set represented by a bipartite graph. Its vertices are tags and collections and its edges are attention from collection to tag. To start with, we choose a tag and then we look for a collection. As we see, the procedure is asymmetric by design. If it succeeds, we refer to the collection $c_j$ as the best friend of the tag $t_i$; $t_i$ selects $c_j$ and we refer to $t_i$ as a marker for $c_j$. The term is consistent with the pattern marker term \cite{stein-obrien_patternmarkers_2017}.}
+%\textcolor{red}{See the commented comment in Russian below}
+%Перечитала текст и не поняла что это за покемон и зачем он здесь????
+%ЭЭЭЭЭ фиг знает что это, наверное, из-под коммента выпрыгнуло без разрешения
+%надо проверить, не пригодится ли это в дискуссию - и всё
+
+So far, we consider only one possible best friend $c_j$ per tag $t_i$. The procedure naturally expands to the case when the tag selects/marks multiple collections, thus having more than one friend. In other words, the \test{best friend test} expands to the \test{friends test}.
+
+The tag splits the set of all collections into two subsets, e.g. the friends of the tag and all the others. The split occurs by a chosen threshold for ordered ranks. The \test{friends test} estimates the statistical significance of this split.
+
+Both tests run for only one tag of interest. Since we usually have no apriori preferences for a tag, we can run the tests for all the tags simultaneously. In this case, we should consider the multiplicity correction. 

@@ -1,0 +1,144 @@
+\section{Calculation of $p$-value}
+\label{sec:theory}
+% The only data structure we use in the test is the matrix $\mathcal{R}$ defined in \eqref{def:R}.  
+% Its elements $r_{ij}$ are ranks of attention to $t_i$ paid by $c_j$.
+% We correct $r_{ij}$ for continuity and redefine them as normalized ranks,
+% \begin{equation}
+% \label{def:correction}
+% r_{ij} := \frac{r_{ij} - \frac{1}{2}}{n}.
+% \end{equation}
+
+ 
+% Its elements $r_{ij}$ are ranks of attention to $t_i$ paid by $c_j$.
+% We correct $r_{ij}$ for continuity and redefine them as normalized ranks,
+% \begin{equation}
+% \label{def:correction}
+% r_{ij} := \frac{r_{ij} - \frac{1}{2}}{n}.
+% \end{equation}
+
+The only data structure we use in the test is the matrix $\mathcal{R}$ defined in \eqref{def:R}. To construct the test for the $i$-th tag $t_i$, we use the $i$-th row of $\mathcal{R}$, $\mathcal{R}_{i:} = (r_{i1}, \dots, r_{ik})$. For simplicity, we omit the first index $i$ and write
+\[
+r := (r_{1}, \dots, r_{k}).
+\]
+
+Under $H_0$, the entries of vector $r$ are uniformly distributed on a grid $\{1, 2, \dots, n-1, n\}$, i.e. $r\sim \text{Unif}(\{1, \dots, n\}^k)$. For further inference, we shift the grid and assume $r\sim \text{Unif}(\{0, \dots, n-1\}^k)$.
+
+By ordering the elements of $r$, we get
+\[
+r_{\sigma} = (r_{\sigma(1)}, \dots, r_{\sigma(k)}), 
+\quad
+r_{\sigma(1)} \leq r_{\sigma(2)} \leq \dots \leq r_{\sigma(k)}.
+\]
+
+The \test{best friend test} \eqref{def:u_1} and the \test{friends test} \eqref{def:u_l} 
+\textcolor{red}{rely} on the difference of consecutive entries in $r_{\sigma}$.
+
+For simplicity, we set
+\begin{equation}
+\label{def:u}
+    r_{\sigma} := v = (v_1, \dots, v_k).
+\end{equation}
+
+Using the new notations, we rewrite the test statistics as
+\[
+u_l = \frac{v_{l+1} - v_{l}}{n}, \quad
+\text{for all}~ l\in \{0, \dots, k-2\}.
+\]
+
+To get the distribution of $u_l$, we have to estimate the distribution of $v_{l+1}- v_l$. Using \cite{khatri1962distributions}, we get
+for the fixed difference $v_{l+1}-v_{l} = q$ the probability  
+\[
+p(q) = \frac{\binom{k}{l}}{n^k}\sum^{n-1-q}_{v_l = 0} \left[(v_l + 1)^{l} - {v_l}^l \right] \left[ (n-q-v_l)^{k-l} - (n-1-q-v_l)^{k-l}\right].
+\]
+
+Moreover, for large $n$, we get
+\[
+p(q) \approx \frac{k}{n-1}\left(1 - \frac{q}{n-1} \right)^{k-1}.
+\]
+Section~\ref{appendix:discreet_case} contains the inference.
+
+To estimate the $p$-value, we have to compute
+\[
+P(q \ge w) = \sum^{n}_{q = w} p(q).
+\]
+
+Similarly, we get the asymptotic result
+\[
+P(q \ge w) \approx \textcolor{red}{\left(1 - \frac{w}{n-1} \right)^{k}}.
+\]
+
+
+Since all $u_l = q/n$ have the same distribution, we use $U$-notation for $p$-value calculations for the \test{best friend test} and the \test{friends test}.
+
+\subsection{Continuous case}
+
+Consider the vector $r$ distributed uniformly on a $k$-dimensional cube $[0, 1]^{k}$, $r = (r_1, \dots, r_k)$. As before, we consider its ordered counterpart
+\[
+r_{\sigma} = (r_{\sigma(1)}, \dots, r_{\sigma(k)}), \quad r_{\sigma(1)} \leq r_{\sigma(2)} \leq \dots \leq r_{\sigma(k)},
+\]
+and denote 
+\[
+    r_{\sigma} := v = (v_1, \dots, v_k).
+\]
+
+Vector $v$ takes values in $k$-dimensional convex polytope $D_k$ that is 
+an intersection of $k$--dimensional cube $[0, 1]^{k}$ and 
+$k-1$ half-spaces, which are defined by linear constraints $v_1 \le v_2$, $v_2 \le v_3$ etc.
+Fig.\ref{fig:polytop} depicts $D_3$. 
+\begin{figure}
+     \centering
+     \begin{subfigure}[b]{0.3\textwidth}
+         \centering 
+         \scalebox{.4}{\import{}{cube-volume}}
+         \caption{Support of $v$.
+         \\\hspace{\textwidth} 
+        }
+         \label{fig:polytop}
+     \end{subfigure}
+     \begin{subfigure}[b]{0.3\textwidth}
+         \centering 
+         \scalebox{.4}{\import{}{cube-w_1}}
+         \caption{Support of $v$, 
+         \\\hspace{\textwidth}
+         $v_2 - v_1 \ge w$.}
+         \label{fig:polytop1}
+     \end{subfigure}
+     \begin{subfigure}[b]{0.3\textwidth}
+         \centering 
+         \scalebox{.4}{\import{}{cube-w_2}}
+         \caption{Support of $v$ \\\hspace{\textwidth}$v_3 - v_2 \ge w$.}
+         \label{fig:polytop2}
+     \end{subfigure}
+    \caption{Polytopes $D_3$. The green area is the support of $v$, the dark-green area is the support of $v$ with additional coordinate constraints.}
+\end{figure}
+
+The volume $V_k$ of the $D_k$ is well-known,
+\begin{eqnarray*}
+V_k = &\displaystyle \int\limits_0^1\int\limits_{v_1}^1\int\limits_{v_2}^1\int\limits_{v_3}^1...\int\limits_{v_{k-1}}^1 dv_k....dv_4 dv_3 dv_2 dv_1 =  \frac{1}{k!}~.
+\end{eqnarray*}
+% see \eqref{eq:volume} for inference.
+% \textcolor{blue}{\textit{This estimation is well known and can be find in textbooks}}
+
+Given some fixed index $l\leq k-1$, we define
+\[
+u_{l} := v_{l+1} - v_{l}. 
+\]
+To estimate its $p$-value, we impose an additional restriction:
+\[
+u_{l} \ge w, \quad w \in [0, 1].
+\]
+
+The vectors $v$ satisfying this restriction take values in a smaller polytope $D^{l}_{k}(w)$ that is an intersection of $D_{k}$ and a half-space represented by the restriction.
+Fig.\ref{fig:polytop1} and Fig.\ref{fig:polytop2} depict $D^{1}_{3}(w)$, $D^{2}_{3}(w)$, respectively. 
+
+The volume of $D^{l}_{k}(w)$ is 
+\begin{equation}
+V_{k}(w) = \frac{(1-w)^k}{k!},
+\end{equation}
+see \eqref{eq:p_1} and \eqref{eq:p_k} for the inference. We omit the $l$ index for the volume because it does not depend on $l$. The intuition is the following: the smaller polytope $D^{l}_{k}(w)$ is geometrically similar to $D_{k}$ with the scaling factor $(1-w)^k$. 
+
+Finally, we recall that $v = r_{\sigma}$. Thus, the probability for random vector $r_{\sigma}$ to satisfy the condition $u_{l} \ge w$ is the same for all $l\leq k-1$; it is equal to the ratio of $V_{k}(w)$ and $V_k$,
+\begin{equation}
+\label{eq:pw}
+    p(w) = (1-w)^k.
+\end{equation}

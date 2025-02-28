@@ -21,7 +21,7 @@
 \usetikzlibrary{positioning}
 \usetikzlibrary {arrows.meta}
 
-
+\newcommand{\red}[1]{\textcolor{red}{#1}}
 
 \begin{document}
 
@@ -32,39 +32,39 @@
 %
 \title{Best friends test: differential importance statistical test reveals hidden specific relations}
 %
-\titlerunning{Best friends test}  
+\titlerunning{Best friends test} 
 % abbreviated title (for running head)
-%                                     also used for the TOC unless
-%                                     \toctitle is used
+% also used for the TOC unless
+% \toctitle is used
 %
 \author{
-Alexandra Suvorikova \inst{1} \and Alexey Kroshnin \inst{1}  \and Vasily Ramensky \inst{2,3,4} \and Vera Mukhina \inst{5,6} \and Ludmila Danilova\inst{8} \and Andrey Mironov \inst{4,7} \and Alexander Favorov\inst{6,8}}
+Alexandra Suvorikova \inst{1} \and Alexei Kroshnin \inst{1} \and Dmirijs Lvovs\inst{6} \and Vasily Ramensky \inst{2,3,4} \and Vera Mukhina \inst{5,6} \and Ludmila Danilova\inst{6} \and Andrey Mironov \inst{4,7} \and Alexander Favorov\inst{6,8}}
 %
 \authorrunning{A. Suvorikova et al.} % abbreviated author list (for running head)
 %
 %%%% list of authors for the TOC (use if author list has to be modified)
-\tocauthor{Alexandra Suvorikova, Vasily Ramensky, Vera Mukhina, Ludmila Danilova, Andrey Mironov, and Alexander Favorov}
+\tocauthor{Alexandra Suvorikova, Alexey Kroshnin, Dmitrijs Lvovs, Vasily Ramensky, Vera Mukhina, Ludmila Danilova, Andrey Mironov, and Alexander Favorov}
 %
 \institute{
 Weierstrass Institute, Berlin, Germany, 
 \email{suvorikova@wias-berlin.de}
 \and
-MSU Institute for Artificial Intelligence, \\Lomonosov Moscow State University,  Moscow, 119992, RF
+MSU Institute for Artificial Intelligence, \\Lomonosov Moscow State University, Moscow, 119992, RF
 \and
-National Medical Research Center for Therapy and Preventive Medicine of the Ministry of Healthcare of Russian Federation,  Moscow, 101990, RF
+National Medical Research Center for Therapy and Preventive Medicine of the Ministry of Healthcare of Russian Federation, Moscow, 101990, RF
 \and
-Department of Bioengineering and Bioinformatics, \\Lomonosov Moscow State University,  Moscow, 119992, RF
+Department of Bioengineering and Bioinformatics, \\Lomonosov Moscow State University, Moscow, 119992, RF
 \and
-University of Maryland School of Medicine,  Baltimore, MD 21205, USA
+University of Maryland School of Medicine, Baltimore, MD 21205, USA
 \and
 Johns Hopkins University School of Medicine, \\ Baltimore, MD 21205, USA, \email{favorov@sensi.org}
 \and
-The Institute for Information Transmission Problems,  Moscow, 127051, RF
+The Institute for Information Transmission Problems, Moscow, 127051, RF
 \and
-Vavilov Institute of General Genetics, RAS,  Moscow, 119333, RF
+Vavilov Institute of General Genetics, RAS, Moscow, 119333, RF
 }
 
-\maketitle              % typeset the title of the contribution
+\maketitle % typeset the title of the contribution
 
 \renewcommand{\tag}{tag}
 \newcommand{\collection}{collection}
@@ -90,370 +90,196 @@ To describe the hidden specific relations in general, we use a concept of \texti
 
 \section{Introduction: what it means to be a friend}
 
-There is a simple intuition of what it means to be a friend.  
+There is a simple intuition of what it means to be a friend. 
 The friends of Augustus try to get together with him as often as possible. And if we meet August somewhere, we will likely meet his friends, too.
 
-A similar setup comes up if we consider any observed data's inner relations. 
-In the following, we model the relations as a bipartite graph. We numerically formulate the concept of friendship between graph nodes as a double-ranking procedure followed by a statistical test validating the ranking result. The approach detects specific relations in the data.
+A similar setup arises if we analyze any observed data's inner relations. 
+In the following, we model the relations as a bipartite graph. We numerically formulate the concept of friendship between graph nodes using a double-ranking procedure followed by a statistical test validating the ranking result. The approach detects specific relations in the data.
 
 % A motivating example comes from the matrix factorization of omics data \cite{fertig_cogaps_2010, stein-obrien_enter_2018}. The factorization gives a matrix that shows the importance (the weights) of the features (e.g. expressions of particular genes) in biological processes.
 
-A motivating example comes from the omics data decomposition \cite{fertig_cogaps_2010, stein-obrien_enter_2018}. It is a matrix containing the importance (the weights) of the features (e.g. expressions of particular genes) in biological processes.
+A motivating example comes from omics data decomposition \cite{fertig_cogaps_2010, stein-obrien_enter_2018}. In this context, a matrix represents the decomposition. Its elements correspond to the weights that quantify the importance of specific \textcolor{red}{features} in \textcolor{red}{the observed biological processes} (e.g., the expression levels of particular genes). A feature is referred to as a \textit{marker} if it has substantial weight in only one process \cite{stein-obrien_patternmarkers_2017}.
 
+The presence of a marker indicates the activity of the corresponding process. Conversely, features identified as noise or those with large weights across multiple processes should not be classified as markers. For instance, the work \cite{stein-obrien_patternmarkers_2017} aims to find all the markers and the corresponding marked processes. 
 
-% If a feature has a substantial weight in only one process, it is referred to as a marker \cite{stein-obrien_patternmarkers_2017}. 
+\paragraph{Approach} In our work, the detection of markers and marked processes is based on the concept of friendship: if a feature is a process marker, then the process is its friend.
 
-If a feature has a substantial weight in only one process, the authors \cite{stein-obrien_patternmarkers_2017} refer to it as a marker. 
-The presence of a marker in the \textcolor{violet}{data factorization} indicates the activity of the corresponding process. Moreover, one should not identify either a noise feature or a feature with large weights in many processes as a marker.
+This relationship is naturally modeled using a bipartite graph. The nodes in one set represent all observed features, while the nodes in the other set represent all biological processes. Weighted edges between these nodes indicate the degree of friendship.
 
-The work \cite{stein-obrien_patternmarkers_2017} aims to find all the markers and the corresponding marked processes.  
+% \textcolor{red}{For a given process, we identify its friend (marker) among the set of all other features.}
 
-In our work, the detection of markers and marked processes relies on the friendship concept:
-if a feature is a process marker, the process is its friend. 
-
-The bipartite graph naturally describes this model. The nodes in the first part are all observed features, and the nodes in the second part are all biological processes. The weighted edges represent the friendship.
-For a given process, we look for the friend (marker) among all other features.
-
-This setting applies to numerous problems. For the sake of generality, we will refer to features as \textit{{\tag}s}, to processes as \textit{{\collection}s}, and to weights as \textit{attention}. See a corresponding bipartite graph at Fig.\ref{fig:nice_name}.  The attention $A(t, c)$ is the weight of an edge between two nodes, a collection $c$ and a tag $t$.
-
+This setting applies to numerous problems. For the sake of generality, we refer to features as \textit{{\tag}s}, to processes as \textit{{\collection}s}, and to weights as \textit{attention}. See a corresponding bipartite graph at Fig.\ref{fig:nice_name}. The model applies to many setups (see Tab.\ref{tab:examples} for examples). 
 \begin{figure}
-    \centering
-    \import{}{bipartite}
-    \caption{Bipartite graph of tag-collection model. $A(t,c)$ is a collection's attention to a tag. The arrows correspond to nonzero $A(t,c)$ .}
-    \label{fig:nice_name}
+ \centering
+ \import{}{bipartite}
+ \caption{Bipartite graph of tag-collection model. The attention $A(t, c)$ is the weight of an edge between node $c$ (collection) and node $t$ (tag).
+ The arrows correspond to nonzero $A(t,c)$ .}
+ \label{fig:nice_name}
 \end{figure}
-
-Let observed collections be $C = \{c_1, \dots, c_k\}$, and observed tags be $T = \{t_1, \dots, t_n\}$.
-The attention $A(t_i, c_j) = a_{ij}$ is the weight of an edge between $t_i \in T$ and $c_j \in C$.
-Let's agree that the greater the $a_{ij}$, the higher the attention is. Naturally, the absence of attention corresponds to $a_{ij} = 0$. 
-
-Values $a_{ij}$ are stored in a matrix $\mathcal{A}$. One may think of $\mathcal{A}$ as a non-diagonal block of a weighted adjacency matrix of the bipartite graph. Each row $\mathcal{A}_{i:}$ corresponds to attention that a tag $t_i$ receives from all collections; each column $\mathcal{A}_{:j}$ corresponds to attention from the collection $c_j$ to all tags.
-
-The model applies to many setups (see Tab.\ref{tab:examples} for examples).
 
 \begin{table}[h!]
 \centering
 \caption{Tag-collection model deployment examples.}
 \label{tab:examples}
 \begin{tabular}{c|c|c|c}
-\textbf{Example} & \textbf{Tag $t_i$} & \textbf{Collection $c_j$} & \textbf{Attention $a_{ij}$} \\ 
+\textbf{Example} & \textbf{Tag $t$} & \textbf{Collection $c$} & \textbf{Attention $A(t, c)$} \\ 
 \hline
 
-\begin{tabular}[c]{@{}c@{}}Search engine\end{tabular} & Query       & \begin{tabular}[c]{@{}c@{}} Search result \end{tabular}         & \begin{tabular}[c]{@{}c@{}}Relevance of\\ search output\\\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}c@{}}Search engine\end{tabular} & Query & \begin{tabular}[c]{@{}c@{}} Search result \end{tabular} & \begin{tabular}[c]{@{}c@{}}Relevance of\\ search output\\\end{tabular} \\ \hline
 
-\begin{tabular}[c]{@{}c@{}}Gene expression regulation\\  by transcription factors\end{tabular}     & Gene             & \begin{tabular}[c]{@{}c@{}}Genes under regulation \\ by the transcription factor \end{tabular}     & \begin{tabular}[c]{@{}c@{}}Strength of \\ regulation\end{tabular}       \\ \hline
+\begin{tabular}[c]{@{}c@{}}Gene expression regulation\\ by transcription factors\end{tabular} & Gene & \begin{tabular}[c]{@{}c@{}}Genes under regulation \\ by the transcription factor \end{tabular} & \begin{tabular}[c]{@{}c@{}}Strength of \\ regulation\end{tabular} \\ \hline
 
-\begin{tabular}[c]{@{}c@{}}Transcription\\ decomposition\end{tabular} & Transcript       & \begin{tabular}[c]{@{}c@{}}Complex biological process\end{tabular}         & \begin{tabular}[c]{@{}c@{}}Transcript's weights \\ in process\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}c@{}}Transcription\\ decomposition\end{tabular} & Transcript & \begin{tabular}[c]{@{}c@{}}Complex biological process\end{tabular} & \begin{tabular}[c]{@{}c@{}}Transcript's weights \\ in process\end{tabular} \\ \hline
 
-\begin{tabular}[c]{@{}c@{}}Transcription \\ correlation\end{tabular} & Transcript             & \begin{tabular}[c]{@{}c@{}}Another transcript\end{tabular} & \begin{tabular}[c]{@{}c@{}}Correlation of transcription values\\ measured in different experiments\end{tabular}    \\ \hline
-Fuzzy clustering                                                      & Object           & Cluster                                                                  & \begin{tabular}[c]{@{}c@{}}Object weight \\ in cluster\end{tabular}     \\ \hline
+\begin{tabular}[c]{@{}c@{}}Transcription \\ correlation\end{tabular} & Transcript & \begin{tabular}[c]{@{}c@{}}Another transcript\end{tabular} & \begin{tabular}[c]{@{}c@{}}Correlation of transcription values\\ measured in different experiments\end{tabular} \\ \hline
+Fuzzy clustering & Object & Cluster & \begin{tabular}[c]{@{}c@{}}Object weight \\ in cluster\end{tabular} \\ \hline
 
 
-\begin{tabular}[c]{@{}c@{}}Weighted graph\end{tabular} & Vertex       & \begin{tabular}[c]{@{}c@{}} Another vertex \end{tabular}         & \begin{tabular}[c]{@{}c@{}}Weight of edge between\\ collection and tag \end{tabular} \\ \hline
-
+\begin{tabular}[c]{@{}c@{}}Weighted graph\end{tabular} & Vertex & \begin{tabular}[c]{@{}c@{}} Another vertex \end{tabular} & \begin{tabular}[c]{@{}c@{}}Weight of edge between\\ collection and tag \end{tabular} \\ \hline
 \end{tabular}
 \end{table}
 
-Our procedure is two-step. First, for a fixed tag, we select the collections that are friend candidates. Then we carry out a statistical test to filter out noise, on the one hand, and nonspecific strong relations, on the other. 
+\paragraph{Our goal} For each tag $t$, we aim to find all ``friendly'' collections in $c$. Returning to the markers and processes example, we search among all tags for markers and the processes they label.
 
-%The selection evaluates how important the tag is for a collection. In the following, we express the importance of ranking.
+
+\subsection*{Blueprint of the procedure}
  
-The selection (the first step) is based on ranking. 
-The ranking can be applied in a na\"ive way: the higher the attention of a collection to a tag is, the more friendly the collection is to the tag. However, this approach cannot distinguish between the tags that are specific markers and those that are paid high attention by all the collections (e.g., so-called network hubs).
 
-So, we suggest a double-ranking method. It points to the most friendly collection(s) for a given tag. But even in a randomly generated attention matrix $\mathcal{A}$, the ranking will bring up a collection for each tag. So, we suggest a novel statistical test that assesses the reliability of friendship in this setup. Section~\ref{sec:method} introduces the procedure.
+% \textcolor{red}{First, for a fixed tag, we range all collections by their ``friendliness''.} Then we carry out a statistical test to filter out noise, on the one hand, and nonspecific strong relations, on the other.
 
-% For each collection $c_j$ we decreasingly rank the attention values $a_{1j}, \dots, a_{nj}$ and get the corresponding ranks $r_{1j}, \dots, r_{nj}$.  The lower $r_{ij}$ is, the higher the importance of the tag $t_i$ for the collection $c_j$. See Section~\ref{sec:method} for details.
+The proposed procedure \textcolor{red}{relies on some modeling assumptions} and consists of two steps. 
+First, for each tag, we quantify the degree of friendliness associated with each collection. In the second step, we perform a statistical test to filter out both noise and nonspecific strong relationships.
 
-% Then, we fix a tag $t_i$ and rank $r_{i1}, \dots, r_{ik}$. In other words, we rank all collections by this tag's importance for them.
-% This step numerically expresses the friendship concept. Say the collection $c_j$ has the highest rank $r_{ij}$ among $r_{i1}, \dots, r_{ik}$. Thus, the importance of $t_i$ to $c_j$ is higher than to other collections. Thus, the collection $c_j$ can be $t_i$'s best friend.
+\textbf{First step.} The quantification of friendliness is based on ranking. A straightforward approach might be to assume that the higher the attention a collection $c$ gives to a tag $t$, the more friendly the collection $c$ is to the tag $t$. However, this na\"ive method fails to differentiate between tags that are specific markers and those that receive high attention from all collections (e.g., so-called network hubs). So, we suggest a double-ranking approach. It points to the most friendly collection(s) for a given tag $t$. 
 
-% \textcolor{red}{However,} having the highest rank \textcolor{red}{after the double-ranking} is necessary but insufficient to be the real best friend. We can illustrate this as follows. Even in a randomly generated attention matrix $\mathcal{A}$, the double ranking will bring up a collection for each tag. So, we suggest a novel statistical test that assesses the reliability of friendship in this setup.
+\textbf{Second step.} To select the true friends among all friendly collections, we use a statistical procedure based on some modeling assumptions. We name it the \test{friends test}. 
 
-In this model, the friendship between a collection and a tag is a property of the whole attention matrix $\mathcal{A}$.
-Under $H_0$, which states no friendship at all, we suggest the attention values from a collection $c_j$ to all tags are independent and identically distributed.
-This distribution can vary from collection to collection. Moreover, all the $n \times k$ attention values $a_{ij}$ from collections to tags are independent.
+For a given tag $t$, the \test{friends test} splits the set of all collections into two subsets: the friends of the tag and all the others. 
 
-We suggest a test checking whether $c_j$ is really the best friend of $t_i$ or $c_j$ appears at the top of the ranking by chance (i.e. according to $H_0$). The test is $p$-value based and compares the ordered ranks for $t_i$ in different collections. We name it the \test{best friend test}.
+It runs for only one tag of interest. Since we usually have no apriori preferences for a tag, we can run it for all the tags simultaneously. In this case, we should consider the multiplicity correction. 
 
-%\textcolor{purple}{Looking for a possible best friend and statistically assessing the friendship, we start with a data set represented by a bipartite graph. Its vertices are tags and collections and its edges are attention from collection to tag. To start with, we choose a tag and then we look for a collection. As we see, the procedure is asymmetric by design. If it succeeds, we refer to the collection $c_j$ as the best friend of the tag $t_i$; $t_i$ selects $c_j$ and we refer to $t_i$ as a marker for $c_j$. The term is consistent with the pattern marker term \cite{stein-obrien_patternmarkers_2017}.}
-%\textcolor{red}{See the commented comment in Russian below}
-%Перечитала текст и не поняла что это за покемон и зачем он здесь????
-%ЭЭЭЭЭ фиг знает что это, наверное, из-под коммента выпрыгнуло без разрешения
-%надо проверить, не пригодится ли это в дискуссию - и всё
+\textbf{Computational aspects.} \textcolor{red}{the procedure is fast and suitable for large data sets!}
 
-So far, we consider only one possible best friend $c_j$ per tag $t_i$. The procedure naturally expands to the case when the tag selects/marks multiple collections, thus having more than one friend. In other words, the \test{best friend test} expands to the \test{friends test}.
+\textbf{R-package}
+The software that implements the \text{best friend test} and \text{friends test} is available as an \textsf{R} package \textsf{best.friends} at 
+\url{https://github.com/favorov/best.friends}. The vignette of the package shows simple usecases.
 
-The tag splits the set of all collections into two subsets, e.g. the friends of the tag and all the others. The split occurs by a chosen threshold for ordered ranks. The \test{friends test} estimates the statistical significance of this split.
 
-Both tests run for only one tag of interest. Since we usually have no apriori preferences for a tag, we can run the tests for all the tags simultaneously. In this case, we should consider the multiplicity correction. 
+\paragraph{The organization of the paper} Section~\ref{sec:method} introduces the procedure in detail. \textcolor{red}{Section...}
 
-\section{Method}
+\section{\textit{Friends}-method}
 \label{sec:method}
+Denote a set of all observed collections as $C := \{c_1, \dots, c_k\}$, and a set of all observed tags as $T := \{t_1, \dots, t_n\}$.
+The attention $A(t_i, c_j)$ is the weight of an edge between $t_i$ in $ T$ and $c_j$ in $C$ (see Fig.\ref{fig:nice_name}).
+Let's agree that the greater the $A(t_i, c_j)$, the higher the attention is. Naturally, the absence of attention corresponds to $A(t_i, c_j) = 0$. 
 
-
-We recall that the attention matrix $\mathcal{A}$ is the only input for the statistical test. Each its element $a_{ij}$ is the value of attention that a collection $c_j \in C$ pays to a tag $t_i \in T$
+Let $a_{ij} := A(t_i, c_j)$. The corresponding attention matrix is 
 \[
-\mathcal{A} = \begin{pmatrix}
+\mathcal{A} := \begin{pmatrix}
 a_{11} & a_{12} & \dots & a_{1k} \\
-       &\cdots & \cdots &  \\
+ &\cdots & \cdots & \\
 a_{n1} & a_{n2} & \dots & a_{nk}
 \end{pmatrix}.
 \]
-Its $i$-th row corresponds to tag $t_i$, and we denote it as $\mathcal{A}_{i:} = (a_{i1}, \dots, a_{ik})$. Its $j$-th  corresponds to collection $c_j$, and we denote it as $\mathcal{A}_{:j} =(a_{1j}, \dots a_{nj})'$ (with $'$ being transposition).
+Of note, one may think of $\mathcal{A}$ as a non-diagonal block of a weighted adjacency matrix of the bipartite graph.
 
-%from intro We express how much a collection $c_j$ cares about a tag $t_i$ in terms of the rank of $a_{ij}$ in column $\mathcal{A}_{:j}$. So, if a collection $c_j$ cares about a tag $t_i$ more than other collections, the rank of $a_{ij}$ in $\mathcal{A}_{:j}$ is higher than the rank of $a_{il}$ in $\mathcal{A}_{:l}$ for all $l \neq j$. 
+In what follows we will denote the $i$-th row of the matrix $\mathcal{A}$ as $\text{row}_i(\mathcal{A})$ and its $j$-th column $\text{col}_j(\mathcal{A})$, i.e.,
+\[
+\text{row}_i(\mathcal{A}) := (a_{i1}, \dots, a_{ik}),
+\quad
+\text{col}_j(\mathcal{A}) := (a_{1j}, \dots, a_{nj}).
+\]
+In other words, a row $\text{row}_i(\mathcal{A})$ corresponds to attention that a tag $t_i$ receives from all collections in $C$; a column $\text{col}_j(\mathcal{A})$ corresponds to attention from a collection $c_j$ to all tags in $T$.
 
-We do the following procedure to identify the collection, which is the putative best friend (or, in other words, the most friendly collection) for each tag.
+In the rest of the text, we assume that all $a_{ij}$ are independent random variables.
 
-For each collection $c_j \in C$, we decreasingly rank the elements inside $\mathcal{A}_{:j}$. Thus, for each $a_{ij} \in \mathcal{A}_{:j}$, we get the ordinal number $r_{ij}:=\text{rank}\left(a_{ij}|\text{inside}~\mathcal{A}_{:j}\right)$. We resolve the ties by the mean rank of the tied elements. 
+Further, under $H_0$ we assume that the attention that each collection $c_j$ from $C$ pays to all tags in $T$ is identically distributed. In other words, values in $\text{col}_j(\mathcal{A})$have the same distribution. We denote it as $P_j$. Typically, all distributions $P_1, \dots, P_k$ are unknown and may vary in nature. 
 
-Let's denote the rank matrix as 
-\begin{equation}
-\label{def:R}
-\mathcal{R} = \begin{pmatrix}
-r_{11} & r_{12} & \dots & r_{1k} \\
-       &\cdots & \cdots &  \\
-r_{n1} & r_{n2} & \dots & r_{nk}
+\subsection*{First step: double ranking}
+
+
+For each collection $c_j \in C$, we decreasingly rank the elements inside $\text{col}_j(\mathcal{A})$. Thus, for each $a_{ij} $ in $\text{col}_j(\mathcal{A})$, we get the ordinal number $o_{ij}$. \textcolor{red}{We resolve the ties by the mean rank of the tied elements. (ties.method = random)} 
+
+Let $\mathcal{O}$ denote the matrix containing ordinal numbers $o_{ij}$ in place of the corresponding attention values $a_{ij}$, 
+\begin{equation*}
+\mathcal{O} = \begin{pmatrix}
+o_{11} & o_{12} & \dots & o_{1k} \\
+ &\cdots & \cdots & \\
+o_{n1} & o_{n2} & \dots & o_{nk}
 \end{pmatrix}, 
 \quad
-r_{ij} =\text{rank}\left(a_{ij}|\text{inside}~\mathcal{A}_{:j}\right).
-\end{equation}
-We denote its $i$-th row as $\mathcal{R}_{i:} = (r_{i1}, \dots, r_{ik})$.
+o_{ij} :=\text{rank}\left(a_{ij}~ \text{inside}~\text{col}_j(\mathcal{A})\right).
+\end{equation*}
+As before, we denote the $i$-th row of $\mathcal{O}$ as $\text{row}_i(\mathcal{O}) := (o_{i1}, \dots, o_{ik})$.
 
-To quantitatively express friendliness, we order the attention ranks to the same tag $t_i$ from different collections. We decreasingly rank the elements in $\mathcal{R}_{i:}$ and the minimal element
-corresponds to the collection that is the putative best friend of $t_i$.
-
-Let's denote the collection-index (the second index) of the smallest entry in $\mathcal{R}_{i:}$ as $\sigma_i(1)$, the collection-index of the second smallest entry as ${\sigma_i(2)}$, etc. The corresponding collections are $c_{\sigma_{i}(1)}$, $c_{\sigma_{i}(2)}$, etc. 
-
-So the putative best friend for the tag $t_i$ is the collection $c_{\sigma_{i}(1)}$.
-
-\subsection{The best friend test}
-\label{sec:best_friend_test}
-
-For a collection to be a tag's best friend, it is \textit{necessary} to be the putative best friend, but it is \textit{not enough}. Indeed, in any ranking, there is the first element. We aim to statistically estimate whether the most friendly tag is the most friendly by chance. 
-
-We recall that under $H_0$ all $a_{ij}$ are independent and all $a_{ij} \in \mathcal{A}_{:j}$ are i.i.d. So, by the construction, under $H_0$ all $r_{i\sigma(j)}$ are independent and uniformly distributed.
-Thus, under $H_0$, each $\mathcal{R}_{i:}$ entries are independently uniformly distributed. 
-
-For a tag $t_i$, let's order the elements of $\mathcal{R}_{i:}$. The smallest entry in $\mathcal{R}_{i:}$ is $r_{i\sigma_i(1)}$, the second smallest entry is $r_{i\sigma_i(2)}$, etc. For simplicity, we do not write the secondary $i$ index that is the same by construction as the first $i$. The resulting matrix is 
+To quantitatively express the friendliness of all collections to the fixed tag $t_i$, we decreasingly order the ranks stored in $\text{row}_i(\mathcal{O})$. Denote the corresponding rearrangement as $r_{i1}, \dots, r_{ik}$. By construction, $r_{i1} \le r_{i2} \le \dots \le r_{ik}$. Let the corresponding matrix be
 \begin{equation}
-\label{def:R_sigma}
-\mathcal{R}_{\sigma} = \begin{pmatrix}
-r_{1\sigma(1)} & r_{1\sigma(2)} & \dots & r_{1\sigma(k)} \\
-       &\cdots & \cdots &  \\
-r_{n\sigma(1)} & r_{n\sigma(2)} & \dots & r_{n\sigma(k)}.
-\end{pmatrix}
+\label{def:R}
+\mathcal{R} := \begin{pmatrix}
+r_{11} & r_{12} & \dots & r_{1k} \\
+ &\cdots & \cdots & \\
+r_{n1} & r_{n2} & \dots & r_{nk}
+\end{pmatrix}.
 \end{equation}
+\paragraph{Idea behind the statistical test} To find the best friends of the tag $t_i$ we are going to split the items inside $\text{row}_{i}(\mathcal{R}) = (r_{i1}, \dots, r_{ik})$ into two non-intersecting groups. One group will match best friends and the other group will match all other collections. 
 
-In this notation $c_{\sigma_i(1)}$ is the putative best friend for the tag $t_i$, and $r_{i\sigma(1)}$ is the rank of $t_i$ in $\mathcal{R}_{i:}$. 
-
-To test whether the putative best friend for the tag $t_i$ ($c_{\sigma_i(1)}$) is really the best friend, we use the observed (i.e. calculated for given $\mathcal{A}$) difference:
-\begin{equation}
-\label{def:u_1}
-u_1(t_i) = \frac{r_{i\sigma(1)} -  r_{i\sigma(2)}}{n}.
-\end{equation}
-The $n$-normalization is technical. We explain it in more detail in Section \ref{sec:theory}.
-
-We note that $u_1(t_i)$ is a realization of a random variable $U$ with the distribution known under $H_0$.
-
-% We note that $u_1(t_i)$ is an observed value/\textcolor{red}{a realization} of a random variable $U$. Moreover, under $H_0$ the distribution of $U$ is known. We write it explicitly in Section \ref{sec:theory}. 
-
-To test $H_0$ for any $t_i$ and its putative best friend $c_{\sigma_{i}(1)}$, we use the $p$-value,
-%use $p$-value of the observed $u_1(t_i)$ in the distribution $U$,
+%NB! Сказать в дискуссии, что метод работает даже если модельное предположение ломается?
+\subsection*{Second step: statistical test}
+Keeping in mind that now we deal with a single tag $t_i$, let's, for simplicity, omit index $i$. Then, 
 \[
-p = P\left(U \ge u_1(t_i)~|~H_0\right). 
-\]
-
-If $p$-value is small enough, we reject the null and claim that the friendliness of the collection $c_{\sigma_{i}(1)}$ is unlikely to observe by random, and so we refer to it as the best friend of $t_i$. In this case, $t_i$ is a marker of its best friend collection $c_{\sigma_{i}(1)}$.
-
-\subsection{The friends test}
-\label{sec:friends_test}
-
-In some cases, a tag has several collections that are almost equally friendly to it. 
-For example, a gene (tag) has a high load in two patterns (two collections), and all other genes are low in both collections. The tag (let it be $t_i$) is a marker for two collections $c_{\sigma_{i}(1)}$ and $c_{\sigma_{i}(2)}$. However, the best friend statistics for $t_i$ cannot find either of the two. 
-Indeed, $c_{\sigma_{i}(1)}$ is better than $c_{\sigma_{i}(2)}$ just by chance and $H_0$ is correctly not rejected by the best friend test.
-
-Still, it is possible that there are two consecutive collections $c_{\sigma_i(l)}$ and $c_{\sigma_i(l+1)}$, and the gap between these is statistically significant.
-
-We denote the first $l$ collections that are most friendly as $F_{i}(l) = \left\{ c_{\sigma_i(1)} \dots c_{\sigma_i(l)} \right\}$.
-We aim to check whether $F_{i}(l)$ is really a set of friends of the tag $t_i$. Numerically, it means that the gap 
-\begin{equation}
-\label{def:u_l}
-u_{l}(t_i) = \frac{r_{i\sigma(l+1)} - r_{i\sigma(l)}}{n}
-\end{equation}
-is too large to be observed by chance if the null hypothesis $H_0$ holds. We note that $H_0$ is the same as in the \test{best friend test} (see Section \ref{sec:best_friend_test}).
-Moreover, \test{best friend test} is a particular case of
-this test---we will refer to it as \test{friends test}---with $l = 1$.
-
-% The \test{friends test} possibly rejects $H_0$
-% for the decomposition of $C$ into two group, $ F_{i}(l)$ and all the other collections.
-
-Section \ref{sec:theory} proves that for any $i$ and $l$, $u_l(t_i)$ is a realization of $U$ introduced  in Section~\ref{sec:best_friend_test}.
-By analogy with the \test{best friend test}, we asses $p$-value for $u_{l}(t_i)$,
-%for the pair of $t_i$ and the population $l$ of the subset of collections $ \left\{ c_{\sigma_i(1)} \dots c_{\sigma_i(l)} \right\},$ that are putative friends between using $u_{l}(t_i)$,
-\[
-p = P\left(U \ge u_l(t_i)~|~H_0\right). 
-\]
-Again, we reject the null if the $p$-value is small enough. So, $F_{i}(l)$ are friends of $t_i$, and $t_i$ is their marker.
-
-
-\section{Calculation of $p$-value}
-\label{sec:theory}
-% The only data structure we use in the test is the matrix $\mathcal{R}$ defined in \eqref{def:R}.  
-% Its elements $r_{ij}$ are ranks of attention to $t_i$ paid by $c_j$.
-% We correct $r_{ij}$ for continuity and redefine them as normalized ranks,
-% \begin{equation}
-% \label{def:correction}
-% r_{ij} := \frac{r_{ij} - \frac{1}{2}}{n}.
-% \end{equation}
-
- 
-% Its elements $r_{ij}$ are ranks of attention to $t_i$ paid by $c_j$.
-% We correct $r_{ij}$ for continuity and redefine them as normalized ranks,
-% \begin{equation}
-% \label{def:correction}
-% r_{ij} := \frac{r_{ij} - \frac{1}{2}}{n}.
-% \end{equation}
-
-The only data structure we use in the test is the matrix $\mathcal{R}$ defined in \eqref{def:R}. To construct the test for the $i$-th tag $t_i$, we use the $i$-th row of $\mathcal{R}$, $\mathcal{R}_{i:} = (r_{i1}, \dots, r_{ik})$. For simplicity, we omit the first index $i$ and write
-\[
-r := (r_{1}, \dots, r_{k}).
-\]
-
-Under $H_0$, the entries of vector $r$ are uniformly distributed on a grid $\{1, 2, \dots, n-1, n\}$, i.e. $r\sim \text{Unif}(\{1, \dots, n\}^k)$. For further inference, we shift the grid and assume $r\sim \text{Unif}(\{0, \dots, n-1\}^k)$.
-
-By ordering the elements of $r$, we get
-\[
-r_{\sigma} = (r_{\sigma(1)}, \dots, r_{\sigma(k)}), 
+\text{row}_{i}(\mathcal{R}) = (r_{1}, \dots, r_{k}), 
 \quad
-r_{\sigma(1)} \leq r_{\sigma(2)} \leq \dots \leq r_{\sigma(k)}.
+r_{1} \le \cdots \le r_{k}.
 \]
 
-The \test{best friend test} \eqref{def:u_1} and the \test{friends test} \eqref{def:u_l} 
-\textcolor{red}{rely} on the difference of consecutive entries in $r_{\sigma}$.
+Before proceeding, we must verify that the tag is not indifferent to all collections, e.g. to reject $H_0$. To do this, one can either use a test to assess the homogeneity of the sample $r_{1}, \cdots, r_{k}$ or, alternatively, apply an information criterion, which will be introduced later in the text (see paragraph \textit{Information Criterion})
 
-For simplicity, we set
-\begin{equation}
-\label{def:u}
-    r_{\sigma} := v = (v_1, \dots, v_k).
-\end{equation}
+Assuming a tag has at least one true friend, we aim to split all collections into two groups. A group containing best friends collections, i.e. the collections corresponding to $r_1, \dots, r_{s^*}$ and all the other.
 
-Using the new notations, we rewrite the test statistics as
-\[
-u_l = \frac{v_{l+1} - v_{l}}{n}, \quad
-\text{for all}~ l\in \{0, \dots, k-2\}.
-\]
+Before introducing a statistical model, we recall two important facts. First, $r_{1}, \cdots, r_{k}$ are independent random variables. Second, each $r_l$ ($1\le l \le k$) takes value ranging from $1$ to $n$. This is because, by construction, each $r_l$ is an ordinal number.
 
-To get the distribution of $u_l$, we have to estimate the distribution of $v_{l+1}- v_l$. Using \cite{khatri1962distributions}, we get
-for the fixed difference $v_{l+1}-v_{l} = q$ the probability  
-\[
-p(q) = \frac{\binom{k}{l}}{n^k}\sum^{n-1-q}_{v_l = 0} \left[(v_l + 1)^{l} - {v_l}^l \right] \left[ (n-q-v_l)^{k-l} - (n-1-q-v_l)^{k-l}\right].
-\]
-
-Moreover, for large $n$, we get
-\[
-p(q) \approx \frac{k}{n-1}\left(1 - \frac{q}{n-1} \right)^{k-1}.
-\]
-Section~\ref{appendix:discreet_case} contains the inference.
-
-To estimate the $p$-value, we have to compute
-\[
-P(q \ge w) = \sum^{n}_{q = w} p(q).
-\]
-
-Similarly, we get the asymptotic result
-\[
-P(q \ge w) \approx \textcolor{red}{\left(1 - \frac{w}{n-1} \right)^{k}}.
-\]
-
-
-Since all $u_l = q/n$ have the same distribution, we use $U$-notation for $p$-value calculations for the \test{best friend test} and the \test{friends test}.
-
-\subsection{Continuous case}
-
-Consider the vector $r$ distributed uniformly on a $k$-dimensional cube $[0, 1]^{k}$, $r = (r_1, \dots, r_k)$. As before, we consider its ordered counterpart
-\[
-r_{\sigma} = (r_{\sigma(1)}, \dots, r_{\sigma(k)}), \quad r_{\sigma(1)} \leq r_{\sigma(2)} \leq \dots \leq r_{\sigma(k)},
-\]
-and denote 
-\[
-    r_{\sigma} := v = (v_1, \dots, v_k).
-\]
-
-Vector $v$ takes values in $k$-dimensional convex polytope $D_k$ that is 
-an intersection of $k$--dimensional cube $[0, 1]^{k}$ and 
-$k-1$ half-spaces, which are defined by linear constraints $v_1 \le v_2$, $v_2 \le v_3$ etc.
-Fig.\ref{fig:polytop} depicts $D_3$. 
+Under $H_1$, we assume that each $r_l$ ($1\le l \le k$) comes from a mixture of two uniform distributions on the discrete grid $1, \dots, n$.
+Specifically, the mixture consists of a uniform distribution supported on $1, \dots, m^*$, and a uniform distribution supported on $m^* + 1, \dots, n$, where $m^*$ is an unknown parameter. The probability of each $r \in \{1, \dots, m^*\}$ is $\frac{p^{*}}{m^*}$ and $r \in \{ m^*+1, \dots, n\}$ is $\frac{1 - p^{*}}{n - m^*}$,
+see Fig.\ref{fig:model}.
 \begin{figure}
-     \centering
-     \begin{subfigure}[b]{0.3\textwidth}
-         \centering 
-         \scalebox{.4}{\import{}{cube-volume}}
-         \caption{Support of $v$.
-         \\\hspace{\textwidth} 
-        }
-         \label{fig:polytop}
-     \end{subfigure}
-     \begin{subfigure}[b]{0.3\textwidth}
-         \centering 
-         \scalebox{.4}{\import{}{cube-w_1}}
-         \caption{Support of $v$, 
-         \\\hspace{\textwidth}
-         $v_2 - v_1 \ge w$.}
-         \label{fig:polytop1}
-     \end{subfigure}
-     \begin{subfigure}[b]{0.3\textwidth}
-         \centering 
-         \scalebox{.4}{\import{}{cube-w_2}}
-         \caption{Support of $v$ \\\hspace{\textwidth}$v_3 - v_2 \ge w$.}
-         \label{fig:polytop2}
-     \end{subfigure}
-    \caption{Polytopes $D_3$. The green area is the support of $v$, the dark-green area is the support of $v$ with additional coordinate constraints.}
+ \centering
+\includegraphics[width=0.8\textwidth]{model.jpeg}
+ \caption{....}
+ \label{fig:model}
 \end{figure}
 
-The volume $V_k$ of the $D_k$ is well-known,
-\begin{eqnarray*}
-V_k = &\displaystyle \int\limits_0^1\int\limits_{v_1}^1\int\limits_{v_2}^1\int\limits_{v_3}^1...\int\limits_{v_{k-1}}^1 dv_k....dv_4 dv_3 dv_2 dv_1 =  \frac{1}{k!}~.
-\end{eqnarray*}
-% see \eqref{eq:volume} for inference.
-% \textcolor{blue}{\textit{This estimation is well known and can be find in textbooks}}
-
-Given some fixed index $l\leq k-1$, we define
+Note, that $p^*$ and $m^*$ are not known.
+We use the maximum likelihood estimation to estimate them based on the observed data $r_1, \dots, r_k$. The likelihood of the mixture is
 \[
-u_{l} := v_{l+1} - v_{l}. 
+L(p, m; r_1, \dots, r_k) := s\ln\left(\frac{p}{m}\right) + (k-s)\ln\left(\frac{1-p}{n - m}\right),
+\quad
+s: r_{s} \le m, ~r_{s+1} > m.
 \]
-To estimate its $p$-value, we impose an additional restriction:
+The goal is to find $\hat{p}$ and $\hat{m}$ maximizing $L(p, m; r_1, \dots, r_k)$. Optimizing by $p$ ensures that $\hat{p} = \frac{s}{k}$. All aforementioned ensures that one can use brute-force search over $m$ to find the optimal parameters.
+
+\paragraph{Information criterion}
+One can avoid using the homogeneity test by applying the following information criterion.
+The approach relies on some preliminary knowledge of the data. Specifically, one has to assume how likely it is that the tag $t$ has friends. We denote the corresponding probability as $q \in (0, 1)$ and set
 \[
-u_{l} \ge w, \quad w \in [0, 1].
+L_1 := L(\hat{p}, \hat{m}) + \ln(q),
+\quad
+L_2 := L(0, 0) + \ln(1-q).
 \]
-
-The vectors $v$ satisfying this restriction take values in a smaller polytope $D^{l}_{k}(w)$ that is an intersection of $D_{k}$ and a half-space represented by the restriction.
-Fig.\ref{fig:polytop1} and Fig.\ref{fig:polytop2} depict $D^{1}_{3}(w)$, $D^{2}_{3}(w)$, respectively. 
-
-The volume of $D^{l}_{k}(w)$ is 
-\begin{equation}
-V_{k}(w) = \frac{(1-w)^k}{k!},
-\end{equation}
-see \eqref{eq:p_1} and \eqref{eq:p_k} for the inference. We omit the $l$ index for the volume because it does not depend on $l$. The intuition is the following: the smaller polytope $D^{l}_{k}(w)$ is geometrically similar to $D_{k}$ with the scaling factor $(1-w)^k$. 
-
-Finally, we recall that $v = r_{\sigma}$. Thus, the probability for random vector $r_{\sigma}$ to satisfy the condition $u_{l} \ge w$ is the same for all $l\leq k-1$; it is equal to the ratio of $V_{k}(w)$ and $V_k$,
-\begin{equation}
-\label{eq:pw}
-    p(w) = (1-w)^k.
-\end{equation}
+The best fit corresponds to $\max\{L_1, L_2\}$.
 
 
-\subsection{Symmetric attention matrix $\mathcal{A}$}
-% \textcolor{blue}{\textit{The matrix shows relation tags vs collection and it is not quadratic. How the non-quadratic matrix can be symmetric?}}
-It may happen that the number of tags $n$ coincides with the number of collections $k$, $n = k$. The particular case of the symmetric (by construction) attention matrix $\mathcal{A}$ requires a more detailed investigation.
 
-The $p$-value calculation relies on the assumption of the independence of attention values in different collections. If the attention matrix $\mathcal{A}$ is symmetric by the nature of the underlying bipartite graph, this assumption \textcolor{red}{does not hold}. Thus, the theoretical inference presented in Section~\ref{sec:theory} is not valid anymore.
+% \subsection{Symmetric attention matrix $\mathcal{A}$}
+% % \textcolor{blue}{\textit{The matrix shows relation tags vs collection and it is not quadratic. How can the non-quadratic matrix be symmetric?}}
+% It may happen that the number of tags $n$ coincides with the number of collections $k$, $n = k$. The particular case of the symmetric (by construction) attention matrix $\mathcal{A}$ requires a more detailed investigation.
 
-Still, the numerical procedure works. We show this in more detail in Supplement~\ref{seq:symmetric_a}. Of note, sometimes we know that all the diagonal elements are $0$ by construction. In this case, both tests use 
-\[
-p(w) = (1-w)^{k-1}, ~~\text{cf. equation \eqref{eq:pw}.}
-\]
+% The $p$-value calculation relies on the assumption of the independence of attention values in different collections. If the attention matrix $\mathcal{A}$ is symmetric by the nature of the underlying bipartite graph, this assumption \textcolor{red}{does not hold}. Thus, the theoretical inference presented in Section~\ref{sec:theory} is not valid anymore.
+
+% Still, the numerical procedure works. We show this in more detail in Supplement~\ref{seq:symmetric_a}. Of note, sometimes we know that all the diagonal elements are $0$ by construction. In this case, both tests use 
+% \[
+% p(w) = (1-w)^{k-1}, ~~\text{cf. equation \eqref{eq:pw}.}
+% \]
+
 
 \subsection{Multiple testing}
 \label{sec:multimurkers}
@@ -470,13 +296,24 @@ calculate $n$ $p$-values. To run the \test{friends test}, we calculate $n \cdot 
 
 \subsection{Friends and antagonists}
 
-\subsection{The code availability}
 
-The software that implements the \text{best friend test} and \text{friends test} is available as an \textsf{R} package \textsf{best.friends} at 
-\url{https://github.com/favorov/best.friends}. The vignette of the package shows simple usecases.
 
-\section{Application example: the matrix of neighboring of cell types in spatial single-cell data tells responders from nonresponders}
 
+
+\section{Application examples}
+\subsection{\red{Senteiment analysis}}
+\paragraph{Data} To illustrate the performance of the 
+\textbf{friends} test, we use AffectVec data \red{[cite]}. This is a word emotion database capturing the subtlety of the English language by providing over 70,000 words annotated with intensity scores for more than 200 emotions. AffectVec quantifies the degree to which each word evokes a wide range of emotional responses. For example, the word ``prank'' may primarily convey joy. Yet it can also be associated with fear, suspense, or a blend of other emotions.
+
+AffectVec is organized as a tabular. Each row corresponds to an individual word and each column represents one of the more than 200 emotion categories. In other words, words are \textit{tags}, emotion categories are \textit{collections} and the corresponding intensity scores are \textit{attentions}. 
+
+\paragraph{Data preprocessing} To test the \textbf{friends} test, we selected $1080$ adjectives (\red{using Python}). \red{Appendix} presents the selection procedure. The data is available at \red{url}.
+
+\red{We consider two settings}: friends, anti-friends. Full list of emotions and manually filtered list of emotions.
+
+Multiplicity correction: $\frac{1}{1080}$
+
+\subsection{Experiment by AF...}
 \section{Discussion}
 
 In this manuscript, we develop a method and software to detect noteworthy edges in a weighted bipartite graph. We suppose all edges of the graph to be co-directed. The graph models a directed relation (referred to as attention) from the vertices of one part (collections) to the vertices of another part (tags).
@@ -487,15 +324,16 @@ Along with the single collection procedure (\test{best friend test}), we suggest
 
 The \text{best friend test} is a particular case of the \test{friends test}, but we consider it separately in the software and, hence, in the methods. Namely, \test{friends test} has higher computational costs and it requires multiplicity correction even for one tag (Section \ref{sec:multimurkers}). In many cases, the \text{best friend test} is enough for practical applications. 
 
-Although the problem looks abstract, its solution has numerous straightforward applications. For instance, the detection of the marker genes \cite{stein-obrien_patternmarkers_2017} for expression patterns critically simplifies the biological interpretation of the results of transcription matrix factorization (\cite{Stein_2018,Fertig_2016}). Here, the genes are tags and the patterns are collections. If a pattern is a friend of a gene (see Section \ref{sec:method}), the gene is the marker of the pattern.
+Although the problem looks abstract, its solution has numerous straightforward applications. For instance, the detection of the marker genes \cite{stein-obrien_patternmarkers_2017} for expression patterns critically simplifies the biological interpretation of the results of transcription matrix factorization \cite{Stein_2018,Fertig_2016}. Here, the genes are tags and the patterns are collections. If a pattern is a friend of a gene (see Section \ref{sec:method}), the gene is the marker of the pattern.
 
-However, the theoretical result is limited to the case of an asymmetric attention matrix. If the matrix is symmetric by the design, the null hypothesis does not hold. However, the computational experiment \textcolor{red}{(see Supplement)} shows that the independence proposition \textcolor{red}{can be used}. Thus, the method applies to the analysis of, e.g. distance matrices. 
+However, the theoretical result is limited to the case of an asymmetric attention matrix. If the matrix is symmetric by the design, the null hypothesis does not hold. However, the computational experiment \textcolor{red}{(see Supplement)} shows that the independence proposition \textcolor{red}{can be used}. Thus, the method applies to the analysis of, e.g., distance matrices. 
 
 The first possible area of application is feature selection. By identification of markers, instead of all tags, we can use a relatively small subset for further analysis. Moreover, the identification of friend-marker pairs helps to remove non-specific connections from a graph. 
 
 Second, the proposed method is useful for efficient clustering of a set of selected features. Also, the friendship concept provides a new similarity measure that possibly generates more interpretable clustering, than the clustering with $\mathcal{A}$ being a similarity measure.
 
 Another possible direction is knowledge transfer: if we know something new about Augustus, we know something new about his friends. 
+\subsection{}
 
 
 % \textcolor{blue}{+ Friedman test }
@@ -515,148 +353,33 @@ Thanks to Daniel Shu and Caedmon Haas for the translation of the motto to gold L
 %\begin{subappendices}
 
 \newcommand{\beginsupplement}{%
-        \setcounter{table}{0}
-        \renewcommand{\thetable}{S\arabic{table}}%
-        \setcounter{figure}{0}
-        \renewcommand{\thefigure}{S\arabic{figure}}
-        \setcounter{equation}{0}
-        \renewcommand{\theequation}{S\arabic{equation}}%
-     }
+ \setcounter{table}{0}
+ \renewcommand{\thetable}{S\arabic{table}}%
+ \setcounter{figure}{0}
+ \renewcommand{\thefigure}{S\arabic{figure}}
+ \setcounter{equation}{0}
+ \renewcommand{\theequation}{S\arabic{equation}}%
+ }
 
 \newpage
 \section*{Supplement}
 \beginsupplement
-\subsection{Inference for the discrete case} 
-\label{appendix:discreet_case}
-Recall that $r = (r_1, \dots, r_k)$ is a vector of i.i.d. uniformly distributed random variables, $r_j \sim \text{Unif}(\{0, \dots, n-1\})$. And the order vector $v = (v_1, \dots, v_k)$ contains corresponding ordered statistics,
-\[
-v_1 \leq v_2 \leq v_3 \dots \leq v_k.
-\]
-To get the joint probability for any pair $(v_{l+1}, v_l)$, s.t. $l\in\{1, \dots, k-1\}$, we use formula (6) by \cite{khatri1962distributions}, 
-\begin{equation}
-\label{eq:joint_distribution}
-p(v_{l+1}, v_l) = \frac{k!}{n^k} 
-\sum^{l-1}_{g=0}\sum^{k-l-1}_{m=0}
-\frac{v^{l-1-g}_l (n-1 - v_{l+1})^{k-l-1-m}}{(l-1-g)!(1+g)!(1+m)!(k-l-1-m)!}.
-\end{equation}
-
-To derive the distribution of the difference $v_{l+1}-v_{l}$, we use \eqref{eq:joint_distribution}, and for any fixed $q$, s.t. $v_{l+1}-v_{l} = q$ we get
-\[
-p(q) = \frac{k!}{n^k}\sum^{l-1}_{g=0}\sum^{k-l-1}_{m=0}
-\frac{1}{(l-1-g)!(1+g)!(1+m)!(k-l-1-m)!}\sum^{n-1-q}_{v_l = 0} v^{l-1-g}_l (n-1 - q - v_{l})^{k-l-1-m}
-\]
-
-Now we fix $v_l$ and $q$, and observe that
-a single summand of the sum $\sum_{v_l}$ can be simplified,
-\begin{align*}
-    &\frac{k!}{n^k}\sum^{l-1}_{g=0}\sum^{k-l-1}_{m=0}
-\frac{ v^{l-1-g}_l (n-1 - q - v_{l})^{k-l-1-m}}{(l-1-g)!(1+g)!(1+m)!(k-l-1-m)!}\\
-= & 
-\frac{k!}{n^k} 
-\left(
-\sum^{l-1}_{g=0} \frac{v^{l-1-g}_l}{(l-1-g)!(1+g)!} 
-\right) 
-\left(
-\sum^{k-l-1}_{m=0} \frac{(n-1 - q - v_{l})^{k-l-1-m}}{(1+m)!(k-l-1-m)!}
-\right) \\
-= & \frac{k!}{n^k} \frac{(v_l + 1)^{l} - v^l_l}{l!} \frac{(n-q-v_l)^{k-l} - (n-1-q-v_l)^{k-l}}{(k-l)!}.
-\end{align*}
-
-Finally, for $v_{l+1}-v_{l} = q$ we get 
-\[
-p(q) = \frac{\binom{k}{l}}{n^k}\sum^{n-1-q}_{v_l = 0} \left[(v_l + 1)^{l} - v^l_l \right] \left[ (n-q-v_l)^{k-l} - (n-1-q-v_l)^{k-l}\right].
-\]
-
-The next step is to get the asymptotic result for large $n$. The polynomial approximation yields
-\begin{align*}
-    &(v_l + 1)^{l} - v^l_l \approx lv^{l-1}_l,\\
-    & (n-q-v_l)^{k-l} - (n-1-q-v_l)^{k-l} \approx (k-l)(n-1-q-v_l)^{k-l-1}.
-\end{align*}
-
-Thus,
-\begin{align*}
-    p(q) \approx & \binom{k}{l} l (k-1-l)
-    \sum^{n-1-q}_{v_l = 0} \frac{v^{l-1}_l (n-1-q-v_l)^{k-l-1}}{n^k}\\
-    \approx & \binom{k}{l} l (k-1-l) \frac{(n-q) (n - 1-q)^{k-2}}{n^k}\int^{1}_{0} x^{l-1}_l(1-x)^{k-l-1}dx\\
-    \approx & \frac{\binom{k}{l} l (k-1-l)}{\binom{k-2}{l-1} (k-1)} \frac{(n-1-q)^{k-1}}{n^k}\\
-    = & \frac{k!}{(k-1)!}\frac{(n-1-q)^{k-1}}{n^k}\\
-    \approx & \frac{k}{n-1}\left(1 - \frac{q}{n-1} \right)^{k-1} \approx \textcolor{red}{\frac{k}{n}\left(1 - \frac{q}{n} \right)^{k-1}}
-\end{align*}
-
-Of note, to get this result, we use the Bernstein polynome,
-\[
-\int^{1}_{0}x^{l-1}(1-x)^{k-l-1}dx = \frac{1}{(k-1)\binom{k-2}{l-1}}.
-\]
-
-\subsection{Estimation of volumes and p-value}
-\label{seq:inference}
-%\renewcommand{\thesection}{\Alph{section}}%
-% or try \arabic{section}
-First, we recall that for any $m > 0$,
-\begin{eqnarray}
-&\displaystyle \int \limits_a^b \left(b-x\right)^{m-1}dx=
-\displaystyle \frac{\left(b-a\right)^m}{m} . \label{eq:intab}
-\end{eqnarray} 
-%\begin{eqnarray}
-%&\displaystyle \int_a^1\left(1-x\right)^{m-1}dx=
-%-\displaystyle \int_0^{1-a}v^{n-1}dv=
-%\displaystyle \frac{\left(1-a\right)^m}{m}  \label{eq:right}
-%\end{eqnarray} 
-%\begin{eqnarray}
-%&\displaystyle \int_0^b\left(b-x\right)^{m-1}dx=\displaystyle \frac{b^m}{m}  \label{eq:left}
-%\end{eqnarray}
-
-% Applying \eqref{eq:intab} recursively from $k$ to $1$, we get
-% \begin{align}
-% V_k & = \displaystyle \int\limits_0^1\int\limits_{u_1}^1\int\limits_{u_2}^1\int\limits_{u_3}^1...\int\limits_{u_{k-1}}^1 du_k...du_4 du_3 du_2 du_1  \nonumber \\ 
-% & =\displaystyle \frac{1}{(k-3)!}\int\limits_0^1\int\limits_{u_1}^1\int\limits_{u_2}^1 \left( 1-u_3 \right)^{k-3}du_3 du_2 du_1  \nonumber \\
-% & =\displaystyle \frac{1}{(k-2)!}\int_0^1\int\limits_{u_1}^1\left( 1-u_2 \right)^{k-2} du_2 du_1  \nonumber \\
-% & = \displaystyle \frac{1}{(k-1)!} \int\limits_0^1\left( 1-u_1 \right)^{k-1} du_1 = \frac{1}{k!}. \label{eq:volume}
-% \end{align}
-
-First, we consider the case for $l = 1$,
-\begin{align}
- V_{1}(w) &=  \displaystyle \displaystyle  \int\limits_0^{1-w}\int\limits_{{v_1}+w}^1\int\limits_{v_2}^1\int\limits_{v_3}^1...\int\limits_{v_{k-1}}^1 dv_k...dv_2 dv_1 \nonumber \\ 
-& = \displaystyle \frac{1}{(k-2)!}\int\limits_0^{1-w}\int\limits_{{v_1}+w}^1\left( 1-v_2 \right)^{k-2} dv_2 dv_1 \nonumber \\
-& = \displaystyle \frac{1}{k!} \int\limits_0^{1-w}\left( 1-w-v_1 \right)^{k-1} dv_1 = \frac{(1-w)^k}{k!}. \label{eq:p_1}
-\end{align}
-
-Now we consider $l\ge 2$,
-\begin{align}
-V_{l}(w) & = \displaystyle \int\limits_0^{1-w}\int\limits_{{v_1}}^{1-w}...\int\limits_{v_{l-1}}^{1-w}\int\limits_{v_l+w}^1...\int\limits_{v_{k-1}}^1 dv_k... dv_1  \nonumber \\ 
-& =  \displaystyle \frac{1}{(k-l-1)!}\displaystyle \int\limits_0^{1-w}\int\limits_{{v_1}}^{1-w}...\int\limits_{v_{l-1}}^{1-w}\int\limits_{v_l+w}^1 \left( 1-v_{l+1} \right)^{k-l-1} dv_{l+1}...dv_1   \nonumber \\
-&=  \displaystyle \frac{1}{(k-l)!}\displaystyle \int\limits_0^{1-w}\int\limits_{{v_1}}^{1-w}...\int\limits_{v_{l-1}}^{1-w} \left( 1-t-v_{l} \right)^{k-l} dv_l...dv_1   \nonumber \\
-& = \displaystyle \frac{1}{(k-l+1)!}\displaystyle \int\limits_0^{1-w}\int\limits_{{v_1}}^{1-w}...\int\limits_{v_{l-2}}^{1-w} \left( 1-w-v_{l-1} \right)^{k-l+1} dv_{l-1}...dv_1   \nonumber \\
-& =  \displaystyle \frac{1}{(k-1)!} \int\limits_0^{1-w}\left( 1-w-v_1 \right)^{k-1} dv_1 = \frac{(1-w)^k}{k!} \label{eq:p_k}
-\end{align}
-
-\subsection{Symmetric $\mathcal{A}$}
-\label{seq:symmetric_a} 
-
-% \begin{eqnarray}
-% & p(w) =  \displaystyle \frac{1}{Q}\displaystyle \int_0^{1-w}\int_{{u_1}+w}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{k-1}}^1 du_k...du_2 du_1 =  \nonumber \\ 
-% %&\displaystyle \frac{n!}{(n-3)!}\int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1 \left( 1-u_3 \right)^{n-3}du_3 du_2 du_1 =  \nonumber \\
-% &\displaystyle \frac{k!}{(k-2)!}\int_0^{1-w}\int_{{u_1}+w}^1\left( 1-u_2 \right)^{k-2} du_2 du_1 =  \nonumber \\
-% &\displaystyle k \int_0^{1-w}\left( 1-w-u_1 \right)^{k-1} du_1 = (1-w)^k \label{eq:p_1}
-% \end{eqnarray}
+\subsection{Data preprocessing} 
+The full list of emotion categories used in the experiment is following:
+\textit{joy, surprise, trust, anticipation, fear, anger, sadness, disgust, happiness, levity, hate, loyalty, melancholy, anxiety, embarrassment,  regard, stress, gusto, compunction, cynicism, situation, umbrage, favor, meekness, compassion, withdrawal, scare, unrest, calm, courage, despair, fidget, shyness, apathy, hysteria, shadow, resentment, optimism, heartstrings, bonheur, dudgeon, merriment, hope, foreboding, envy, interest, relaxed, cruelty, helplessness,   solicitude, satisfaction,   suspense, fondness, dolor, weakness, electricity, esteem, woe, relieved, wonder, attachment, pessimism, malice, love, compatibility, timidity, blessedness, exultation, tumult, alienation, humility, powerlessness, complacency, gloom, aggression, sensation, antipathy, gloat, doubt, empathy, consciousness, ingratitude, hopelessness, signal, alarm, dislike, stir, distance, smugness, repentance, easiness, friendliness, gravity, displeasure, discouragement, pique, benevolence, chagrin, tension, togetherness, panic, eagerness, pleasure, excitement, mood, animosity, defeatism, worship, repugnance, grudge, euphoria, antagonism, trait, brotherhood, stewing, pity, daze, sympathy, annoyance, encouragement,  buoyancy, devotion, triumph, contempt, belonging, sinking, unhappiness, trepidation, admiration, disapproval, indifference, affection, astonishment, oppression, languor, coolness, liking, behaviour, peace, misogyny, bang, cheerfulness, creeps, agitation, boredom, gratification  hurt, agape, concern, ardor, mourning, harassment, contentment, closeness, surprised, confusion, presage, approval, state, wrath, dander, reverence, content, amusement, indignation, fearlessness, depreciation, expectation, tenderness, misery, depression, forgiveness, willies, fit, comfort, shame, apprehension   delight, jealousy, aggravation, chill, warpath, serene, exuberance, resignation, gratitude, despondency, nirvana, lividity, emotion, disappointment horror, grief, weight, distress, intoxication, irritation, insecurity, pride, fever, rejoicing, impatience, politeness, tranquillity, hilarity, fury, gladness, thing, nausea, calmness, fulfillment, ecstasy, elation, playfulness, exhilaration, titillation, gratefulness, diffidence, radiance, sorrow, confidence, security, ego, hostility, frustration, attrition, angst, shock, preference, enthusiasm, isolation, conscience, scruple, worry, earnestness, malevolence, awe, guilt, identification.}
 
 
-% \begin{eqnarray}
-% & p_l(w) = \displaystyle \frac{1}{Q}\displaystyle \int_0^{1-w}\int_{{u_1}}^{1-w}...\int_{u_{l-1}}^{1-w}\int_{u_l+w}^1...\int_{u_{k-1}}^1 du_k... du_1 =  \nonumber \\ 
-% & \displaystyle \frac{k!}{(k-l-1)!}\displaystyle \int_0^{1-w}\int_{{u_1}}^{1-w}...\int_{u_{l-1}}^{1-w}\int_{u_l+w}^1 \left( 1-u_{l+1} \right)^{k-l-1} du_{l+1}...du_1 =  \nonumber \\
-% & \displaystyle \frac{k!}{(k-l)!}\displaystyle \int_0^{1-w}\int_{{u_1}}^{1-w}...\int_{u_{l-1}}^{1-w} \left( 1-t-u_{l} \right)^{k-l} du_l...du_1 =  \nonumber \\
-% & \displaystyle \frac{k!}{(k-l+1)!}\displaystyle \int_0^{1-w}\int_{{u_1}}^{1-w}...\int_{u_{l-2}}^{1-w} \left( 1-w-u_{l-1} \right)^{k-l+1} du_{l-1}...du_1 =  \nonumber \\
-% & \displaystyle k \int_0^{1-w}\left( 1-w-u_1 \right)^{k-1} du_1 = (1-w)^k \label{eq:p_k}
-% \end{eqnarray}
-%\end{subappendices}
-\begin{comment}
-\subsection{ex-abstract}
-Suppose we have set of {\tag}s $\T$ and a set of {\collection}s $\C$ of this {\tag}s with some fuzzy membership, e.g. there is a numeric measure of how an {\tag} is represented in a {\collection} $A(\tl,\cl)$ for each pair $(\tl,\cl):\tl \in \T, \cl \in \C$. The higher the $A(\tl,\cl)$ value is, the more the {\tag} $\tl$ is involved in the {\collection} $\cl$. The absence of the {\tag} in the {\collection} is shown by the value that is minimal for the {\collection}.
 
-An example that is easy to think about is: genes are {\tag}s and their groups under regulation by same transcription factors (TF’s) form {\collection}s, and A shows the strength of the regulation. We look at a gene and we want to know whether a TF is its friend, i.e. whether the TF specifically prefers (regulates) the gene. The na\"ive idea is to look for a TF that the gene is the most sensitive for. Still, it’s possible that this TF is the strongest for the most of the genes. Sometimes, it is what we want to find, but now we want to answer other questions, namely, what TF is the most specific factor for the gene and is the specificity enough to say that is does not look like a random outcome?
+The filtered list of emotions
+\textit{joy, happiness, surprise, gratitude, friendliness, hope, admiration, love, cheerfulness, trust, interest,
+compassion, stress, fear, anger, sadness, hate, melancholy, anxiety, despair, powerlessness, aggression, dislike, cynicism, unrest, apathy, hysteria, calm, courage, shyness, 
+ optimism, helplessness, weakness, pessimism, humility, antipathy, 
+ togetherness, panic, eagerness, pleasure, excitement, euphoria, brotherhood, sympathy, annoyance, triumph, belonging, unhappiness, admiration, disapproval, indifference, affection, astonishment, 
+ agitation, boredom, gratification, concern, harassment, contentment, closeness, confusion, approval, amusement, indignation, fearlessness, depreciation, expectation, 
+ tenderness, misery, depression, forgiveness, fit, comfort, shame, apprehension, delight, jealousy, aggravation, chill, disappointment, horror, grief, distress, intoxication,
+ irritation, insecurity, pride, impatience, politeness, tranquillity, calmness, playfulness, gratefulness, sorrow, confidence, security, ego, frustration, shock, enthusiasm, isolation, worry, guilt.}
 
-Sometimes, the {\collection}s are in in one-to-one relation with the {\tag}s, e.g. each {\collection} is a set of {\tag}s, which are neighbours of {\tag} in some graph. For this example, A is a weighted adjacency matrix of this graph. The friendship terminology emerges naturally from this case. The friendship relation itself is asymmetric: a friend cares about Augustus, while Augustus does not.
-\end{comment}
+
 
 
 

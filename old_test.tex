@@ -1,0 +1,153 @@
+
+We recall that the attention matrix $\mathcal{A}$ is the only input for the statistical test. Each its element $a_{ij}$ is the value of attention that a collection $c_j \in C$ pays to a tag $t_i \in T$
+\[
+\mathcal{A} = \begin{pmatrix}
+a_{11} & a_{12} & \dots & a_{1k} \\
+       &\cdots & \cdots &  \\
+a_{n1} & a_{n2} & \dots & a_{nk}
+\end{pmatrix}.
+\]
+Its $i$-th row corresponds to tag $t_i$, and we denote it as $\mathcal{A}_{i:} = (a_{i1}, \dots, a_{ik})$. Its $j$-th  corresponds to collection $c_j$, and we denote it as $\mathcal{A}_{:j} =(a_{1j}, \dots a_{nj})'$ (with $'$ being transposition).
+
+%from intro We express how much a collection $c_j$ cares about a tag $t_i$ in terms of the rank of $a_{ij}$ in column $\mathcal{A}_{:j}$. So, if a collection $c_j$ cares about a tag $t_i$ more than other collections, the rank of $a_{ij}$ in $\mathcal{A}_{:j}$ is higher than the rank of $a_{il}$ in $\mathcal{A}_{:l}$ for all $l \neq j$. 
+
+
+
+For each collection $c_j \in C$, we decreasingly rank the elements inside $\mathcal{A}_{:j}$. Thus, for each $a_{ij} \in \mathcal{A}_{:j}$, we get the ordinal number $r_{ij}:=\text{rank}\left(a_{ij}|\text{inside}~\mathcal{A}_{:j}\right)$. We resolve the ties by the mean rank of the tied elements. 
+
+Let's denote the rank matrix as 
+\begin{equation}
+\label{def:R}
+\mathcal{R} = \begin{pmatrix}
+r_{11} & r_{12} & \dots & r_{1k} \\
+       &\cdots & \cdots &  \\
+r_{n1} & r_{n2} & \dots & r_{nk}
+\end{pmatrix}, 
+\quad
+r_{ij} =\text{rank}\left(a_{ij}|\text{inside}~\mathcal{A}_{:j}\right).
+\end{equation}
+We denote its $i$-th row as $\mathcal{R}_{i:} = (r_{i1}, \dots, r_{ik})$.
+
+To quantitatively express friendliness, we order the attention ranks to the same tag $t_i$ from different collections. We decreasingly rank the elements in $\mathcal{R}_{i:}$ and the minimal element
+corresponds to the collection that is the putative best friend of $t_i$.
+
+Let's denote the collection-index (the second index) of the smallest entry in $\mathcal{R}_{i:}$ as $\sigma_i(1)$, the collection-index of the second smallest entry as ${\sigma_i(2)}$, etc. The corresponding collections are $c_{\sigma_{i}(1)}$, $c_{\sigma_{i}(2)}$, etc. 
+
+So the putative best friend for the tag $t_i$ is the collection $c_{\sigma_{i}(1)}$.
+
+
+
+We recall that the attention matrix $\mathcal{A}$ is the only input for the statistical test. Each its element $a_{ij}$ is the value of attention that a collection $c_j \in C$ pays to a tag $t_i \in T$
+\[
+\mathcal{A} = \begin{pmatrix}
+a_{11} & a_{12} & \dots & a_{1k} \\
+       &\cdots & \cdots &  \\
+a_{n1} & a_{n2} & \dots & a_{nk}
+\end{pmatrix}.
+\]
+Its $i$-th row corresponds to tag $t_i$, and we denote it as $\mathcal{A}_{i:} = (a_{i1}, \dots, a_{ik})$. Its $j$-th  corresponds to collection $c_j$, and we denote it as $\mathcal{A}_{:j} =(a_{1j}, \dots a_{nj})'$ (with $'$ being transposition).
+
+%from intro We express how much a collection $c_j$ cares about a tag $t_i$ in terms of the rank of $a_{ij}$ in column $\mathcal{A}_{:j}$. So, if a collection $c_j$ cares about a tag $t_i$ more than other collections, the rank of $a_{ij}$ in $\mathcal{A}_{:j}$ is higher than the rank of $a_{il}$ in $\mathcal{A}_{:l}$ for all $l \neq j$. 
+
+
+
+For each collection $c_j \in C$, we decreasingly rank the elements inside $\mathcal{A}_{:j}$. Thus, for each $a_{ij} \in \mathcal{A}_{:j}$, we get the ordinal number $r_{ij}:=\text{rank}\left(a_{ij}|\text{inside}~\mathcal{A}_{:j}\right)$. We resolve the ties by the mean rank of the tied elements. 
+
+Let's denote the rank matrix as 
+\begin{equation}
+\label{def:R}
+\mathcal{R} = \begin{pmatrix}
+r_{11} & r_{12} & \dots & r_{1k} \\
+       &\cdots & \cdots &  \\
+r_{n1} & r_{n2} & \dots & r_{nk}
+\end{pmatrix}, 
+\quad
+r_{ij} =\text{rank}\left(a_{ij}|\text{inside}~\mathcal{A}_{:j}\right).
+\end{equation}
+We denote its $i$-th row as $\mathcal{R}_{i:} = (r_{i1}, \dots, r_{ik})$.
+
+To quantitatively express friendliness, we order the attention ranks to the same tag $t_i$ from different collections. We decreasingly rank the elements in $\mathcal{R}_{i:}$ and the minimal element
+corresponds to the collection that is the putative best friend of $t_i$.
+
+Let's denote the collection-index (the second index) of the smallest entry in $\mathcal{R}_{i:}$ as $\sigma_i(1)$, the collection-index of the second smallest entry as ${\sigma_i(2)}$, etc. The corresponding collections are $c_{\sigma_{i}(1)}$, $c_{\sigma_{i}(2)}$, etc. 
+
+So the putative best friend for the tag $t_i$ is the collection $c_{\sigma_{i}(1)}$.
+
+
+
+
+
+We do the following procedure to identify the collection, which is the putative best friend (or, in other words, the most friendly collection) for each tag.
+
+
+\subsection{The best friend test}
+\label{sec:best_friend_test}
+
+For a collection to be a tag's best friend, it is \textit{necessary} to be the putative best friend, but it is \textit{not enough}. Indeed, in any ranking, there is the first element. We aim to statistically estimate whether the most friendly tag is the most friendly by chance. 
+
+We recall that under $H_0$ all $a_{ij}$ are independent and all $a_{ij} \in \mathcal{A}_{:j}$ are i.i.d. So, by the construction, under $H_0$ all $r_{i\sigma(j)}$ are independent and uniformly distributed.
+Thus, under $H_0$, each $\mathcal{R}_{i:}$ entries are independently uniformly distributed. 
+
+For a tag $t_i$, let's order the elements of $\mathcal{R}_{i:}$. The smallest entry in $\mathcal{R}_{i:}$ is $r_{i\sigma_i(1)}$, the second smallest entry is $r_{i\sigma_i(2)}$, etc. For simplicity, we do not write the secondary $i$ index that is the same by construction as the first $i$. The resulting matrix is 
+\begin{equation}
+\label{def:R_sigma}
+\mathcal{R}_{\sigma} = \begin{pmatrix}
+r_{1\sigma(1)} & r_{1\sigma(2)} & \dots & r_{1\sigma(k)} \\
+       &\cdots & \cdots &  \\
+r_{n\sigma(1)} & r_{n\sigma(2)} & \dots & r_{n\sigma(k)}.
+\end{pmatrix}
+\end{equation}
+
+In this notation $c_{\sigma_i(1)}$ is the putative best friend for the tag $t_i$, and $r_{i\sigma(1)}$ is the rank of $t_i$ in $\mathcal{R}_{i:}$. 
+
+To test whether the putative best friend for the tag $t_i$ ($c_{\sigma_i(1)}$) is really the best friend, we use the observed (i.e. calculated for given $\mathcal{A}$) difference:
+\begin{equation}
+\label{def:u_1}
+u_1(t_i) = \frac{r_{i\sigma(1)} -  r_{i\sigma(2)}}{n}.
+\end{equation}
+The $n$-normalization is technical. We explain it in more detail in Section \ref{sec:theory}.
+
+We note that $u_1(t_i)$ is a realization of a random variable $U$ with the distribution known under $H_0$.
+
+% We note that $u_1(t_i)$ is an observed value/\textcolor{red}{a realization} of a random variable $U$. Moreover, under $H_0$ the distribution of $U$ is known. We write it explicitly in Section \ref{sec:theory}. 
+
+To test $H_0$ for any $t_i$ and its putative best friend $c_{\sigma_{i}(1)}$, we use the $p$-value,
+%use $p$-value of the observed $u_1(t_i)$ in the distribution $U$,
+\[
+p = P\left(U \ge u_1(t_i)~|~H_0\right). 
+\]
+
+If $p$-value is small enough, we reject the null and claim that the friendliness of the collection $c_{\sigma_{i}(1)}$ is unlikely to observe by random, and so we refer to it as the best friend of $t_i$. In this case, $t_i$ is a marker of its best friend collection $c_{\sigma_{i}(1)}$.
+
+\subsection{The friends test}
+\label{sec:friends_test}
+
+In some cases, a tag has several collections that are almost equally friendly to it. 
+For example, a gene (tag) has a high load in two patterns (two collections), and all other genes are low in both collections. The tag (let it be $t_i$) is a marker for two collections $c_{\sigma_{i}(1)}$ and $c_{\sigma_{i}(2)}$. However, the best friend statistics for $t_i$ cannot find either of the two. 
+Indeed, $c_{\sigma_{i}(1)}$ is better than $c_{\sigma_{i}(2)}$ just by chance and $H_0$ is correctly not rejected by the best friend test.
+
+Still, it is possible that there are two consecutive collections $c_{\sigma_i(l)}$ and $c_{\sigma_i(l+1)}$, and the gap between these is statistically significant.
+
+We denote the first $l$ collections that are most friendly as $F_{i}(l) = \left\{ c_{\sigma_i(1)} \dots c_{\sigma_i(l)} \right\}$.
+We aim to check whether $F_{i}(l)$ is really a set of friends of the tag $t_i$. Numerically, it means that the gap 
+\begin{equation}
+\label{def:u_l}
+u_{l}(t_i) = \frac{r_{i\sigma(l+1)} - r_{i\sigma(l)}}{n}
+\end{equation}
+is too large to be observed by chance if the null hypothesis $H_0$ holds. We note that $H_0$ is the same as in the \test{best friend test} (see Section \ref{sec:best_friend_test}).
+Moreover, \test{best friend test} is a particular case of
+this test---we will refer to it as \test{friends test}---with $l = 1$.
+
+% The \test{friends test} possibly rejects $H_0$
+% for the decomposition of $C$ into two group, $ F_{i}(l)$ and all the other collections.
+
+Section \ref{sec:theory} proves that for any $i$ and $l$, $u_l(t_i)$ is a realization of $U$ introduced  in Section~\ref{sec:best_friend_test}.
+By analogy with the \test{best friend test}, we asses $p$-value for $u_{l}(t_i)$,
+%for the pair of $t_i$ and the population $l$ of the subset of collections $ \left\{ c_{\sigma_i(1)} \dots c_{\sigma_i(l)} \right\},$ that are putative friends between using $u_{l}(t_i)$,
+\[
+p = P\left(U \ge u_l(t_i)~|~H_0\right). 
+\]
+Again, we reject the null if the $p$-value is small enough. So, $F_{i}(l)$ are friends of $t_i$, and $t_i$ is their marker.
+
+
+
