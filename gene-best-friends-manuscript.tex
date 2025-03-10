@@ -73,99 +73,88 @@ Vavilov Institute of General Genetics, RAS, Moscow, 119333, RF
 \newcommand{\tl}{t}
 \newcommand{\cl}{c}
 \newcommand{\test}[1]{\textbf{\textit{#1}}}
-%\setlength\epigraphwidth{.8\textwidth}
-\setlength\epigraphrule{0pt}
-
-\epigraph{SI AUGUSTUS CERNATUR, CERNANTUR QOUQUE AMICI}
-
-\vspace{-0.2in}
 
 \begin{abstract}
-We propose a novel approach to select hidden specific relations in a dataset, which a bipartite graph can represent. 
-To describe the hidden specific relations in general, we use a concept of \textit{friendship}. The goal is to detect objects in the data that are more important to particular others, than to the rest of the dataset, i.e. to detect friends. To this end, we introduce two statistical tests, the \test{best friend test} and the \test{friends test}. Both tests are based on the double ranking of the entries in the block of the weighted adjacency matrix of the bipartite graph. This model fits many practical problems, such as gene expression regulation by a set of transcription factors, etc. The method is available as an \textsf{R} package at \url{https://github.com/favorov/best.friends}.
+We propose a novel approach to select hidden specific strong connections in a dataset represented by a bipartite graph. \textcolor{red}{...} This model fits many practical problems, such as gene expression regulation by a set of transcription factors, etc. The method is available as an \textsf{R} package at \url{https://github.com/favorov/best.friends}.
 \end{abstract}
 
 
-\keywords{weighted bipartite graph, hidden relations, rank statistics, feature selection, clustering, knowledge transfer, specific gene regulation, pattern marker}
+\keywords{weighted bipartite graph, rank statistics, feature selection, clustering, knowledge transfer, specific gene regulation, pattern marker}
 
-\section{Introduction: what it means to be a friend}
+\section{Introduction}
 
-There is a simple intuition of what it means to be a friend. 
-The friends of Augustus try to get together with him as often as possible. And if we meet August somewhere, we will likely meet his friends, too.
+A bipartite graph $G = (V, E)$ is a graph whose set of vertices $V$ can be partitioned into two disjoint subsets $T$ and $C$ such that the union of $T$ and $C$ is equal to $V$ and their intersection is empty, i.e., $
+T \cup C = V$,  $T \cap C = \varnothing$.  In a bipartite graph, edges exist only between nodes in $T$ and nodes in $C$; there are no edges connecting vertices within the same subset. \textcolor{blue}{An example is shown at Fig.\ref{fig:nice_name}.} Typically, $T$ and $C$ represent entities of different types, and connections occur only between these distinct types. Consequently, the adjacency matrix $\mathcal{A}_G$ of a bipartite graph $G$ takes the following form,
+\begin{equation}
+\label{eq:adj_matrix}
+\mathcal{A}_G := \begin{pmatrix}
+0 & A\\
+A^{T} & 0
+\end{pmatrix},
+\quad
+A := \begin{pmatrix}
+a_{11} & a_{12} & \dots & a_{1k} \\
+ &\cdots & \cdots & \\
+a_{n1} & a_{n2} & \dots & a_{nk}
+\end{pmatrix},
+\quad k := |C|, \quad
+n := |T|,
+\end{equation}
+where $|T|$ and $|C|$ is the number of vertices in $T$ and $C$, respectively. Typically, $a_{ij} = 1$ if there exists an edge between vertices $t_i\in T$ and $c_{j}\in C$, otherwise $a_{ij} = 0$. However, in many practical applications, the weight of an edge may correspond to the distance between nodes, \textcolor{red}{probability that the edge exists}, the strength of the association between the nodes (e.g., correlation), etc. In those cases, the weights $a_{ij}$ are set to real numbers, that is, $a_{ij}\in 
+\mathbb{R}$. 
 
-A similar setup arises if we analyze any observed data's inner relations. 
-In the following, we model the relations as a bipartite graph. We numerically formulate the concept of friendship between graph nodes using a double-ranking procedure followed by a statistical test validating the ranking result. The approach detects specific relations in the data.
-
-% A motivating example comes from the matrix factorization of omics data \cite{fertig_cogaps_2010, stein-obrien_enter_2018}. The factorization gives a matrix that shows the importance (the weights) of the features (e.g. expressions of particular genes) in biological processes.
-
-A motivating example comes from omics data decomposition \cite{fertig_cogaps_2010, stein-obrien_enter_2018}. In this context, a matrix represents the decomposition. Its elements correspond to the weights that quantify the importance of specific \textcolor{red}{features} in \textcolor{red}{the observed biological processes} (e.g., the expression levels of particular genes). A feature is referred to as a \textit{marker} if it has substantial weight in only one process \cite{stein-obrien_patternmarkers_2017}.
-
-The presence of a marker indicates the activity of the corresponding process. Conversely, features identified as noise or those with large weights across multiple processes should not be classified as markers. For instance, the work \cite{stein-obrien_patternmarkers_2017} aims to find all the markers and the corresponding marked processes. 
-
-\paragraph{Approach} In our work, the detection of markers and marked processes is based on the concept of friendship: if a feature is a process marker, then the process is its friend.
-
-This relationship is naturally modeled using a bipartite graph. The nodes in one set represent all observed features, while the nodes in the other set represent all biological processes. Weighted edges between these nodes indicate the degree of friendship.
-
-% \textcolor{red}{For a given process, we identify its friend (marker) among the set of all other features.}
-
-This setting applies to numerous problems. For the sake of generality, we refer to features as \textit{{\tag}s}, to processes as \textit{{\collection}s}, and to weights as \textit{attention}. See a corresponding bipartite graph at Fig.\ref{fig:nice_name}. The model applies to many setups (see Tab.\ref{tab:examples} for examples). 
 \begin{figure}
  \centering
  \import{}{bipartite}
- \caption{Bipartite graph of tag-collection model. The attention $A(t, c)$ is the weight of an edge between node $c$ (collection) and node $t$ (tag).
- The arrows correspond to nonzero $A(t,c)$ .}
+ \caption{\red{draw a new graph}}
  \label{fig:nice_name}
 \end{figure}
 
-\begin{table}[h!]
-\centering
-\caption{Tag-collection model deployment examples.}
-\label{tab:examples}
-\begin{tabular}{c|c|c|c}
-\textbf{Example} & \textbf{Tag $t$} & \textbf{Collection $c$} & \textbf{Attention $A(t, c)$} \\ 
-\hline
+The bipartite graph naturally emerges in various real-world settings, including recommender systems \textcolor{red}{[...]}, 
+resource allocation problems \textcolor{red}{[...]}, etc.
 
-\begin{tabular}[c]{@{}c@{}}Search engine\end{tabular} & Query & \begin{tabular}[c]{@{}c@{}} Search result \end{tabular} & \begin{tabular}[c]{@{}c@{}}Relevance of\\ search output\\\end{tabular} \\ \hline
+This model effectively captures intrinsic relationships in complex data structures, such as decomposed omic data \cite{fertig_cogaps_2010, stein-obrien_enter_2018}, \textcolor{red}{phenotype-disease} matrices, and similar datasets. In such problems, the vertices in one part (say, $T$) correspond to features (e.g., genes, phenotypes, etc.), while the vertices in the other part (say, $C$) correspond to the biological processes or conditions (e.g., \textcolor{red}{...}) in which the features participate. The edge weights indicate the association strength: the larger the weight, the stronger the relationship between the corresponding feature and the process.
 
-\begin{tabular}[c]{@{}c@{}}Gene expression regulation\\ by transcription factors\end{tabular} & Gene & \begin{tabular}[c]{@{}c@{}}Genes under regulation \\ by the transcription factor \end{tabular} & \begin{tabular}[c]{@{}c@{}}Strength of \\ regulation\end{tabular} \\ \hline
+It is worth noting that the strength of an association can be viewed as the distance between nodes: the stronger the relationship, the smaller the distance. A well-known example is the relationship between correlation and Euclidean distance. Specifically, if association strength is measured as correlation and $r$ is the correlation coefficient between two observations, their Euclidean distance can be calculated as $d = \sqrt{2(1-r)}$. \red{Another well-known example is kernel-based similarity 
+calculated from distance [add citation]}. 
 
-\begin{tabular}[c]{@{}c@{}}Transcription\\ decomposition\end{tabular} & Transcript & \begin{tabular}[c]{@{}c@{}}Complex biological process\end{tabular} & \begin{tabular}[c]{@{}c@{}}Transcript's weights \\ in process\end{tabular} \\ \hline
+The graph-based model described above is well suited for formulating and solving various practical problems. Before introducing the specific problem that this study focuses on, we will briefly recall some related settings.
 
-\begin{tabular}[c]{@{}c@{}}Transcription \\ correlation\end{tabular} & Transcript & \begin{tabular}[c]{@{}c@{}}Another transcript\end{tabular} & \begin{tabular}[c]{@{}c@{}}Correlation of transcription values\\ measured in different experiments\end{tabular} \\ \hline
-Fuzzy clustering & Object & Cluster & \begin{tabular}[c]{@{}c@{}}Object weight \\ in cluster\end{tabular} \\ \hline
+\paragraph{Assignment problem} In many applications, the aim is to find the pairs of closest nodes $t\in T$ and $c \in C$ \red{[...]}. 
+This problem can be naturally stated as the assignment problem \red{[...]}. Let a distance function be $D :T \times C \rightarrow \mathbb{R}_{+} $. The goal is to find the bijection $f: T \rightarrow C$ such that the total distance is minimum, i.e., $\sum_{t\in T}D(t, f(t)) \rightarrow \min_{f}$.
 
+\paragraph{Detection of hubs}
+Hubs are nodes with an unusually high degree. By visualizing and analyzing hubs, one can gain insights into how networks represented by graphs are structured \cite{royer2022epilepsy}. In contrast, other studies treat hubs as outliers \cite{kirkley2024identifying}.
 
-\begin{tabular}[c]{@{}c@{}}Weighted graph\end{tabular} & Vertex & \begin{tabular}[c]{@{}c@{}} Another vertex \end{tabular} & \begin{tabular}[c]{@{}c@{}}Weight of edge between\\ collection and tag \end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\paragraph{Search for specific nodes} In certain applications, the objective is to identify the pairs of nodes satisfying specific properties. Stein et al. \cite{stein-obrien_patternmarkers_2017} examine a set of features $T$ and a set of biological processes 
+$C$, in order to pinpoint markers: features that are strongly associated with exactly one process. 
 
-\paragraph{Our goal} For each tag $t$, we aim to find all ``friendly'' collections in $c$. Returning to the markers and processes example, we search among all tags for markers and the processes they label.
+\paragraph{Problem setting}
+The current study generalizes the setting introduced in \cite{stein-obrien_patternmarkers_2017}. Our objective is to identify all features that are strongly associated with a few processes. In other words, our goal is to find all nodes in $T$ that are strongly associated to at least one node in $C$, but not with too many of them. In this setting, the association strengths between nodes are edge weights stored in the block $A$ of the adjacency matrix \eqref{eq:adj_matrix}. Throughout the rest of the text, and for the sake of simplicity, we will use the term ``distance'' instead of ``association strength''. 
 
+For generality, we assume the observed processes (vertices in $C$) to be of different natures, making it impossible to directly compare the distance between a fixed node $t\in T$ and arbitrary nodes $c, c' \in C$ \red{provide an example?}.  Moreover, we do not impose any modeling assumptions on the distributions of entries in $A$. This makes it impossible to quantitatively define which nodes in $C$ are ``close'' and which are ``distant'' to $t\in T$. These concepts are therefore relative and depend on the structure of the entire matrix $A$.
 
-\subsection*{Blueprint of the procedure}
+To address this challenge, the current study proposes a novel self-tuning approach for identifying vertices $t \in T$ that have only a few close nodes in $C$. In what follows, we present the core ideas behind this procedure, referred to as the \textit{friends.test}.
+
+\subsection{Blueprint of the procedure}
  
+Through the rest of the text, we assume that all edge weights $a_{ij} \in A$ (see \eqref{eq:adj_matrix}) are independent random variables. 
 
-% \textcolor{red}{First, for a fixed tag, we range all collections by their ``friendliness''.} Then we carry out a statistical test to filter out noise, on the one hand, and nonspecific strong relations, on the other.
+\textbf{Step 1: ranking.} First, we apply the ranking to make our approach distribution-free. Specifically, to compare distances between a fixed vertex $t\in T$ and different vertices in $C$, we replace the edge weights $a_{ij} \in A$ with their ranks. Thus, if the ranks of $a_{ij} \in A$ and $a_{ik}\in A$ coincide, we say that $c_k$ and $c_j$ are equidistant from $t_i$.
 
-The proposed procedure \textcolor{red}{relies on some modeling assumptions} and consists of two steps. 
-First, for each tag, we quantify the degree of friendliness associated with each collection. In the second step, we perform a statistical test to filter out both noise and nonspecific strong relationships.
+\textbf{Step 2: model fit.} Next, we filter out the ``equidistant hubs''---vertices in $T$ that are at the same distance to most nodes in $C$. We then fit to the data a parametric model to identify, among the remaining vertices $t\in T$, those that are close to only a few nodes in $C$. The approach is self-tuning. Section~\ref{sec:discussion} discusses a particular choice of the parametric model.
 
-\textbf{First step.} The quantification of friendliness is based on ranking. A straightforward approach might be to assume that the higher the attention a collection $c$ gives to a tag $t$, the more friendly the collection $c$ is to the tag $t$. However, this na\"ive method fails to differentiate between tags that are specific markers and those that receive high attention from all collections (e.g., so-called network hubs). So, we suggest a double-ranking approach. It points to the most friendly collection(s) for a given tag $t$. 
+The model fit is performed separately for each vertex $t\in T$ of interest. Since there is typically no an apriori preference for a particular vertex $t$, one can perform model fit for all relevant vertices simultaneously. In this case, the multiplicity correction should be applied. 
 
-\textbf{Second step.} To select the true friends among all friendly collections, we use a statistical procedure based on some modeling assumptions. We name it the \test{friends test}. 
+\paragraph{Computational aspects.} Denoting the cardinality of $T$ as $n$, and the cardinality of $C$ as $k$ ($|T| = n$, $|C| = k$), one can estimate the computational complexity of \textit{friends.test} as $\mathcal{O}(kn\log(n))$.
+\textcolor{red}{The approach suits well for the large data sets.}
 
-For a given tag $t$, the \test{friends test} splits the set of all collections into two subsets: the friends of the tag and all the others. 
-
-It runs for only one tag of interest. Since we usually have no apriori preferences for a tag, we can run it for all the tags simultaneously. In this case, we should consider the multiplicity correction. 
-
-\textbf{Computational aspects.} \textcolor{red}{the procedure is fast and suitable for large data sets!}
-
-\textbf{R-package}
-The software that implements the \text{best friend test} and \text{friends test} is available as an \textsf{R} package \textsf{best.friends} at 
-\url{https://github.com/favorov/best.friends}. The vignette of the package shows simple usecases.
+\paragraph{R-package}
+The software implementing the \text{friends test} is available as an \textsf{R} package \textit{friends.test} at 
+\url{https://github.com/favorov/best.friends}. The package vignette shows simple use cases.
 
 
-\paragraph{The organization of the paper} Section~\ref{sec:method} introduces the procedure in detail. \textcolor{red}{Section...}
+\paragraph{The organization of the paper} Section~\ref{sec:method} introduces the \textit{friends.test}. Section~\ref{sec:experiments} presents the experiments. Section~\ref{sec:discussion} discuss...
 
 \section{\textit{Friends}-method}
 \label{sec:method}
@@ -225,7 +214,7 @@ r_{n1} & r_{n2} & \dots & r_{nk}
 
 %NB! Сказать в дискуссии, что метод работает даже если модельное предположение ломается?
 \subsection*{Second step: statistical test}
-Keeping in mind that now we deal with a single tag $t_i$, let's, for simplicity, omit index $i$. Then, 
+Keeping in mind that now we deal with a single tag $t_i$, let's, for simplicity, omit index $i$. \textcolor{red}{Then,} 
 \[
 \text{row}_{i}(\mathcal{R}) = (r_{1}, \dots, r_{k}), 
 \quad
@@ -301,6 +290,7 @@ calculate $n$ $p$-values. To run the \test{friends test}, we calculate $n \cdot 
 
 
 \section{Application examples}
+\label{sec:experiments}
 \subsection{\red{Senteiment analysis}}
 \paragraph{Data} To illustrate the performance of the 
 \textbf{friends} test, we use AffectVec data \red{[cite]}. This is a word emotion database capturing the subtlety of the English language by providing over 70,000 words annotated with intensity scores for more than 200 emotions. AffectVec quantifies the degree to which each word evokes a wide range of emotional responses. For example, the word ``prank'' may primarily convey joy. Yet it can also be associated with fear, suspense, or a blend of other emotions.
@@ -315,6 +305,10 @@ Multiplicity correction: $\frac{1}{1080}$
 
 \subsection{Experiment by AF...}
 \section{Discussion}
+\label{sec:discussion}
+
+\textcolor{red}{We note that the step function can be replaced by some other shapes... Why step? Clustering? Bump?}
+\textcolor{green}{Works under model misspecification}
 
 In this manuscript, we develop a method and software to detect noteworthy edges in a weighted bipartite graph. We suppose all edges of the graph to be co-directed. The graph models a directed relation (referred to as attention) from the vertices of one part (collections) to the vertices of another part (tags).
 
