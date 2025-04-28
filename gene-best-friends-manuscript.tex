@@ -75,24 +75,29 @@ Vavilov Institute of General Genetics, RAS, Moscow, 119333, RF
 \newcommand{\test}[1]{\textbf{\textit{#1}}}
 
 \begin{abstract}
-We propose a novel approach to select hidden specific strong connections in a dataset represented by a bipartite graph. \textcolor{red}{...} This model fits many practical problems, such as gene expression regulation by a set of transcription factors, etc. The method is available as an \textsf{R} package at \url{https://github.com/favorov/best.friends}.
+We propose a novel approach to identify specific connectivity patterns in a dataset represented by a bipartite graph. This model fits many practical problems, such as gene expression regulation by a set of transcription factors, etc. The method is available as an \textsf{R} package at \url{https://github.com/favorov/best.friends}.
 \end{abstract}
 
 
 \keywords{weighted bipartite graph, rank statistics, feature selection, clustering, knowledge transfer, specific gene regulation, pattern marker}
 
 \section{Introduction}
+Graphs whose vertices belong to two sets (partitions) arise naturally in many modern applications: recommendation systems, social network analysis, medicine, etc. Particular medical applications include drug-adverse
+reaction associations \cite{timilsina2019discovering}, relationships between genes \cite{fertig_cogaps_2010, stein-obrien_enter_2018}, phenotype-driven disease prioritization  \cite{ullah2015estimating}. In such scenarios, the objects in one partition interact exclusively with the objects in another, giving rise to the weighted bipartite graph model. Edge weights typically encode association strength, such as correlation, interaction probability, or distance.
 
-A bipartite graph $G = (V, E)$ is a network structure whose set of vertices $V$ is partitioned into two disjoint subsets $T$ and $C$, i.e., $
-T \cup C = V$,  $T \cap C = \varnothing$. In such graphs, edges connect only vertices in $T$ to vertices in $C$; no edges exist between vertices within the same subset. Fig. \ref{fig:nice_name} provides an example. 
+Analyzing such graphs reveals particular connectivity patterns, such as genes participating in only a few biological processes. The work of Stein-O’Brien et al. \cite{stein-obrien_patternmarkers_2017} illustrates this idea by analyzing a gene–process weighted bipartite graph and pinpointing marker genes---genes strongly associated with exactly one biological process. Identifying connectivity patterns is also valuable in the analysis of protein-protein \red{interaction maps}: prioritizing proteins that remain highly connected, but interact strongly with only a narrow set of biological processes can improve therapeutic specificity and reduce off-target effects \cite{viacava2021centrality}.
+
+Building on this motivation, we develop a procedure for identifying the vertices with a specific connectivity pattern: vertices in one partition (say, $T$) that form strong links to only a small subset of vertices in the opposite ($C$) partition. The remainder of this section establishes notation, states the formal problem, and sketches our solution.
+
+A weighted bipartite graph $G = (V, E)$ is a network structure whose set of vertices $V$ is partitioned into two disjoint subsets $T$ and $C$. The edges connect only the vertices in $T$ to the vertices in $C$.
+Fig. \ref{fig:nice_name} provides an example. 
 \begin{figure}
  \centering
  \import{}{bipartite}
- \caption{\red{draw a new graph}}
+ \caption{Illustration of a weighted bipartite graph where vertices belong to two disjoint sets, $T = \{t_1, \dots, t_n\}$ and $C = \{c_1, \dots, c_k\} $.
+Edges represent interactions between elements of different sets, with weights $a_{ij}$ encoding association strength.}
  \label{fig:nice_name}
 \end{figure}
-
-In many applications, $T$ and $C$ represent entities of different types, and the edges are weighted. 
 The corresponding weighted adjacency matrix $\mathcal{A}_G$ takes a block form,
 \begin{equation}
 \label{eq:adj_matrix}
@@ -109,77 +114,36 @@ a_{n1} & a_{n2} & \dots & a_{nk}
 \quad k := |C|, \quad
 n := |T|,
 \end{equation}
-where $|T|$ and $|C|$ are the numbers of vertices in $T$ and $C$, respectively. 
-In the case of unweighted graph, $a_{ij} = 1$ if there is an edge between vertices $t_i\in T$ and $c_{j}\in C$, $a_{ij} = 0$ otherwise. However, in many cases $a_{ij}$ is a real number reflecting the association strength between vertices---for example, the distance between vertices, probability that the connection exists, correlation, etc. 
+where $|T|$ and $|C|$ are the numbers of vertices in $T$ and $C$, respectively. In the case of unweighted graph, $a_{ij} = 1$ if there is an edge between vertices $t_i\in T$ and $c_{j}\in C$ and $a_{ij} = 0$ otherwise. If the graph is weighted, $a_{ij}$ are real numbers reflecting the association strength between vertices. 
 
-The bipartite graph naturally emerges in various real-world settings, including recommender systems \textcolor{red}{[...]}, 
-resource allocation problems \textcolor{red}{[...]}, etc. This model effectively captures intrinsic relationships in complex data structures, such as decomposed omic data \cite{fertig_cogaps_2010, stein-obrien_enter_2018}, \textcolor{red}{phenotype-disease} matrices, and similar datasets. In such problems, the vertices in one part (say, $T$) correspond to features (e.g., genes, phenotypes, etc.), while the vertices in the other part (say, $C$) correspond to the biological processes or conditions (e.g., \textcolor{red}{...}) in which the features participate. The edge weights indicate the association strength: the larger the weight, the stronger the relationship between the corresponding feature and the process.
+Each column in $A$ (i.e., $(a_{1j}, \dots, a_{nj})$) contains edge weights corresponding to the association strengths between a column vertex $c_j$ (e.g., a biological process) and all row vertices in $T$ (e.g., genes). Because every column may follow its own scale or distribution, weights from different columns are generally not comparable on an absolute scale. We model this effect by introducing latent variables. Specifically, \red{under the null hypothesis}, we assume that all edge weights originate from a common distribution, but have been modified through unknown transformations. 
 
-In this study, we generalize the setting introduced in \cite{stein-obrien_patternmarkers_2017}. Our focus is on identifying those vertices in $T$ that exhibit a \textit{specific pattern of strong associations}---that is, vertices that are strongly connected to only a limited number of vertices in
-$C$ while having relatively weaker associations with the others. \textcolor{red}{This characteristic is essential, for example, in applications where one seeks to pinpoint features that are selectively related to certain biological processes or conditions.}\red{[...]}
+Let $\xi_{ij}, 1 \le i \le n,\; 1 \le j \le k$ be i.i.d.\ latent random variables drawn from unknown distribution $P$. We assume that for each column vertex $c_j$ there exists a fixed unknown monotone functions $f_j$ on $\mathbb{R}$
+such that for each edge $(i,j)$ the corresponding edge weight is $a_{ij} = f_j(\xi_{ij})$. The higher values $a_{ij}$ indicate a stronger association between $t_i$ and $c_j$. With this convention, our goal is to identify the vertices in $T$ whose strong associations are concentrated on only a small (depending on $t_i\in T$) subset of vertices in $C$. We refer to this subset as ``friends'' of $t_i$.
 
-Before presenting our approach, we discuss briefly some related problems.
+Recall that the column-specific monotone distortions $f_1, \dots, f_k$ capture the fact that the entries $a_{ij}$ in different columns are of different nature. Hence, they cannot be directly compared on an absolute scale. Furthermore, whenever a row vertex $t_i$ does have a small group of column vertices in $C$ to which it is strongly linked, that group is typically unique to $t_i$. Together, the lack of a common scale and the vertex-specific friend sets pose two statistical challenges: scale invariance and per-row adaptivity. To address these challenges, we introduce the \textsf{friends.test}, a computationally efficient self-tuning approach composed of two steps: ranking and model fitting.
 
-\paragraph{Assignment problem.} In many applications, the aim is to find the pairs of closest vertices $t\in T$ and $c \in C$ \red{[...]}. 
-This problem can be naturally stated as the assignment problem \red{[...]}. Let a distance function be $d \colon T \times C \rightarrow \mathbb{R}_{+} $. The goal is to find an injection $f: T \rightarrow C$ such that the total distance is minimum, i.e., $\sum_{t\in T}D(t, f(t)) \rightarrow \min_{f}$.
+First, we apply the ranking resolving monotone distortions and mapping all entries onto a common scale. The ranking is performed independently for each vertex $c_j \in C$. Specifically, we replace entries $a_{ij}$ with their ranks computed with respect to other entries stored in the same ($j$-th) column. Let the rank of $a_{ij}$ be $r_{ij}$. 
 
-\paragraph{Detection of hubs}
-Traditionally, hubs are defined as vertices with an unusually high degree. In many settings, they are marked as influential nodes \cite{shiokawa2015scan}. By visualizing and analyzing hubs, one can gain insights into how networks represented by graphs are structured \cite{royer2022epilepsy}. In contrast, other studies treat hubs as outliers \cite{kirkley2024identifying}. Informally, the hub identification problem aims to highlight vertices with abnormally high connectivity.
+After ranking, we filter out non-informative vertices $t_i \in T$---such $t_i$ whose ranks $(r_{i1}, \dots, r_{ik})$ follow a discrete uniform law. Indeed, they do not differentiate meaningfully between distinct subsets of vertices in $C$.  This connectivity pattern indicates that the corresponding connections are formed by chance within the $C$ partition.
 
-\paragraph{Search for specific connections.} In certain applications, the objective is to identify the pairs of vertices satisfying specific properties. Stein et al. \cite{stein-obrien_patternmarkers_2017} examine a set of features $T$ and a set of biological processes $C$, to pinpoint markers: features that are strongly associated with exactly one process. 
-\vspace{12pt}
+Row vertex $t_i$ rejected by the uniformity test is referred to as \textit{selective}. Let the corresponding row of ranks be $(r_{i1}, \dots, r_{ik})$ and denote $F_i = \{c_j\in C\, :\, r_{ij} \le m\}$, where $m$ is an unknown true cut-off threshold differentiating between strong associations and all others. In other words, $F_i$ is a set of friends of a selective vertex $t_i$. To identify $F_i$, we fit a self-tuning parametric model. Section~\ref{sec:discussion} discusses a particular choice of the parametric model.
 
-Our goal is to identify all vertices in $T$ that are strongly associated with a limited subset of vertices in $C$. This formulation extends the setting of \cite{stein-obrien_patternmarkers_2017}, where the goal is to identify all vertices in $T$ that are strongly associated with exactly one vertex in $C$. 
-
-In our work, the association strengths are the edge weights stored in the block $A$ of the adjacency matrix \eqref{eq:adj_matrix}. Let us now introduce the edge weight-generating model.
-Under the null hypothesis, we assume that all edge weights originate from a common distribution, but have been modified through unknown transformations. Let $\xi_{ij}, 1 \le i \le n,\; 1 \le j \le k$ be i.i.d.\ latent random variables drawn from unknown distribution. We assume that there exists a fixed collection of unknown monotone functions $f_1, \dots, f_k$ on $\mathbb{R}$
-such that for each edge $(i,j)$ the corresponding edge weight is $a_{ij} = f_j(\xi_{ij})$.
-Moreover, each function 
-$f_j$ depends solely on the vertex $c_j$, meaning that the form of the transformation is determined entirely by the corresponding column vertex. Without loss of generality, we restrict our attention to the case where 
-$a_{ij}\ge 0$ for all $(i,j)$ and interpret $a_{ij}$
-as the distance between $t_i$ and $c_j$.
-
-Introducing transformations $f_1, \dots, f_k$, we let the vertices in $C$ (e.g., the observed biological processes) be of different natures. As a consequence, the distance between a fixed vertex $t\in T$ and arbitrary vertices $c, c' \in C$ cannot be directly compared on an absolute scale. Therefore, the concepts of ``close'' and ``distant'' vertices are inherently relative and must be interpreted taking into account all elements in $A$. In other words, the closeness criteria depend on the structure of the entire matrix $A$, precluding the use of a universal threshold. To address this challenge, we propose \textit{friends.test}--a novel self-tuning approach that identifies vertices $t\in T$ having a limited number of ``close'' (or \textit{friendly}) vertices in $C$ and also determines precisely which vertices in $C$ constitute these ``friends''. The \textit{friends.test} consists of two steps: \textcolor{red}{ranking and model fitting.}
-
-\textbf{Step 1: ranking.} First, we use the ranking procedure to  \textcolor{red}{remove} heterogeneity induced by unknown monotone transformations $f_1, \dots, f_k$. The ranking is performed independently for each vertex $c_j \in C$. Specifically, we replace elements $a_{ij} \in A$ with their ranks computed with respect to other values stored in the corresponding ($j$-th) column. If the rank of $a_{ij} \in A$ and the rank of $a_{il}\in A$ coincide, we say that the vertices $c_l$ and $c_j$ are equidistant from the vertex $t_i$. Conversely, if the rank of $a_{ij}$ is lower than the rank of $a_{il}$, we say that the vertex $c_j$ is closer to the vertex $t_i$ as the vertex $c_l$.
-
-
-\textbf{Step 2: model fit.} After ranking we filter out so-called \textit{\textcolor{red}{global} hubs}. We say that $t_i $ is a global hub if (1) it has connections to almost all vertices in $C$; (2) the corresponding edge weights $a_{i1}, \dots, a_{ik}$ are statistically identical (i.i.d.). Section~\ref{sec:method} presents a statistical criterion identifying global hubs. Informally, hub filtering removes the vertices in 
-$T$ that do not differentiate meaningfully between distinct subsets of the nodes in $C$. Their connectivity pattern suggests that the corresponding connections are formed by chance, rather than through any structured process.  
-For the remaining $t_i\in T$, we fit a self-tuning parametric model designed to identify their ``close'' vertices from $C$. Section~\ref{sec:discussion} discusses a particular choice of the parametric model.
-
-The model fit is performed separately for each vertex $t\in T$. Since there is typically no a priori preference for a particular vertex $t$, one can fit the model for all relevant vertices simultaneously. In this case, one should apply the multiplicity correction. 
-
-\paragraph{Computational aspects.} Denoting the cardinality of $T$ as $n$, and the cardinality of $C$ as $k$ ($|T| = n$, $|C| = k$), one can estimate the computational complexity of \textit{friends.test} as $\mathcal{O}(kn\log(n))$.
-\textcolor{red}{The approach suits well for the large data sets.}
-
-\paragraph{R-package}
-The software implementing the \text{friends test} is available as an \textsf{R} package \textit{friends.test} at 
+The \textsf{friends.test} runs in $\mathcal{O}(nk\log(n))$ \red{times}, making it scalable for large matrices. The software is available as an \textsf{R} package \textsf{friends.test} at\\ 
 \url{https://github.com/favorov/best.friends}. The package vignette shows simple use cases.
 
 
-\paragraph{The organization of the paper} Section~\ref{sec:method} introduces the \textit{friends.test}. Section~\ref{sec:experiments} presents the experiments. Section~\ref{sec:discussion} discuss...
+%%\paragraph{The organization of the paper} Section~\ref{sec:method} introduces the \textit{friends.test}. Section~\ref{sec:experiments} presents the experiments. Section~\ref{sec:discussion} discuss...
 
-\section{\textit{Friends}-test}
+\section{The \textsf{friends.test}}
 \label{sec:method}
-Let $C := \{c_1, \dots, c_k\}$, and let $T := \{t_1, \dots, t_n\}$. 
-Without loss of generality, we assume that the elements of $A$~\eqref{eq:adj_matrix} are distances.  
- We will denote the $i$-th row of the matrix $A$ as $\text{row}_i(A)$ and its $j$-th column $\text{col}_j(A)$, i.e.,
+Let the $i$-th row of the matrix $A$ be $\text{row}_i(A)$ and let the $j$-th column be $\text{col}_j(A)$,
 \[
 \text{row}_i(A) := (a_{i1}, \dots, a_{ik}),
 \quad
 \text{col}_j(A) := (a_{1j}, \dots, a_{nj}).
 \]
-In other words, a row $\text{row}_i(A)$ corresponds to the distances between the vertex $t_i$ to all vertices in $C$. A column $\text{col}_j(A)$ corresponds to the distances from a vertex $c_j$ to all vertices in $T$. 
-
-% In the remainder of the text, we assume that all $a_{ij}$ are independent random variables.
-
-% \textcolor{red}{Further, under $H_0$} we assume that the attention that each node $c_j$ from $C$ pays to all tags in $T$ is identically distributed. In other words, values in $\text{col}_j(A)$ have the same distribution. We denote it as $P_j$. Typically, all distributions $P_1, \dots, P_k$ are unknown and may vary in nature. 
-
-
-For each node $c_j \in C$, we rank the elements in the corresponding column $\text{col}_j(A)$ in decreasing order---that is, higher $a_{ij}$ receive lower ordinal numbers. Thus, each entry $a_{ij} $ in $\text{col}_j(A)$ is assigned the ordinal number---rank $r_{ij}$. In cases where multiple entries in $\text{col}_j(A)$ share the same value, we use a randomized tie-breaking procedure.
-
-We denote as $R$ the matrix containing the ranks $r_{ij}$, 
+For each column node $c_j \in C$, we rank the entries in $\text{col}_j(A)$ in decreasing order: the higher $a_{ij}$ receives the lower rank. In cases where multiple entries in $\text{col}_j(A)$ share the same value, we use a randomized tie-breaking procedure. Let $R$ be a matrix containing the ranks $r_{ij}$, 
 \begin{equation*}
 R = \begin{pmatrix}
 r_{11} & r_{12} & \dots & r_{1k} \\
@@ -189,66 +153,35 @@ r_{n1} & r_{n2} & \dots & r_{nk}
 \quad
 r_{ij} :=\text{rank}\left(a_{ij}~ \text{inside}~\text{col}_j(A)\right).
 \end{equation*}
-Let the $i$-th row of $R$ as $\text{row}_i(R) := (r_{i1}, \dots, r_{ik})$. To identify if a vertex $t_i\in T$ is connected to only a limited set of vertices in $C$, we fit a parametric model to observations stored in $\text{row}_i(R)$. However, first, we have to filter out the global hubs. We say that $t_i\in T$ is a global hub, \textcolor{red}{if $H_0$} holds true---that is, for all $j = 1, \dots, k$,
-$r_{ij} \sim \text{Unif}(\{u_i, \dots, w_i\})$ and $1\le u_i \le w_i \le n$. \textcolor{red}{To verify whether $H_0$ holds}, one can either use a test assessing the uniformity of the sample $\text{row}_i(R)$, or apply an information criterion, which will be introduced later in the text (see paragraph \textit{Information Criterion}) 
+Before fitting a parametric model to $\text{row}_i(R)$, we check whether $t_i$ is non-informative. That is,
+\[
+r_{ij} \sim \text{Unif}(\{u_i, \dots, w_i\}), \quad 1 \le j \le k,
+\]
+where $u_i$ and $w_i$ are unknown parameters such that $1\le u_i \le w_i \le n$. One can either use a statistical test or apply an approach introduced in paragraph \textit{Information Criterion}. 
 
-Next, we assume that vertex $t_i$ is not a global hub. Since we now consider only a single vertex, we omit the index $i$ for simplicity. Specifically,
+From now on, we set $t_i$ to be a selective node. For simplicity, we omit the index $i$ and write $
+\text{row}_{i}(R) = (r_{1}, \dots, r_{k})$. We assume that each $r_j$ comes from a mixture of uniform distributions on the discrete grid $\{u, \dots, w\}$, where $1\le u < w \le n$,
+\begin{equation}
+\label{def:mixture_model}
+r_j \sim p^* \text{Unif}\left(\{u, \dots, m^*\}\right) + (1-p^*)\text{Unif}\left(\{m^{*}+1, \dots, w\}\right),
+\end{equation}
+where $p^* \in (0, 1)$, as well as $u$, $m^*$ and $w$ are unknown parameters. The corresponding ``friends'' set is
+$F = \{c_j\in C:\, r_{j} \le m^*\}$. Consequently, the probability to observe $r_l \in F$ is $\frac{p^{*}}{m^* - u + 1}$, and the probability that $r_l \in C\setminus F$ is $\frac{1 - p^{*}}{w - m^*}$.
+To estimate the parameters from data, we use Maximum Likelihood. Specifically, the log-likelihood of the mixture~\eqref{def:mixture_model} is
 \[
-\text{row}_{i}(R) = (r_{1}, \dots, r_{k}).
+L(p, m, u, w; r_1, \dots, r_k) := s\ln\left(\frac{p}{m-u+1}\right) + (k-s)\ln\left(\frac{1-p}{w - m}\right),
 \]
-\textcolor{red}{Under $H_1$}, we assume that each $r_l$ ($1\le l \le k$) comes from a mixture of two uniform distributions on the discrete grid $\{u, \dots, w\}$, where $1\le u < v \le n$, i.e,
-\[
-r_l \sim p^* \text{Unif}\left(\{u, \dots, m^*\}\right) + (1-p^*)\text{Unif}\left(\{m^{*}+1, \dots, w\}\right),
-\]
-where $p^* \in (0, 1)$ and $m^*$ are unknown parameters.
-Consequently, the probability to observe $r_l \in \{u, \dots, m^*\}$ is $\frac{p^{*}}{m^* - u + 1}$, and the probability $r_l \in \{ m^*+1, \dots, w\}$ is $\frac{1 - p^{*}}{w - m^*}$.
-To estimate $p^*$ and $m^*$ from data, we use Maximum Likelihood. Specifically, the corresponding  \textcolor{red}{log-likelihood} of the mixture is written as
-\[
-L(p, m; r_1, \dots, r_k) := s\ln\left(\frac{p}{m-u+1}\right) + (k-s)\ln\left(\frac{1-p}{w - m}\right),
-\]
-where $ s$ is such that $u \le r_{s} \le m$ and $m < r_{s+1} \le w$. Optimizing $L(p, m; r_1, \dots, r_k)$ over $p$ yields $\hat{p} = \frac{s}{k}$. This ensures that one can use brute-force search over $m$ to find the optimal parameters.
+where $ s$ is such that $u \le r_{s} \le m$ and $m < r_{s+1} \le w$. We estimate $u$ as $\min_{j} r_j$ and $w$ as $\max_{j} r_j$. Further, optimizing $L(p, m; r_1, \dots, r_k)$ over $p$ yields $\hat{p} = \frac{s}{k}$. This ensures that one can use brute-force search over $m$ to find the optimal $\hat{m}$. The corresponding ``friends'' set is $\hat{F} = \{c_j \in C:\, r_j \le \hat{m} \}$.
 
 \paragraph{Information criterion}
-The homogeneity test can be avoided by employing the following information criterion, which relies on preliminary knowledge about the data. Specifically, one needs to assume the likelihood that the vertex $t$ has ``close'' vertices in $C$. We denote this probability by $q \in (0, 1)$ and set
+As an alternative to a uniformity test, we introduce an information criterion relying on a preliminary guess about the dataset in hand. Suppose we believe a priori that any given row vertex is selective with probability $q\in (0, 1)$ and set
 \[
-L_1 := L(\hat{p}, \hat{m}) + \ln(q),
+L_1 := L(\hat{p}, \hat{m}, \hat{u}, \hat{w}) + \ln(q),
 \quad
-L_2 := L(0, 0) + \ln(1-q).
+L_2 := L(0, 0, \hat{u}, \hat{w}) + \ln(1-q),
 \]
-The best fit corresponds to $\max\{L_1, L_2\}$.
-
-
-
-% \subsection{Symmetric attention matrix $A$}
-% % \textcolor{blue}{\textit{The matrix shows relation tags vs node and it is not quadratic. How can the non-quadratic matrix be symmetric?}}
-% It may happen that the number of tags $n$ coincides with the number of nodes $k$, $n = k$. The particular case of the symmetric (by construction) attention matrix $A$ requires a more detailed investigation.
-
-% The $p$-value calculation relies on the assumption of the independence of attention values in different nodes. If the attention matrix $A$ is symmetric by the nature of the underlying bipartite graph, this assumption \textcolor{red}{does not hold}. Thus, the theoretical inference presented in Section~\ref{sec:theory} is not valid anymore.
-
-% Still, the numerical procedure works. We show this in more detail in Supplement~\ref{seq:symmetric_a}. Of note, sometimes we know that all the diagonal elements are $0$ by construction. In this case, both tests use 
-% \[
-% p(w) = (1-w)^{k-1}, ~~\text{cf. equation \eqref{eq:pw}.}
-% \]
-
-
-\subsection{Multiple testing}
-\label{sec:multimurkers}
-
-All the tests we formulated here are not corrected for the multiplicity of hypotheses. Namely, they work directly if we \textit{a-priori} know what tag $t_i$ and what size $l$ of friends set we run the test for. 
-
-In practice, the tests are run for each tag or even for each tag and the friend set population. Two important observations follow.
-
-\paragraph*{Multiplicity correction} 
-To run the \test{best friend test} on all the $n$ tags, we 
-calculate $n$ $p$-values. To run the \test{friends test}, we calculate $n \cdot k$ $p$-values. However, all the tests rely on the ranking of the elements inside the same attention matrix $A$. Thus, the assumption of test independence does not hold. In this case, the standard Bonferroni correction on the set of corresponding $p$-values is possibly too strong (\cite{cabin2000bonferroni}). However, some correction is still necessary. We leave it to the scope of the particular application.
-
-\paragraph*{Multimarkers} Note that after the multiple hypothesis correction, a node may be the best friend (or an element of the true friends set) for more than one tag. The set of tags is thus a multimarker for the node. In practice, a multimarker tags (selects) a node more specific than each of its elements.
-
-\subsection{Friends and antagonists}
-
-
-
-
+where $L_1$ is the likelihood under the model that vertex $t$ is selective, and $L_2$ is a competing model corresponding to non-informative vertex $t$.
+The best fit is $\max\{L_1, L_2\}$.
 
 \section{Application examples}
 \label{sec:experiments}
@@ -291,8 +224,6 @@ The first possible area of application is feature selection. By identification o
 Second, the proposed method is useful for efficient clustering of a set of selected features. Also, the friendship concept provides a new similarity measure that possibly generates more interpretable clustering, than the clustering with $A$ being a similarity measure.
 
 Another possible direction is knowledge transfer: if we know something new about Augustus, we know something new about his friends. 
-\subsection{}
-
 
 % \textcolor{blue}{+ Friedman test }
 % %\url{https://en.wikipedia.org/wiki/Friedman_test}
