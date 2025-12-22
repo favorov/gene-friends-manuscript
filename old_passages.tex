@@ -3,4 +3,14 @@ We recall that the attention matrix $\mathcal{A}$ is the only input for the stat
 Its $j$-th  column corresponds to collection $c_j$, and we denote it as $\mathcal{A}_{:j} =(a_{1j}, \dots a_{nj})'$ (with $'$ being transposition). By modeling assumptions, elements in $\mathcal{A}_{:j}$ have the same distribution $P_j$ and are independent.
 
 Its $i$-th row corresponds to tag $t_i$, and we denote it as $\mathcal{A}_{i:} = (a_{i1}, \dots, a_{ik})$.
-By modeling assumptions, elements in $\mathcal{A}_{i:}$ are independent.
+By modeling assumptions, elements in $\mathcal{A}_{i:}$ are independent.\subsection{\red{Senteiment analysis}}
+\paragraph{Data} To illustrate the performance of the 
+\textbf{friends} test, we use AffectVec data \red{[cite]}. This is a word emotion database capturing the subtlety of the English language by providing over 70,000 words annotated with intensity scores for more than 200 emotions. AffectVec quantifies the degree to which each word evokes a wide range of emotional responses. For example, the word ``prank'' may primarily convey joy. Yet it can also be associated with fear, suspense, or a blend of other emotions.
+
+AffectVec is organized as a tabular. Each row corresponds to an individual word and each column represents one of the more than 200 emotion categories. In other words, words are \textit{tags}, emotion categories are \textit{nodes} and the corresponding intensity scores are \textit{attentions}. 
+
+\paragraph{Data preprocessing} To test the \textbf{friends} test, we selected $1080$ adjectives (\red{using Python}). \red{Appendix} presents the selection procedure. The data is available at \red{url}.
+
+\red{We consider two settings}: friends, anti-friends. Full list of emotions and manually filtered list of emotions.
+
+Multiplicity correction: $\frac{1}{1080}$

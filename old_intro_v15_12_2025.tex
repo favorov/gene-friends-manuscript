@@ -1,0 +1,54 @@
+\section{Introduction}
+
+
+Graphs whose vertices belong to two sets (partitions) arise naturally in many modern applications: recommendation systems, social network analysis, medicine, etc. Particular medical applications include drug-adverse
+reaction associations \cite{timilsina2019discovering}, relationships between genes \cite{fertig_cogaps_2010, stein-obrien_enter_2018}, phenotype-driven disease prioritization  \cite{ullah2015estimating}. In such scenarios, the objects in one partition interact exclusively with the objects in another, giving rise to the weighted bipartite graph model. Edge weights typically encode association strength, such as correlation, interaction probability, or distance.
+
+Analyzing such graphs reveals particular connectivity patterns, such as genes participating in only a few biological processes. The work of Stein-O’Brien et al. \cite{stein-obrien_patternmarkers_2017} illustrates this idea by analyzing a gene–process weighted bipartite graph and pinpointing marker genes---genes strongly associated with exactly one biological process. Identifying connectivity patterns is also valuable in the analysis of protein-protein \red{interaction maps}: prioritizing proteins that remain highly connected, but interact strongly with only a narrow set of biological processes can improve therapeutic specificity and reduce off-target effects \cite{viacava2021centrality}.
+
+Building on this motivation, we develop a procedure for identifying the vertices with a specific connectivity pattern: vertices in one partition (say, $T$) that form strong links to only a small subset of vertices in the opposite ($C$) partition. The remainder of this section establishes notation, states the formal problem, and sketches our solution.
+
+A weighted bipartite graph $G = (V, E)$ is a network structure whose set of vertices $V$ is partitioned into two disjoint subsets $T$ and $C$. The edges connect only the vertices in $T$ to the vertices in $C$.
+Fig. \ref{fig:nice_name} provides an example. 
+\begin{figure}
+ \centering
+ \import{}{bipartite}
+ \caption{Illustration of a weighted bipartite graph where vertices belong to two disjoint sets, $T = \{t_1, \dots, t_n\}$ and $C = \{c_1, \dots, c_k\} $.
+Edges represent interactions between elements of different sets, with weights $a_{ij}$ encoding association strength.}
+ \label{fig:nice_name}
+\end{figure}
+The corresponding weighted adjacency matrix $\mathcal{A}_G$ takes a block form,
+\begin{equation}
+\label{eq:adj_matrix}
+\mathcal{A}_G := \begin{pmatrix}
+0 & A\\
+A^{T} & 0
+\end{pmatrix},
+\quad \text{where}~~
+A := \begin{pmatrix}
+a_{11} & a_{12} & \dots & a_{1k} \\
+ &\cdots & \cdots & \\
+a_{n1} & a_{n2} & \dots & a_{nk}
+\end{pmatrix},
+\quad k := |C|, \quad
+n := |T|,
+\end{equation}
+where $|T|$ and $|C|$ are the numbers of vertices in $T$ and $C$, respectively. In the case of unweighted graph, $a_{ij} = 1$ if there is an edge between vertices $t_i\in T$ and $c_{j}\in C$ and $a_{ij} = 0$ otherwise. If the graph is weighted, $a_{ij}$ are real numbers reflecting the association strength between vertices. 
+
+Each column in $A$ (i.e., $(a_{1j}, \dots, a_{nj})$) contains edge weights corresponding to the association strengths between a column vertex $c_j$ (e.g., a biological process) and all row vertices in $T$ (e.g., genes). Because every column may follow its own scale or distribution, weights from different columns are generally not comparable on an absolute scale. We model this effect by introducing latent variables. Specifically, \red{under the null hypothesis}, we assume that all edge weights originate from a common distribution, but have been modified through unknown transformations. 
+
+Let $\xi_{ij}, 1 \le i \le n,\; 1 \le j \le k$ be i.i.d.\ latent random variables drawn from unknown distribution $P$. We assume that for each column vertex $c_j$ there exists a fixed unknown monotone functions $f_j$ on $\mathbb{R}$
+such that for each edge $(i,j)$ the corresponding edge weight is $a_{ij} = f_j(\xi_{ij})$. The higher values $a_{ij}$ indicate a stronger association between $t_i$ and $c_j$. With this convention, our goal is to identify the vertices in $T$ whose strong associations are concentrated on only a small (depending on $t_i\in T$) subset of vertices in $C$. We refer to this subset as ``friends'' of $t_i$.
+
+Recall that the column-specific monotone distortions $f_1, \dots, f_k$ capture the fact that the entries $a_{ij}$ in different columns are of different nature. Hence, they cannot be directly compared on an absolute scale. Furthermore, whenever a row vertex $t_i$ does have a small group of column vertices in $C$ to which it is strongly linked, that group is typically unique to $t_i$. Together, the lack of a common scale and the vertex-specific friend sets pose two statistical challenges: scale invariance and per-row adaptivity. To address these challenges, we introduce the \textsf{friends.test}, a computationally efficient self-tuning approach composed of two steps: ranking and model fitting.
+
+First, we apply the ranking resolving monotone distortions and mapping all entries onto a common scale. The ranking is performed independently for each vertex $c_j \in C$. Specifically, we replace entries $a_{ij}$ with their ranks computed with respect to other entries stored in the same ($j$-th) column. Let the rank of $a_{ij}$ be $r_{ij}$. 
+
+After ranking, we filter out non-informative vertices $t_i \in T$---such $t_i$ whose ranks $(r_{i1}, \dots, r_{ik})$ follow a discrete uniform law. Indeed, they do not differentiate meaningfully between distinct subsets of vertices in $C$.  This connectivity pattern indicates that the corresponding connections are formed by chance within the $C$ partition.
+
+Row vertex $t_i$ rejected by the uniformity test is referred to as \textit{selective}. Let the corresponding row of ranks be $(r_{i1}, \dots, r_{ik})$ and denote $F_i = \{c_j\in C\, :\, r_{ij} \le m\}$, where $m$ is an unknown true cut-off threshold differentiating between strong associations and all others. In other words, $F_i$ is a set of friends of a selective vertex $t_i$. To identify $F_i$, we fit a parametric model. Section~\ref{sec:discussion} discusses a particular choice of the parametric model.
+
+
+
+
+%%\paragraph{The organization of the paper} Section~\ref{sec:method} introduces the \textit{friends.test}. Section~\ref{sec:experiments} presents the experiments. Section~\ref{sec:discussion} discuss...

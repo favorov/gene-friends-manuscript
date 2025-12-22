@@ -1,0 +1,19 @@
+Many modern data challenges involve understanding the interaction between two distinct sets of objects. These paired relationships arise in diverse fields. For instance, recommendation systems link users to movies, pharmacovigilance connects drugs to adverse effects \cite{timilsina2019discovering}, and transcriptomics associates genes with biological processes \cite{fertig_cogaps_2010, stein-obrien_enter_2018}. In these scenarios, the goal is often to identify specific, meaningful interaction patterns---a behavior we term ``friendship''---amidst both background noise and non-specific connections. Examples of the latter are a ``housekeeping'' gene active in all observed biological processes, or a user who ranks all movies 5 stars.
+
+In this work, we assume the data are represented by an interaction matrix $A$ of size $n \times k$, where rows correspond to a set of entities $T = \{t_1, \dots, t_n\}$ (e.g., genes, users) and columns denote a set of counterparts $C = \{c_1, \dots, c_k\}$ (e.g., biological processes, movies):
+\begin{equation}
+\label{eq:adj_matrix}
+A := \begin{pmatrix}
+a_{11} & a_{12} & \dots & a_{1k} \\
+ &\cdots & \cdots & \\
+a_{n1} & a_{n2} & \dots & a_{nk}
+\end{pmatrix}.
+\end{equation}
+The entry $a_{ij}$ represents the strength of interaction between $t_i$ and $c_j$. 
+We refer to the $i$-th row vector $\mathrm{row}(A)_{i} = (a_{i1}, \dots, a_{ik})$ as the interaction profile of $t_i$, which encapsulates its connectivity pattern across all counterparts in $C$. 
+
+
+
+Conceptually, ``friendship'' is characterized by a structural break within an entity’s interaction profile. We assume that a ``friend'' entity does not interact with its counterparts uniformly; instead, its profile exhibits a clear transition between a subset of high-priority interactions and a broader set of non-specific, background activity. Examples include a user who watches exclusively horror movies or a gene expressed only in a specific cancer process. However, identifying ``friends'' is challenging for two main reasons.
+
+First, the experimental data often originate from heterogeneous sources or lack a common scale, making direct comparison of interaction strength non-informative---for example, when comparing gene expression levels across \red{different processes}. Second, it is unknown a priori whether an entity exhibits ``friendship'' behavior at all. Even when such behavior exists, neither the size of the corresponding subset nor the characteristic strength of these interactions is known. Consequently, a threshold separating ``friendship'' from other interactions must be adaptive.

@@ -20,9 +20,12 @@
 \usepackage{tikz}
 \usetikzlibrary{positioning}
 \usetikzlibrary {arrows.meta}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
 
 \newcommand{\red}[1]{\textcolor{red}{#1}}
-
+\newcommand{\as}[1]{\textcolor{magenta}{#1}}
 \begin{document}
 
 %
@@ -38,20 +41,16 @@
 % \toctitle is used
 %
 \author{
-Alexandra Suvorikova \inst{1} \and Alexei Kroshnin \inst{1} \and Dmirijs Lvovs\inst{6} \and Vasily Ramensky \inst{2,3,4} \and Vera Mukhina \inst{5,6} \and Ludmila Danilova\inst{6} \and Andrey Mironov \inst{4,7} \and Alexander Favorov\inst{6,8}}
+Alexandra Suvorikova \inst{1} \and Alexei Kroshnin \inst{1} \and Dmirijs Lvovs\inst{4} \and Vera Mukhina \inst{3,4} \and Ludmila Danilova\inst{4} \and Andrey Mironov \inst{2,5} \and Alexander Favorov\inst{4,6}}
 %
 \authorrunning{A. Suvorikova et al.} % abbreviated author list (for running head)
 %
 %%%% list of authors for the TOC (use if author list has to be modified)
-\tocauthor{Alexandra Suvorikova, Alexey Kroshnin, Dmitrijs Lvovs, Vasily Ramensky, Vera Mukhina, Ludmila Danilova, Andrey Mironov, and Alexander Favorov}
+\tocauthor{Alexandra Suvorikova, Alexey Kroshnin, Dmitrijs Lvovs, Vera Mukhina, Ludmila Danilova, Andrey Mironov, and Alexander Favorov}
 %
 \institute{
 Weierstrass Institute, Berlin, Germany, 
 \email{suvorikova@wias-berlin.de}
-\and
-MSU Institute for Artificial Intelligence, \\Lomonosov Moscow State University, Moscow, 119992, RF
-\and
-National Medical Research Center for Therapy and Preventive Medicine of the Ministry of Healthcare of Russian Federation, Moscow, 101990, RF
 \and
 Department of Bioengineering and Bioinformatics, \\Lomonosov Moscow State University, Moscow, 119992, RF
 \and
@@ -67,7 +66,6 @@ Vavilov Institute of General Genetics, RAS, Moscow, 119333, RF
 \maketitle % typeset the title of the contribution
 
 \renewcommand{\tag}{tag}
-\newcommand{\node}{node}
 \newcommand{\T}{T}
 \newcommand{\C}{C}
 \newcommand{\tl}{t}
@@ -82,68 +80,50 @@ We propose a novel approach to identify specific connectivity patterns in a data
 \keywords{weighted bipartite graph, rank statistics, feature selection, clustering, knowledge transfer, specific gene regulation, pattern marker}
 
 \section{Introduction}
-Graphs whose vertices belong to two sets (partitions) arise naturally in many modern applications: recommendation systems, social network analysis, medicine, etc. Particular medical applications include drug-adverse
-reaction associations \cite{timilsina2019discovering}, relationships between genes \cite{fertig_cogaps_2010, stein-obrien_enter_2018}, phenotype-driven disease prioritization  \cite{ullah2015estimating}. In such scenarios, the objects in one partition interact exclusively with the objects in another, giving rise to the weighted bipartite graph model. Edge weights typically encode association strength, such as correlation, interaction probability, or distance.
 
-Analyzing such graphs reveals particular connectivity patterns, such as genes participating in only a few biological processes. The work of Stein-O’Brien et al. \cite{stein-obrien_patternmarkers_2017} illustrates this idea by analyzing a gene–process weighted bipartite graph and pinpointing marker genes---genes strongly associated with exactly one biological process. Identifying connectivity patterns is also valuable in the analysis of protein-protein \red{interaction maps}: prioritizing proteins that remain highly connected, but interact strongly with only a narrow set of biological processes can improve therapeutic specificity and reduce off-target effects \cite{viacava2021centrality}.
+Many modern data challenges involve understanding the interaction between two distinct sets of objects. These paired relationships arise in diverse fields. For instance, recommendation systems link users to movies, pharmacovigilance connects drugs to adverse effects \cite{timilsina2019discovering}, and transcriptomics associates genes with biological processes \cite{fertig_cogaps_2010, stein-obrien_enter_2018}. In these scenarios, the goal is often to identify specific, meaningful patterns amidst a background of noise, on the one hand, and non-specific connections (e.g., a viewer who rates each movie $5$ stars, or a ``housekeeping'' gene active in all observed biological processes), on the other hand.
 
-Building on this motivation, we develop a procedure for identifying the vertices with a specific connectivity pattern: vertices in one partition (say, $T$) that form strong links to only a small subset of vertices in the opposite ($C$) partition. The remainder of this section establishes notation, states the formal problem, and sketches our solution.
-
-A weighted bipartite graph $G = (V, E)$ is a network structure whose set of vertices $V$ is partitioned into two disjoint subsets $T$ and $C$. The edges connect only the vertices in $T$ to the vertices in $C$.
-Fig. \ref{fig:nice_name} provides an example. 
-\begin{figure}
- \centering
- \import{}{bipartite}
- \caption{Illustration of a weighted bipartite graph where vertices belong to two disjoint sets, $T = \{t_1, \dots, t_n\}$ and $C = \{c_1, \dots, c_k\} $.
-Edges represent interactions between elements of different sets, with weights $a_{ij}$ encoding association strength.}
- \label{fig:nice_name}
-\end{figure}
-The corresponding weighted adjacency matrix $\mathcal{A}_G$ takes a block form,
+Formally, we describe this data as an interaction matrix $A$ of size $n\times k$, where the rows represent the first set of entities (e.g., genes or users) and the columns represent the second set (e.g., biological processes or movies),
 \begin{equation}
 \label{eq:adj_matrix}
-\mathcal{A}_G := \begin{pmatrix}
-0 & A\\
-A^{T} & 0
-\end{pmatrix},
-\quad \text{where}~~
 A := \begin{pmatrix}
 a_{11} & a_{12} & \dots & a_{1k} \\
  &\cdots & \cdots & \\
-a_{n1} & a_{n2} & \dots & a_{nk}
-\end{pmatrix},
-\quad k := |C|, \quad
-n := |T|,
+a_{n1} & a_{n2} & \dots & a_{nk},
+\end{pmatrix}
 \end{equation}
-where $|T|$ and $|C|$ are the numbers of vertices in $T$ and $C$, respectively. In the case of unweighted graph, $a_{ij} = 1$ if there is an edge between vertices $t_i\in T$ and $c_{j}\in C$ and $a_{ij} = 0$ otherwise. If the graph is weighted, $a_{ij}$ are real numbers reflecting the association strength between vertices. 
+where $a_{ij}$ is the stregnth of interaction between the $i$-th entity of the first group and the $j$-th entity of the second grous.
 
-Each column in $A$ (i.e., $(a_{1j}, \dots, a_{nj})$) contains edge weights corresponding to the association strengths between a column vertex $c_j$ (e.g., a biological process) and all row vertices in $T$ (e.g., genes). Because every column may follow its own scale or distribution, weights from different columns are generally not comparable on an absolute scale. We model this effect by introducing latent variables. Specifically, \red{under the null hypothesis}, we assume that all edge weights originate from a common distribution, but have been modified through unknown transformations. 
+This study focuses on detecting a particular type of connectivity pattern we call ``friendship''. A ``friend'' is an entity (row) interacting with only a relatively small subset of the opposing group (column). Examples include a user watching exclusively horror movies, or a gene expressed only in a specific cancer processes. However, identifying ``friends'' is challenging for two main reasons.
 
-Let $\xi_{ij}, 1 \le i \le n,\; 1 \le j \le k$ be i.i.d.\ latent random variables drawn from unknown distribution $P$. We assume that for each column vertex $c_j$ there exists a fixed unknown monotone functions $f_j$ on $\mathbb{R}$
-such that for each edge $(i,j)$ the corresponding edge weight is $a_{ij} = f_j(\xi_{ij})$. The higher values $a_{ij}$ indicate a stronger association between $t_i$ and $c_j$. With this convention, our goal is to identify the vertices in $T$ whose strong associations are concentrated on only a small (depending on $t_i\in T$) subset of vertices in $C$. We refer to this subset as ``friends'' of $t_i$.
+First, the experimental data often originate from heterogeneous sources or lack a common scale making direct comparison of interaction strength non-informative (e.g., gene expression levels across observed processes). Second, a priori, it is unknown whether an entity exhibits ``friendship'' behaviour at all, and, if it does, the size of the corresponding subset is unknown. Thus, a threshold separating ``friendship'' from other interactions must be adaptive.  
 
-Recall that the column-specific monotone distortions $f_1, \dots, f_k$ capture the fact that the entries $a_{ij}$ in different columns are of different nature. Hence, they cannot be directly compared on an absolute scale. Furthermore, whenever a row vertex $t_i$ does have a small group of column vertices in $C$ to which it is strongly linked, that group is typically unique to $t_i$. Together, the lack of a common scale and the vertex-specific friend sets pose two statistical challenges: scale invariance and per-row adaptivity. To address these challenges, we introduce the \textsf{friends.test}, a computationally efficient self-tuning approach composed of two steps: ranking and model fitting.
+To address these challenges, we introduce the \textsf{friends.test}---a computationally efficient self-tuning approach detecting ``friendship''. To overcome the lack of a common scale, our method uses a rank-based representation that effectively normalizes the absolute values of interaction strength $a_{ij}$. To determine the specific threshold for interaction of interest, we employ adaptive model fitting on the observed ranks, allowing the algorithm to automatically distinguish ``friendship'' from other interactions for each entity individually.
 
-First, we apply the ranking resolving monotone distortions and mapping all entries onto a common scale. The ranking is performed independently for each vertex $c_j \in C$. Specifically, we replace entries $a_{ij}$ with their ranks computed with respect to other entries stored in the same ($j$-th) column. Let the rank of $a_{ij}$ be $r_{ij}$. 
+To demonstrate the utility of the \textsf{friends.test}, we apply it to a transcriptomic dataset of head and neck squamous cell carcinoma (HNSCC). \textsf{R}-package is available at \url{https://github.com/favorov/best.friends}.
 
-After ranking, we filter out non-informative vertices $t_i \in T$---such $t_i$ whose ranks $(r_{i1}, \dots, r_{ik})$ follow a discrete uniform law. Indeed, they do not differentiate meaningfully between distinct subsets of vertices in $C$.  This connectivity pattern indicates that the corresponding connections are formed by chance within the $C$ partition.
+The paper is organized as follows. Section... Section~\ref{sec:discussion}...
 
-Row vertex $t_i$ rejected by the uniformity test is referred to as \textit{selective}. Let the corresponding row of ranks be $(r_{i1}, \dots, r_{ik})$ and denote $F_i = \{c_j\in C\, :\, r_{ij} \le m\}$, where $m$ is an unknown true cut-off threshold differentiating between strong associations and all others. In other words, $F_i$ is a set of friends of a selective vertex $t_i$. To identify $F_i$, we fit a self-tuning parametric model. Section~\ref{sec:discussion} discusses a particular choice of the parametric model.
+\paragraph{Accepted notations.} We consider a dataset represented by an interaction matrix $A$ of size $n \times k$, where the rows correspond to a set of entities $T = \{t_1, \dots, t_n\}$ (e.g., genes or users) and the columns correspond to a set of objects $C = \{c_1, \dots, c_k\}$ (e.g., biological processes or movies).
+For any index pair $(i, j)$, let $a_{ij}$ denote the observed interaction strength between entity $t_i$ and object $c_j$. We denote the $i$-th row of the matrix as $row_i(A) := (a_{i1}, \dots, a_{ik})$ and the $j$-th column as $col_j(A) := (a_{1j}, \dots, a_{nj})$. Throughout the paper, we use $F_i \subset C$ to denote the specific subset of ``friends'' for entity $t_i$. Finally, $\mathcal{U}\{\cdots\}$ denotes the uniform distribution.
+% 
 
-The \textsf{friends.test} runs in $\mathcal{O}(nk\log(n))$ \red{times}, making it scalable for large matrices. The software is available as an \textsf{R} package \textsf{friends.test} at\\ 
-\url{https://github.com/favorov/best.friends}. The package vignette shows simple use cases.
-
-
-%%\paragraph{The organization of the paper} Section~\ref{sec:method} introduces the \textit{friends.test}. Section~\ref{sec:experiments} presents the experiments. Section~\ref{sec:discussion} discuss...
-
-\section{The \textsf{friends.test}}
+\section{Friends test}
 \label{sec:method}
-Let the $i$-th row of the matrix $A$ be $\text{row}_i(A)$ and let the $j$-th column be $\text{col}_j(A)$,
-\[
-\text{row}_i(A) := (a_{i1}, \dots, a_{ik}),
-\quad
-\text{col}_j(A) := (a_{1j}, \dots, a_{nj}).
-\]
-For each column node $c_j \in C$, we rank the entries in $\text{col}_j(A)$ in decreasing order: the higher $a_{ij}$ receives the lower rank. In cases where multiple entries in $\text{col}_j(A)$ share the same value, we use a randomized tie-breaking procedure. Let $R$ be a matrix containing the ranks $r_{ij}$, 
+
+ We assume that all columns of $A$ may follow its own scale or distribution. To model this effect, we introduce latent variables. Specifically, under the null hypothesis \red{representing absence of ``friendship''}, we assume that all items in $A$  originate from a common distribution, but have been modified through unknown transformations. Let $\xi_{ij}, 1 \le i \le n,\; 1 \le j \le k$ be i.i.d.\ latent random variables drawn from unknown distribution $P$. We assume that for each column $c_j\in C$ there exists a fixed unknown monotone functions $f_j$ on $\mathbb{R}$
+such that for each interaction strength it holds $a_{ij} = f_j(\xi_{ij})$. The higher values $a_{ij}$ indicate a stronger interaction between $t_i$ and $c_j$. 
+
+
+
+
+\subsection{The \textsf{friends.test}}
+
+Since $f_j$ is strictly monotone, it preserves the relative ordering of the entities in $col_j(A)$. Therefore, converting the observed values $a_{ij}$ to ranks eliminates the unknown distortions $f_j$ and recovers the underlying order of the latent signals $\xi_{ij}$, making the columns comparable.
+
+So, for each column $c_j \in C$, we rank the entries in $\text{col}_j(A)$ in decreasing order: the higher $a_{ij}$ receives the lower rank. In cases where multiple entries in $\text{col}_j(A)$ share the same value, we use a randomized tie-breaking procedure. 
+
+We denote as $R$ the matrix containing the obtained ranks $r_{ij}$, 
 \begin{equation*}
 R = \begin{pmatrix}
 r_{11} & r_{12} & \dots & r_{1k} \\
@@ -153,51 +133,188 @@ r_{n1} & r_{n2} & \dots & r_{nk}
 \quad
 r_{ij} :=\text{rank}\left(a_{ij}~ \text{inside}~\text{col}_j(A)\right).
 \end{equation*}
-Before fitting a parametric model to $\text{row}_i(R)$, we check whether $t_i$ is non-informative. That is,
-\[
-r_{ij} \sim \text{Unif}(\{u_i, \dots, w_i\}), \quad 1 \le j \le k,
-\]
-where $u_i$ and $w_i$ are unknown parameters such that $1\le u_i \le w_i \le n$. One can either use a statistical test or apply an approach introduced in paragraph \textit{Information Criterion}. 
 
-From now on, we set $t_i$ to be a selective node. For simplicity, we omit the index $i$ and write $
-\text{row}_{i}(R) = (r_{1}, \dots, r_{k})$. We assume that each $r_j$ comes from a mixture of uniform distributions on the discrete grid $\{u, \dots, w\}$, where $1\le u < w \le n$,
+With the data normalized via ranking, we now analyze the connectivity pattern of each entity in the row-set $T$. Specifically, for a given target entity $t_i$ (e.g., a gene), the $\text{row}_i(R)$ \red{reflects how $t_i$} interacts with each entity in column-set $C$ (e.g., with biological processes).
+
+Under the null hypothesis---representing the absence of any ``friendship''---the ranks in $\text{row}_i(R)$ follow a uniform distribution by construction. Therefore, we first assess whether the target $t_i$ behaves consistently with the null hypothesis, i.e., 
+\[
+r_{ij} \sim \mathcal{U}\{u_i, \dots, w_i\}, \quad 1 \le j \le k,
+\]
+where $u_i$ and $w_i$ are unknown parameters such that $1\le u_i \le w_i \le n$. To check the null hypothesis, one can either use a standard statistical test or the method detailed in the \textit{Information Criterion} section.
+
+In what follows, we assume that the null is rejected and $t_i$ exhibits ``friendship'' behaviour. For simplicity, we omit the index $i$ and denote the ranks of the target row as $r_{1}, \dots, r_{k}$.
+
+We assume that the ranks $r_j$ follow a mixture of uniform distributions defined on the integer support $\{u, \dots, w\}$:
 \begin{equation}
 \label{def:mixture_model}
-r_j \sim p^* \text{Unif}\left(\{u, \dots, m^*\}\right) + (1-p^*)\text{Unif}\left(\{m^{*}+1, \dots, w\}\right),
+r_j \sim p^* \cdot \mathcal{U}\{u, \dots, m^*\} + (1-p^*)\cdot\mathcal{U}\{m^*+1, \dots, w\}, \quad u \le m^* < w,
 \end{equation}
-where $p^* \in (0, 1)$, as well as $u$, $m^*$ and $w$ are unknown parameters. The corresponding ``friends'' set is
-$F = \{c_j\in C:\, r_{j} \le m^*\}$. Consequently, the probability to observe $r_l \in F$ is $\frac{p^{*}}{m^* - u + 1}$, and the probability that $r_l \in C\setminus F$ is $\frac{1 - p^{*}}{w - m^*}$.
-To estimate the parameters from data, we use Maximum Likelihood. Specifically, the log-likelihood of the mixture~\eqref{def:mixture_model} is
+where the boundary points $u, w$ satisfy $1\le u < w \le n$. Here, $p^* \in (0, 1)$ is the mixture weight, and $m^*$ serves as the adaptive cut-off point separating the ``friends'' from the rest. The parameters $u, w, m^*$ and $p^*$ are unknown.
+
+In this framework, the first component $p^* \cdot \mathcal{U}\{u, \dots, m^*\}$ represents the concentrated ``friendship'' signal, while the second component $(1-p^*)\cdot\mathcal{U}\{m^{*}+1, \dots, w\}$ captures the non-specific interactions.
+
+Following this model, we define the set ``friends'' as
+$F := \{\text{all}~c_j\in C:\, r_{j} \le m^*\}$. Consequently, the likelihood of observing a specific rank $r_j$ is:
+\[
+p(r_j) := 
+\begin{cases} 
+\frac{p^{*}}{m^* - u + 1} & \text{if } u \le r_j \le m^* \\
+\frac{1 - p^{*}}{w - m^*} & \text{if } m^* < r_j \le w
+\end{cases}
+\]
+To estimate the model parameters, we use the Maximum Likelihood approach. Let $r_{(1)} \le r_{(2)} \le \dots \le r_{(k)}$ denote the sorted ranks of the target row. The log-likelihood of the mixture model~\eqref{def:mixture_model} is
 \[
 L(p, m, u, w; r_1, \dots, r_k) := s\ln\left(\frac{p}{m-u+1}\right) + (k-s)\ln\left(\frac{1-p}{w - m}\right),
 \]
-where $ s$ is such that $u \le r_{s} \le m$ and $m < r_{s+1} \le w$. We estimate $u$ as $\min_{j} r_j$ and $w$ as $\max_{j} r_j$. Further, optimizing $L(p, m; r_1, \dots, r_k)$ over $p$ yields $\hat{p} = \frac{s}{k}$. This ensures that one can use brute-force search over $m$ to find the optimal $\hat{m}$. The corresponding ``friends'' set is $\hat{F} = \{c_j \in C:\, r_j \le \hat{m} \}$.
+where $s = \max \{j : r_{(j)} \le m\}$ is the count of columns in $F$.
+
+We estimate the boundaries as $\hat{u} := r_{(1)}$ and $\hat{w} := r_{(k)}$. Optimizing $L(\cdot)$ over $p$ yields $\hat{p} = s/k$. We then perform a search over $m$ to find the optimal $\hat{m}$ that maximizes the likelihood. The estimated ``friends'' set is $\hat{F} = \{c_j \in C \mid r_j \le \hat{m} \}$.
+
+% First, we estimate $u$ as $\hat{u} := \min_{j} r_j$ and $w$ as $\hat{w} := \max_{j} r_j$. Further, optimizing $L(\cdot)$ over $p$ yields $\hat{p} = \frac{s}{k}$. This ensures that one can use brute-force search over $m$ to find the optimal $\hat{m}$. Thus, the estimated ``friends'' set is $\hat{F} = \{c_j \in C:\, r_j \le \hat{m} \}$.
 
 \paragraph{Information criterion}
-As an alternative to a uniformity test, we introduce an information criterion relying on a preliminary guess about the dataset in hand. Suppose we believe a priori that any given row vertex is selective with probability $q\in (0, 1)$ and set
+As an alternative to a uniformity test, we introduce an information criterion relying on a preliminary guess about the dataset in hand. Suppose we believe a priori that any given row   is selective with probability $q\in (0, 1)$ and set
 \[
 L_1 := L(\hat{p}, \hat{m}, \hat{u}, \hat{w}) + \ln(q),
 \quad
 L_2 := L(0, 0, \hat{u}, \hat{w}) + \ln(1-q),
 \]
-where $L_1$ is the likelihood under the model that vertex $t$ is selective, and $L_2$ is a competing model corresponding to non-informative vertex $t$.
+where $L_1$ is the likelihood under the model that   $t$ is selective, and $L_2$ is a competing model corresponding to non-informative   $t$.
 The best fit is $\max\{L_1, L_2\}$.
 
-\section{Application examples}
+We summarize the estimation procedure in Algorithm~\ref{alg:friends}.
+
+\begin{algorithm}[H]
+\caption{Friends detection for target $t_i$}
+\label{alg:friends}
+\begin{algorithmic}[1]
+\State \textbf{Input:} Row of ranks $r = (r_1, \dots, r_k)$, prior probability $q$
+\State \textbf{Step 1: Sorting and Boundaries}
+\State Sort ranks: $r_{(1)} \le r_{(2)} \le \dots \le r_{(k)}$
+\State Set boundaries: $\hat{u} \gets r_{(1)}$, $\hat{w} \gets r_{(k)}$
+
+\State \textbf{Step 2: Null Model Score ($L_2$)}
+\State $L_2 \gets k \cdot \ln\left(\frac{1}{\hat{w} - \hat{u} + 1}\right) + \ln(1-q)$
+
+\State \textbf{Step 3: Friendship Model Optimization ($L_1$)}
+\State $L_{\text{best}} \gets -\infty$, $\hat{m} \gets \text{null}$
+\For{$s = 1$ to $k-1$}
+    \State Current cut-off candidate: $m \gets r_{(s)}$
+    \If{$m < r_{(s+1)}$ and $m < \hat{w}$}  \Comment{Valid cut-off check}
+        \State $\hat{p} \gets s/k$
+        \State $L_{\text{curr}} \gets s \ln\left(\frac{\hat{p}}{m - \hat{u} + 1}\right) + (k-s) \ln\left(\frac{1-\hat{p}}{\hat{w} - m}\right)$
+        \If{$L_{\text{curr}} > L_{\text{best}}$}
+            \State $L_{\text{best}} \gets L_{\text{curr}}$
+            \State $\hat{m} \gets m$
+        \EndIf
+    \EndIf
+\EndFor
+\State $L_1 \gets L_{\text{best}} + \ln(q)$
+
+\State \textbf{Step 4: Decision}
+\If{$L_1 > L_2$}
+    \State \Return "Friendship Detected", Friends Set $\hat{F} = \{j : r_j \le \hat{m}\}$
+\Else
+    \State \Return "No Friendship"
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+
+\section{Results}
 \label{sec:experiments}
-\subsection{\red{Senteiment analysis}}
-\paragraph{Data} To illustrate the performance of the 
-\textbf{friends} test, we use AffectVec data \red{[cite]}. This is a word emotion database capturing the subtlety of the English language by providing over 70,000 words annotated with intensity scores for more than 200 emotions. AffectVec quantifies the degree to which each word evokes a wide range of emotional responses. For example, the word ``prank'' may primarily convey joy. Yet it can also be associated with fear, suspense, or a blend of other emotions.
+We developed a novel R package \textsf{friends.test}  that implements the functionality described above and is available at 
+\url{https://github.com/favorov/best.friends} under \red{license}. The package vignette shows simple use cases. The package 
+ runs in $\mathcal{O}(nk\log(n))$ \red{times, where n is ..., k is}. That performance makes the package scalable for large matrices. 
+ 
+\subsection{Application to cancer transcriptomic data}
+To validate our \textsf{friends.test} method in the real-world data, we applied it to the previously published transcriptomic dataset (GSE112026) \cite{ando2019chromatin, guo2016characterization}. That dataset contained 47 human papillomavirus-positive head and neck squamous cell carcinoma (HPV+ HNSCC) and 25 normal uvulopharyngoplasty (UPPP) surgical specimens, and naturally fit our bipartite graph setting with HPV+ HNSCC as the cancer group and UPPP as the normal group. 
 
-AffectVec is organized as a tabular. Each row corresponds to an individual word and each column represents one of the more than 200 emotion categories. In other words, words are \textit{tags}, emotion categories are \textit{nodes} and the corresponding intensity scores are \textit{attentions}. 
+The \textsf{friends.test} was applied to the RSEM-normalized gene expression matrix  identify the genes that were ``markers'' for the samples, regardless of the sample groups.
+ Then, a gene was classified as a group-specific marker if it had at least a quarter of the samples within the target group as ``friends'' (and the gene was the ``marker'' for its ``friends'') and the gene had no ``friends'' in the other group. Based on this criterion, we identified cancer markers (associated exclusively with cancer samples) and normal tissue markers (associated exclusively with normal samples).
 
-\paragraph{Data preprocessing} To test the \textbf{friends} test, we selected $1080$ adjectives (\red{using Python}). \red{Appendix} presents the selection procedure. The data is available at \red{url}.
+To assess the statistical significance of the identified group-specific markers, we generated an empirical null distribution using a permutation test, where cancer and normal sample labels were randomly shuffled, and the group-specific marker identification procedure was run on the shuffled labels on the same \textsf{friends.test} group-agnostic result. The permutation was run $10^6$ times, and  the number of group-specific markers was compared with the number of markers in the permutation-based lists. All of the permutation-based lists were shorter than the group-specific markers. This result confirmed that the signal was stronger than random noise with $p$-value equal to $10^{-6}$. (Supplementary table for the null distribution)
 
-\red{We consider two settings}: friends, anti-friends. Full list of emotions and manually filtered list of emotions.
+To ensure the reproducibility of the identified group-specific markers, we performed a stability analysis. The \textsf{friends.test} algorithm with the consequent selection of genes, the group-specific markers, was executed 1,000 times in parallel. The results of all iterations were aggregated to calculate the selection frequency for each gene. A gene was retained as a stable marker if it had frequency more than 0.2, which meant to be identified as a group-specific marker in at least 200 runs. Following this procedure, we identified 37 stable markers (35 cancer-specific and 2 normal-specific, Table~\ref{tab:stable_markers}). 
 
-Multiplicity correction: $\frac{1}{1080}$
 
-\subsection{Experiment by AF...}
+% replace with table on Google https://docs.google.com/spreadsheets/d/1KMNEBLSHbr05q1xBH05JNPKCjU6xbrFx7EP97g1dF40/edit?gid=0#gid=0
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|p{8cm}|}
+\hline
+\textbf{Category} & \textbf{Stable Marker Genes} \\
+\hline
+Cancer Markers & ABCA13$|$154664, AMDHD1$|$144193, ATP13A5$|$344905, \newline
+C16orf73$|$254528, C1orf110$|$339512, CEL$|$1056,\newline COL11A1$|$1301, COL22A1$|$169044, COL7A1$|$1294, \newline
+COMP$|$1311, CSAG2$|$728461, CXorf22$|$170063, \newline
+CXorf59$|$286464, CYP26A1$|$1592, HOXD11$|$3237, \newline 
+KRT17$|$3872, LST-3TM12$|$338821, MMP10$|$4319, \newline
+MMP13$|$4322, MMP3$|$4314, NKX2-4$|$644524, \newline
+NOS2$|$4843, OCA2$|$4948, PIWIL2$|$55124,  \newline
+POSTN$|$10631, PPP4R4$|$57718, PRAME$|$23532, \newline
+PTH2R$|$5746, SCUBE3$|$222663, SLCO1B1$|$10599, \newline
+SLCO1B3$|$28234, SOX14$|$8403, SULT1E1$|$6783, \newline
+SYCP2$|$10388, TG$|$7038 \\
+\hline
+Normal Tissue Markers & CLIC3$|$9022, CR2$|$1380 \\
+\hline
+\end{tabular}
+\caption{List of stable markers identified for Cancer and Normal tissues.}
+\label{tab:stable_markers}
+\end{table}
+
+
+
+To study biological functions of stable markers and the their relationship to cancer, we performed a literature analysis, and found that the 35 cancer markers clustered into distinct functional groups, collectively describing an invasive and remodeling tumor phenotype, including the invasion machinery (\textit{MMP3}, \textit{MMP10}, \textit{MMP13}) and extracellular matrix (ECM) (\textit{POSTN}, \textit{SCUBE3}, cancer-associated fibroblast (CAF) markers \textit{COL11A1}, and \textit{COL22A1}), as well as tumor-specific antigens (\textit{CSAG2, PRAME, KRT17, SYCP2})(Table~\ref{tab:stable_markers}). The two normal markers included Chloride Intracellular Channel 3 (CLIC3)  and complement C3d receptor 2 (CR2). These results confirm that our \textsf{friends.test} method functions as a high-fidelity biological filter. 
+
+
+\red{move to discussion}
+
+Specifically, there were three distinct members of the matrix metalloproteinases (MMP) family (\textit{MMP3}, \textit{MMP10}, and \textit{MMP13}), which were critical for degrading the basement membrane, facilitating tumor invasion. Additionally, \textit{MMP10} and \textit{MMP13} were known to correlate with metastasis and poor survival in HNSCC \cite{eraz2011mmp, luukkaa2006association, vincent2014overexpression, iizuka2014matrix}. \textit{COL7A1} was reported as a top-ranking diagnostic predictor specifically for squamous cell carcinomas, including Head and Neck Squamous Cell Carcinoma (HNSC) and Lung Squamous Cell Carcinoma (LUSC) %need a ref%.  
+Also, \textit{COL11A1}, and \textit{COL22A1} points to a significant desmoplastic reaction---the formation of fibrous tissue supporting the tumor. \textit{COL11A1} is widely validated as a specific marker for CAFs in the head and neck tumor microenvironment \cite{nallanthighal2021collagen, garcia2013overexpression}.
+
+\subsubsection{The``invasion machinery'' and extracellular matrix (ECM)}
+The most prominent signal within the list is the upregulation of ECM remodeling components, a \red{hallmark of invasive carcinoma}.
+\begin{itemize}
+    \item \textbf{Matrix Metalloproteinases (MMPs).} The algorithm identified three distinct members of the MMP family: \textit{MMP3}, \textit{MMP10}, and \textit{MMP13}. These enzymes are critical for degrading the basement membrane, facilitating tumor invasion. Specifically, \textit{MMP10} and \textit{MMP13} are known to correlate with metastasis and poor survival in HNSCC \cite{eraz2011mmp, luukkaa2006association, vincent2014overexpression, iizuka2014matrix}.
+
+    \item \textbf{Basement membrane remodeling (anchoring fibrils).} \cite{wang2023machine} identified COL7A1 as a top-ranking diagnostic predictor specifically for squamous cell carcinomas, including Head and Neck Squamous Cell Carcinoma (HNSC) and Lung Squamous Cell Carcinoma (LUSC). %может быть это в tumor-specific?
+
+    \item \textbf{Cancer-associated fibroblast (CAF) markers.} The retrieval of \textit{COL11A1}, and \textit{COL22A1} points to a significant desmoplastic reaction---the formation of fibrous tissue supporting the tumor. \textit{COL11A1} is widely validated as a specific marker for CAFs in the head and neck tumor microenvironment \cite{nallanthighal2021collagen, garcia2013overexpression}.
+    
+    \item \textbf{Cell adhesion.} \textit{POSTN} (Periostin) 
+    \red{functions as a hub gene} for cell adhesion and migration, bridging cancer cells with the structural matrix \cite{teng2025periostin, zhao2022hub, xian2025periostin}.
+
+    \item \textbf{Proliferation.}  \red{Secretory SCUBE3 supported oncogenic activity through interactions with key oncogenic cell surface receptor proteins} \cite{singh2025antibody}.
+\end{itemize}
+
+
+\paragraph{Tumor-specific antigens.}
+% The list of cancer markers includes Cancer-Testis Antigens (CTAs), which are typically silenced in normal somatic tissues but re-activated in tumorigenesis, satisfying the algorithm's strict exclusion criteria for normal samples.
+\begin{itemize}
+    \item \textbf{PRAME.} The gene \textit{PRAME} is highly specific to HNSCC \cite{szczepanski2013prame} and melanoma and is associated with retinoid resistance \cite{ramchatesingh2025targeting}.
+    \item \textit{KRT17} Research identifies KRT17 as a critical mediator of drug resistance and immune evasion in head and neck
+squamous cell carcinoma (HNSCC), positioning it as a promising therapeutic target \cite{hou2025krt17} \red{rewrite, because this is a citation from the text}
+\item  Expression of SYCP2 in HPV associated Cancers \cite{almubarak2021investigating}
+\end{itemize}
+
+
+
+
+
+ \subsubsection{The normal tissue signature}
+
+\begin{itemize}
+   \item \textbf{CLIC3:} While \textit{CLIC3} is often studied in cancer, its classification here as a normal marker aligns with studies showing its mRNA downregulation in HNSCC tumor tissue relative to healthy adjacent tissue \cite{general_bio_lit}.
+ \item \textbf{CR2 (CD21):} This receptor is typically restricted to B-cells and follicular dendritic cells \cite{general_bio_lit}. Its identification as a normal marker \cite{stable_markers} likely reflects the presence of healthy lymphoid structures (e.g., tonsillar crypts) in the control samples that are destroyed or displaced in the invasive tumor landscape.
+ \end{itemize}
+
+\paragraph{Conclusion}
+The experimental results confirm that the algorithm functions as a high-fidelity biological filter. By isolating these 37 stable genes, the method successfully recovered the core pathology of HNSCC: the loss of normal lymphoid structure (\textit{CR2}), the acquisition of invasive capability (\textit{MMPs}, \textit{POSTN}), and the restructuring of the tumor microenvironment (\textit{COL11A1}).
+
+
 \section{Discussion}
 \label{sec:discussion}
 
@@ -207,23 +324,28 @@ The method works even if the modeling assumption is misspecified...
 \textcolor{red}{We note that the step function can be replaced by some other shapes... Why step? Clustering? Bump?}
 \textcolor{green}{Works under model misspecification}
 
-In this manuscript, we develop a method and software to detect noteworthy edges in a weighted bipartite graph. We suppose all edges of the graph to be co-directed. The graph models a directed relation (referred to as attention) from the vertices of one part (nodes) to the vertices of another part (tags).
+In this manuscript, we develop a method and software to detect noteworthy edges in a weighted bipartite graph. We suppose all edges of the graph to be co-directed. The graph models a directed relation (referred to as attention) from the vertices of one part ( s) to the vertices of another part (tags).
 
 Essentially, the method consists of two steps. First, we use a double-ranking approach to find the putative friends. Then, to validate the friendship hypothesis, we perform a novel statistical test that is distribution-free.
 
-Along with the single node procedure (\test{best friend test}), we suggest its extension for a subset of nodes (\test{friends test}).
+Along with the single   procedure (\test{best friend test}), we suggest its extension for a subset of  s (\test{friends test}).
 
 The \text{best friend test} is a particular case of the \test{friends test}, but we consider it separately in the software and, hence, in the methods. Namely, \test{friends test} has higher computational costs and it requires multiplicity correction even for one tag (Section \ref{sec:multimurkers}). In many cases, the \text{best friend test} is enough for practical applications. 
 
-Although the problem looks abstract, its solution has numerous straightforward applications. For instance, the detection of the marker genes \cite{stein-obrien_patternmarkers_2017} for expression patterns critically simplifies the biological interpretation of the results of transcription matrix factorization \cite{Stein_2018,Fertig_2016}. Here, the genes are tags and the patterns are nodes. If a pattern is a friend of a gene (see Section \ref{sec:method}), the gene is the marker of the pattern.
+Although the problem looks abstract, its solution has numerous straightforward applications. For instance, the detection of the marker genes \cite{stein-obrien_patternmarkers_2017} for expression patterns critically simplifies the biological interpretation of the results of transcription matrix factorization \cite{Stein_2018,Fertig_2016}. Here, the genes are tags and the patterns are  s. If a pattern is a friend of a gene (see Section \ref{sec:method}), the gene is the marker of the pattern.
 
 However, the theoretical result is limited to the case of an asymmetric attention matrix. If the matrix is symmetric by the design, the null hypothesis does not hold. However, the computational experiment \textcolor{red}{(see Supplement)} shows that the independence proposition \textcolor{red}{can be used}. Thus, the method applies to the analysis of, e.g., distance matrices. 
 
-The first possible area of application is feature selection. By identification of markers, instead of all tags, we can use a relatively small subset for further analysis. Moreover, the identification of friend-marker pairs helps to remove non-specific connections from a graph. 
+The first possible area of application is feature selection. By identifying markers, instead of all tags, we can use a relatively small subset for further analysis. Moreover, the identification of friend-marker pairs helps to remove non-specific connections from a graph. 
 
-Second, the proposed method is useful for efficient clustering of a set of selected features. Also, the friendship concept provides a new similarity measure that possibly generates more interpretable clustering, than the clustering with $A$ being a similarity measure.
+Second, the proposed method is useful for efficient clustering of a set of selected features. Also, the friendship concept provides a new similarity measure that possibly generates more interpretable clustering than the clustering with $A$ being a similarity measure.
 
 Another possible direction is knowledge transfer: if we know something new about Augustus, we know something new about his friends. 
+
+{
+\color{magenta}
+Current approaches to interaction analysis typically fall into two categories. Biclustering methods (e.g., Cheng \& Church, ISA) identify large blocks of coordinated activity but may overlook entity-specific signals due to rigid structure requirements or scale sensitivity. Conversely, specificity indices (e.g., Tau index, Gini coefficient) quantify how specific a row is but fail to explicitly identify the interacting partners or provide a statistical confidence interval. Unlike Gene Set Enrichment Analysis (GSEA), which relies on a priori knowledge of groups, the \texttt{friends.test} is fully unsupervised, discovering specific connectivity patterns de novo using rank statistics to ensure robustness against distributional heterogeneity.
+}
 
 % \textcolor{blue}{+ Friedman test }
 % %\url{https://en.wikipedia.org/wiki/Friedman_test}
@@ -233,8 +355,8 @@ Another possible direction is knowledge transfer: if we know something new about
 The authors declare no conflict of interest.
 
 \section{Acknowledgements}
-AF acknowledges support by National Institutes of Health (NIH) P30CA006973 and 1U01CA253403-01.
-Thanks to Daniel Shu and Caedmon Haas for the translation of the motto to gold Latin. 
+The authors acknowledge support by National Institutes of Health (NIH) P30CA006973 (AF, LD), 1U01CA253403-01 (AF), and R50CA243627 (LD).
+Thanks to Daniel Shu and Caedmon Haas for the translation of the motto into gold Latin. 
 
 \bibliography{gene-best-friends}
 
@@ -253,23 +375,76 @@ Thanks to Daniel Shu and Caedmon Haas for the translation of the motto to gold L
 \newpage
 \section*{Supplement}
 \beginsupplement
-\subsection{Data preprocessing} 
-The full list of emotion categories used in the experiment is following:
-\textit{joy, surprise, trust, anticipation, fear, anger, sadness, disgust, happiness, levity, hate, loyalty, melancholy, anxiety, embarrassment,  regard, stress, gusto, compunction, cynicism, situation, umbrage, favor, meekness, compassion, withdrawal, scare, unrest, calm, courage, despair, fidget, shyness, apathy, hysteria, shadow, resentment, optimism, heartstrings, bonheur, dudgeon, merriment, hope, foreboding, envy, interest, relaxed, cruelty, helplessness,   solicitude, satisfaction,   suspense, fondness, dolor, weakness, electricity, esteem, woe, relieved, wonder, attachment, pessimism, malice, love, compatibility, timidity, blessedness, exultation, tumult, alienation, humility, powerlessness, complacency, gloom, aggression, sensation, antipathy, gloat, doubt, empathy, consciousness, ingratitude, hopelessness, signal, alarm, dislike, stir, distance, smugness, repentance, easiness, friendliness, gravity, displeasure, discouragement, pique, benevolence, chagrin, tension, togetherness, panic, eagerness, pleasure, excitement, mood, animosity, defeatism, worship, repugnance, grudge, euphoria, antagonism, trait, brotherhood, stewing, pity, daze, sympathy, annoyance, encouragement,  buoyancy, devotion, triumph, contempt, belonging, sinking, unhappiness, trepidation, admiration, disapproval, indifference, affection, astonishment, oppression, languor, coolness, liking, behaviour, peace, misogyny, bang, cheerfulness, creeps, agitation, boredom, gratification  hurt, agape, concern, ardor, mourning, harassment, contentment, closeness, surprised, confusion, presage, approval, state, wrath, dander, reverence, content, amusement, indignation, fearlessness, depreciation, expectation, tenderness, misery, depression, forgiveness, willies, fit, comfort, shame, apprehension   delight, jealousy, aggravation, chill, warpath, serene, exuberance, resignation, gratitude, despondency, nirvana, lividity, emotion, disappointment horror, grief, weight, distress, intoxication, irritation, insecurity, pride, fever, rejoicing, impatience, politeness, tranquillity, hilarity, fury, gladness, thing, nausea, calmness, fulfillment, ecstasy, elation, playfulness, exhilaration, titillation, gratefulness, diffidence, radiance, sorrow, confidence, security, ego, hostility, frustration, attrition, angst, shock, preference, enthusiasm, isolation, conscience, scruple, worry, earnestness, malevolence, awe, guilt, identification.}
+\section{The analysis of Table~\ref{tab:stable_markers}}
+
+% The application of the stability-based feature selection algorithm on the GSE112026 dataset yielded a robust signature of 37 gene markers 
+% This list, consisting of 35 cancer-specific markers and 2 normal tissue markers, exhibits high biological coherence, successfully reconstructing key molecular drivers of Head and Neck Squamous Cell Carcinoma (HNSCC) pathogenicity without prior biological knowledge \cite{stable_markers}.
 
 
+The 35 identified cancer markers cluster into three distinct functional groups that collectively describe an invasive and remodeling tumor phenotype:
 
-The filtered list of emotions
-\textit{joy, happiness, surprise, gratitude, friendliness, hope, admiration, love, cheerfulness, trust, interest,
-compassion, stress, fear, anger, sadness, hate, melancholy, anxiety, despair, powerlessness, aggression, dislike, cynicism, unrest, apathy, hysteria, calm, courage, shyness, 
- optimism, helplessness, weakness, pessimism, humility, antipathy, 
- togetherness, panic, eagerness, pleasure, excitement, euphoria, brotherhood, sympathy, annoyance, triumph, belonging, unhappiness, admiration, disapproval, indifference, affection, astonishment, 
- agitation, boredom, gratification, concern, harassment, contentment, closeness, confusion, approval, amusement, indignation, fearlessness, depreciation, expectation, 
- tenderness, misery, depression, forgiveness, fit, comfort, shame, apprehension, delight, jealousy, aggravation, chill, disappointment, horror, grief, distress, intoxication,
- irritation, insecurity, pride, impatience, politeness, tranquillity, calmness, playfulness, gratefulness, sorrow, confidence, security, ego, frustration, shock, enthusiasm, isolation, worry, guilt.}
+\subsubsection{The Invasion Machinery and Extracellular Matrix (ECM)}
+The most prominent signal within the dataset is the upregulation of ECM remodeling components, a hallmark of invasive carcinoma .
+\begin{itemize}
+    \item \textbf{Matrix Metalloproteinases (MMPs):} The algorithm identified three distinct members of the MMP family: \textit{MMP3}, \textit{MMP10}, and \textit{MMP13} \cite{stable_markers}. These enzymes are critical for degrading the basement membrane, facilitating tumor invasion. Specifically, \textit{MMP10} (Stromelysin-2) and \textit{MMP13} (Collagenase-3) are known to correlate with metastasis and poor survival in HNSCC \cite{general_bio_lit}.
+    \item \textbf{Cancer-Associated Fibroblast (CAF) Markers:} The retrieval of \textit{COL11A1}, \textit{COL7A1}, and \textit{COL22A1} \cite{stable_markers} points to a significant desmoplastic reaction—the formation of fibrous tissue supporting the tumor. \textit{COL11A1} is widely validated as a specific marker for CAFs in the head and neck tumor microenvironment \cite{general_bio_lit}.
+    \item \textbf{Cell Adhesion:} \textit{POSTN} (Periostin), identified as a stable marker \cite{stable_markers}, functions as a key hub gene for cell adhesion and migration, bridging cancer cells with the structural matrix \cite{general_bio_lit}.
+\end{itemize}
+
+\subsubsection{Tumor-Specific Antigens}
+The stable list includes Cancer-Testis Antigens (CTAs), which are typically silenced in normal somatic tissues but re-activated in tumorigenesis, satisfying the algorithm's strict exclusion criteria for normal samples.
+\begin{itemize}
+    \item \textbf{PRAME Family:} The gene \textit{PRAME} was identified as a cancer marker \cite{stable_markers}. It is highly specific to HNSCC and melanoma and is associated with retinoid resistance \cite{general_bio_lit}. The list also includes \textit{CXorf22} (alias \textit{PRAMEF2}) and \textit{CXorf59} (alias \textit{PRAMEF15}) \cite{stable_markers}, suggesting the algorithm successfully detected the co-activation of this antigen cluster.
+\end{itemize}
+
+\subsubsection{Squamous Cell Identity}
+The detection of \textit{KRT17} (Keratin 17) \cite{stable_markers} highlights the method's sensitivity to the epithelial phenotype. \textit{KRT17} is an onco-fetal keratin absent in healthy adult epidermis but strongly induced in squamous cell carcinomas, where it marks stem-like cancer cells \cite{general_bio_lit}.
+
+\subsection{The Normal Tissue Signature}
+The identification of only two normal markers, \textit{CLIC3} and \textit{CR2} \cite{stable_markers}, reflects the loss of normal tissue architecture during carcinogenesis.
+\begin{itemize}
+    \item \textbf{CLIC3:} While \textit{CLIC3} is often studied in cancer, its classification here as a normal marker aligns with studies showing its mRNA downregulation in HNSCC tumor tissue relative to healthy adjacent tissue \cite{general_bio_lit}.
+    CLIC3 mRNA was significantly downregulated in both oral and laryngeal cancer tissues compared to adjacent normal tissue (https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0333487)
+    \item \textbf{CR2 (CD21):} This receptor is typically restricted to B-cells and follicular dendritic cells \cite{general_bio_lit}. Its identification as a normal marker \cite{stable_markers} likely reflects the presence of healthy lymphoid structures (e.g., tonsillar crypts) in the control samples that are destroyed or displaced in the invasive tumor landscape.
+\end{itemize}
+
+\subsection{Conclusion}
+The experimental results confirm that the algorithm functions as a high-fidelity biological filter. By isolating these 37 stable genes, the method successfully recovered the core pathology of HNSCC: the loss of normal lymphoid structure (\textit{CR2}), the acquisition of invasive capability (\textit{MMPs}, \textit{POSTN}), and the restructuring of the tumor microenvironment (\textit{COL11A1}).
 
 
+% The 35 cancer markers cluster into three distinct functional groups that collectively describe an aggressive, invasive tumor phenotype.
 
+% \textbf{Group 1.}
+
+% \paragraph{The ``Invasion Machinery'' (MMPs and Collagens).} \red{The first signal is the massive upregulation of the extracellular matrix (ECM) remodeling machinery.} This is a classic hallmark of invasive HNSCC.
+
+% \paragraph{Matrix Metalloproteinases (MMP3, MMP10, MMP13)}: These enzymes are the "molecular scissors" that cancer cells use to degrade the basement membrane and invade surrounding tissues. MMP10 (Stromelysin-2) and MMP13 (Collagenase-3) are specifically known to be overexpressed in HNSCC and correlate with metastasis and poor survival.
+
+% \paragraph{Cancer-Associated Fibroblast (CAF) Markers.} The presence of COL11A1, COL7A1, and COL22A1 indicates a strong "desmoplastic reaction"—the formation of stiff, fibrous scar tissue around the tumor. COL11A1 is widely recognized as one of the most specific markers for Cancer-Associated Fibroblasts (CAFs) in head and neck cancer, often used to predict metastasis.
+
+% \paragraph{Periostin (POSTN).} Identified as a top "hub gene" in HNSCC, Periostin is crucial for cell adhesion and migration, often acting as a bridge between cancer cells and the structural matrix.
+
+% \textbf{Group 2.}
+
+% \paragraph{Tumor-Specific Antigens (The PRAME Family)} The list of cancer markers contains a cluster of genes known as Cancer-Testis Antigens (CTAs), which are typically silent in normal adult tissues but reactivated in tumors.
+
+% \paragraph{PRAME.} This gene is highly specific to HNSCC and melanoma. Its expression is associated with poor prognosis and resistance to retinoid therapy. 
+
+% \paragraph{PRAME Family Members.} \red{Several "Unknown" or "ORF" genes likely belong to this same family. For example, CXorf22 is an alias for PRAMEF2, and CXorf59 is PRAMEF15. The algorithm likely detected this entire gene cluster co-activating on the X chromosome.}
+
+% \textbf{Group 3.}
+% C. Squamous Cell Identity
+
+% KRT17 (Keratin 17): An "onco-fetal" keratin that is not found in healthy adult epidermis but is strongly induced in squamous cell carcinomas. It regulates tumor cell proliferation and is a marker of "stem-like" cancer cells.
+
+% SYCP2: While traditionally a meiosis gene, it is frequently upregulated in HPV-positive HNSCC and is associated with genomic instability.
+
+% 2. The Normal Tissue Signature (n=2)
+% The finding of only two "Normal" markers (CLIC3, CR2) is biologically instructive. These genes represent functions that are actively lost or suppressed during carcinogenesis.
+
+% CLIC3 (Chloride Intracellular Channel 3): Recent studies explicitly validate this finding, showing that CLIC3 mRNA and protein levels are significantly downregulated in HNSCC tumor tissues compared to adjacent normal tissues. The algorithm correctly identified it as a "Normal" marker because its expression is high in health and collapses in disease.
+
+% CR2 (Complement Receptor 2 / CD21): This receptor is typically found on B-cells and follicular dendritic cells in the tonsils (a common site for HNSCC). Its classification as a "Normal" marker suggests the loss of normal lymphoid structures (like tonsillar crypts) as the invasive tumor takes over and destroys the healthy immune architecture.
 
 
 
