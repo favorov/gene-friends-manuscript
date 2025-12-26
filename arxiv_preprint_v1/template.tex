@@ -39,22 +39,23 @@
 \usetikzlibrary {arrows.meta}
 \usepackage[ruled,vlined]{algorithm2e}
 
+\usepackage{mathtools}
+\mathtoolsset{showonlyrefs}
+
 \newcommand{\red}[1]{\textcolor{red}{#1}}
 \newcommand{\as}[1]{\textcolor{magenta}{#1}}
 \newcommand{\genecard}[1]{\href{https://www.genecards.org/cgi-bin/carddisp.pl?gene=#1}{#1}}
 
 
-\title{We need a nice title}
-%title{Telling the story of best friends: marker rank statistic} -- старый. Но не ужасный.
-
+\title{friends.test: rank-based method for feature selection in interaction matrices}
 
 \author{
-  Alexandra Suvorikova \\
+  Alexandra Suvorikova \thanks{These authors contributed equally to this work.} \\
   Weierstrass Institute\\
   \texttt{suvorikova@wias-berlin.de} \\
   %% examples of more authors
   \And
-  Alexey Kroshnin \\
+  Alexey Kroshnin\footnotemark[1] \\
   Weierstrass Institute\\
   \And
   Dmirijs Lvovs \\
@@ -80,18 +81,14 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-The analysis of the interaction of two different sets is essential across diverse fields, from linking drugs to side effects to associating genes with biological processes. However, not all interactions are equally informative. For example, a gene associated with a few specific biological processes provides more functional insight than a highly non-specific gene that acts within nearly every observed process. Identifying such specific interactions is challenging because they are often hidden among a large number of weak background connections. Moreover, the data might be aggregated from different sources, making it impossible to define universal identification criteria.
+The analysis of the interaction matrix between two distinct sets is essential across diverse fields, from pharmacovigilance to transcriptomics. Not all interactions are equally informative: a marker gene associated with a few specific biological processes is more informative than a highly expressed non-specific gene associated with most observed processes. Identifying these interactions is challenging due to background connections. Furthermore, data heterogeneity across sources precludes universal identification criteria.
 
-We introduce \textsf{friends.test}, a statistical method that formalizes specificity as a structural break in the distribution of an entity's interactions (e.g., a gene's associations to processes). A ranking-based representation ensures robustness to different data scales. To automatically locate the boundary between specific interactions and background activity, we employ model fitting.
-
-\red{We demonstrate \textsf{friends.test} on transcriptomic data from head and neck squamous cell carcinoma, where it identifies a set of group-specific marker genes.} Using the detected interaction profiles, we further illustrate how they can be leveraged to construct a functional similarity space that reveals coherent gene modules. A computationally efficient \textsf{R} implementation of \textsf{friends.test} is available at \url{https://github.com/favorov/friends.test}.
-
-% We propose a novel approach to identify specific connectivity patterns in a dataset represented by a bipartite graph. This model fits many practical problems, such as gene expression regulation by a set of transcription factors, etc. The method is available as an \textsf{R} package at \url{https://github.com/favorov/best.friends}.
+To address this challenge, we introduce \textsf{friends.test}, a method for identifying specificity by detecting structural breaks in entity interactions. Rank-based representation of the interaction matrix ensures invariance to heterogeneous data and allows for integrating data from diverse sources. To automatically locate the boundary between specific interactions and background activity, we employ model fitting. We demonstrate the applicability of \textsf{friends.test} on the GSE112026---transnational data from head and neck cancer. A computationally efficient \textsf{R} implementation is available at \url{https://github.com/favorov/friends.test}.
 \end{abstract}
 
 
 % keywords can be removed
-\keywords{rank statistics \and feature selection \and specific gene regulation}
+\keywords{rank statistics \and model fitting \and structural break detection \and feature selection \and specific gene regulation}
 
 
 \section{Introduction}
@@ -113,17 +110,17 @@ a_{n1} & a_{n2} & \dots & a_{nk}
 Each entry $a_{ij}$ represents the strength of interaction between $t_i$ and $c_j$. 
 We refer to the $i$-th row vector $\mathrm{row}_{i}(A) = (a_{i1}, \dots, a_{ik})$ as the interaction profile of $t_i$, which encapsulates its connectivity pattern across all counterparts in $C$. 
 
-We model the presence of informative interactions through a specific configuration of the interaction profile, which we term ``friendship''. We posit that an entity (row) $t_i \in T$ does not necessarily interact with its counterparts in $C$ uniformly; instead, it may exhibit selective affinity toward a specific subset of ``friends''. That is, its profile exhibits a clear transition (a structural break) between a subset of high-intensity interactions and a broader set of non-specific, background activity. For example, a gene might be selectively expressed in only a few specific biological processes while remaining at baseline levels elsewhere. 
+We model the presence of informative interactions through a specific configuration of the interaction profile, which we term ``friendship''. We assume that an entity (row) $t_i \in T$ does not necessarily interact with its counterparts in $C$ uniformly; instead, it may exhibit selective affinity toward a specific subset of ``friends''. That is, its profile exhibits a clear transition (a structural break) between a subset of high-intensity interactions and a broader set of non-specific, background activity. For example, a gene might be selectively expressed in only a few specific biological processes while remaining at baseline levels elsewhere. 
 
 
-However, identifying such ``friends'' remains challenging for two main reasons. First, the experimental data often originate from heterogeneous sources or lack a common scale, making direct comparison of interaction strength non-informative---for example, when comparing gene expression levels across different processes or disparate experimental conditions. Second, it is unknown a priori whether an entity exhibits ``friendship'' behavior at all. Even when such a pattern exists, neither the size of the high-intensity subset nor the magnitude of the structural break is known. Consequently, any threshold used to separate ``friendship'' from background activity must be inherently adaptive. 
+However, identifying such ``friends'' remains challenging for two main reasons. First, the experimental data often originate from heterogeneous sources or lack a common scale, making direct comparison of interaction strength non-informative---for example, when comparing gene expression levels across different processes or disparate experimental conditions. Second, it is unknown \textit{a priori} whether an entity exhibits ``friendship'' behavior at all. Even when such a pattern exists, neither the size of the high-intensity subset nor the magnitude of the structural break is known. Consequently, any threshold used to separate ``friendship'' from background activity must be inherently adaptive. 
 
-To address these challenges, we introduce \textsf{friends.test}: a computationally efficient, self-tuning approach for detecting specific interactions by identifying structural breaks in interaction profiles. To overcome the lack of a common scale, our method utilizes a rank-based representation, which normalizes disparate interaction strengths and ensures the procedure is scale-invariant. Furthermore, to ensure the method is adaptive, we employ model fitting. This allows the algorithm to automatically locate the structural break and determine an entity-specific threshold, effectively distinguishing meaningful signal from background noise for each entity individually.
+To address these challenges, we introduce \textsf{friends.test}: a computationally efficient, self-tuning approach for detecting specific interactions by identifying structural breaks in interaction profiles. To overcome the lack of a common scale, our method utilizes a rank-based representation, which normalizes disparate interaction strengths and ensures the procedure is scale-invariant. Additionally, we employ model fitting to make the method adaptive; this allows the algorithm to automatically locate structural breaks and determine entity-specific thresholds, effectively distinguishing meaningful signals from background noise for each entity.
 
 To demonstrate the utility of the \textsf{friends.test}, we apply it to a transcriptomic dataset of head and neck squamous cell carcinoma (HNSCC). \textsf{R}-package is available at \url{https://github.com/favorov/friends.test}. The package 
- runs in $\mathcal{O}(nk\log(n))$ times, where $n$ is number of rows, $k$ is number of columns. That performance makes the package scalable for large matrices. 
+ runs in $\mathcal{O}(nk\log(n))$ times, where $n$ is the number of rows, $k$ is the number of columns. That performance makes the package scalable for large matrices. 
 
-The paper is organized as follows. Section~\ref{sec:method} introduces the methodology. Section~\ref{sec:experiments} provides experimental results. Section~\ref{sec:discussion} discusses the algorithm---its limitations, possible applications and related works.
+The paper is organized as follows. Section~\ref{sec:method} introduces the methodology. Section~\ref{sec:experiments} provides experimental results. Section~\ref{sec:discussion} discusses the algorithm---its limitations, possible applications, and related works.
 
 \paragraph{Accepted notations.} We consider a dataset represented by an interaction matrix $A$ of size $n \times k$, where the rows correspond to a set of entities $T = \{t_1, \dots, t_n\}$ (e.g., genes or users) and the columns correspond to a set of objects $C = \{c_1, \dots, c_k\}$ (e.g., biological processes or movies).
 For any index pair $(i, j)$, let $a_{ij}$ denote the observed interaction strength between entity $t_i$ and object $c_j$. We denote the $i$-th row of the matrix as $\mathrm{row}_i(A) := (a_{i1}, \dots, a_{ik})$ and the $j$-th column as $\mathrm{col}_j(A) := (a_{1j}, \dots, a_{nj})$. Throughout the paper, we use $F_i \subset C$ to denote the specific subset of ``friends'' for entity $t_i$. Finally, $\mathcal{U}\{\cdots\}$ denotes the uniform distribution.
@@ -135,12 +132,12 @@ The procedure is divided into three logical stages: normalizing the data to ensu
 
 
 \subsection{Scale-invariant data representation}
-We assume that each column in $A$ may follow its own scale or distribution. To model this effect, we introduce a latent variable framework. Let $\xi_{ij}$ ($1 \le i \le n, 1 \le j \le k$) be latent random variables. For each column $c_j \in C$, we assume there exists a fixed unknown strictly monotone increasing function $f_j: \mathbb{R} \to \mathbb{R}$ such that each observed interaction strength is given by $a_{ij} = f_j(\xi_{ij})$. Under this assumption, higher values of $a_{ij}$ indicate a stronger underlying interaction between $t_i$ and $c_j$.To distinguish between ``friendly'' and background interactions, we model the latent variables $\xi_{ij}$ as being drawn from an unkown two-component mixture, $\xi_{ij} \sim \pi \cdot P_{\text{friendly}} + (1 - \pi) \cdot P_{\text{noise}},$
-where $P_{\text{friendly}}$ and $P_{\text{noise}}$ represent the distributions of ``friendly'' and non-informative interactions, respectively, and $\pi \in [0, 1)$ is the mixture weight.
+We assume that each column in $A$ may follow its own scale or distribution. To model this effect, we introduce a latent variable framework. Let $\xi_{ij}$ ($1 \le i \le n, 1 \le j \le k$) be latent random variables. For each column $c_j \in C$, we assume there exists a fixed unknown strictly monotone increasing function $f_j: \mathbb{R} \to \mathbb{R}$ such that each observed interaction strength is given by $a_{ij} = f_j(\xi_{ij})$. Under this assumption, higher values of $a_{ij}$ indicate a stronger underlying interaction between $t_i$ and $c_j$.To distinguish between ``friendly'' and background interactions, we model the latent variables $\xi_{ij}$ as being drawn from an unkown two-component mixture, $\xi_{ij} \sim \pi \cdot P_{\text{friend}} + (1 - \pi) \cdot P_{\text{noise}},$
+where $P_{\text{friend}}$ and $P_{\text{noise}}$ represent the distributions of ``friendly'' and non-informative interactions, respectively, and $\pi \in [0, 1)$ is the mixture weight.
 
-Since $f_j$ is strictly monotone, it preserves the relative ordering of elements within each column $\text{col}_j(A)$. Consequently, converting the observed values $a_{ij}$ to ranks eliminates the unknown column-specific distortions $f_j$. This transformation recovers the underlying ordinal structure of the latent signals $\xi_{ij}$, thereby making the columns statistically comparable.
+Since $f_j$ is strictly monotone, it preserves the relative ordering of elements within each column $\text{col}_j(A)$. Consequently, converting the observed values $a_{ij}$ to ranks eliminates the unknown column-specific distortions $f_j$. This rank-based transformation recovers the underlying ordinal structure of the latent signals $\xi_{ij}$, thereby making the columns statistically comparable.
 
-So, for each column $c_j \in C$, we rank the entries in $\mathrm{col}_j(A)$ in decreasing order: the higher $a_{ij}$ receives the lower rank. In cases where multiple entries in $\mathrm{col}_j(A)$ share the same value, we use a randomized tie-breaking procedure. 
+So, for each column $c_j \in C$, we rank the entries in $\mathrm{col}_j(A)$ in decreasing order, assigning the top rank to the largest value $a_{ij}$. In cases where multiple entries in $\mathrm{col}_j(A)$ share the same value, we use a randomized tie-breaking procedure. 
 
 We denote the matrix containing the obtained ranks $r_{ij}$ as $R$, 
 \begin{equation*}
@@ -193,7 +190,7 @@ where $u^*$ and $w^*$ are unknown parameters.
 
 To distinguish a true structural break from fluctuations, we propose two alternatives.
 
-The first approach is the \textit{pre-fitting uniformity test}. That is, we assess whether items in  $\mathrm{row}_i(R)$ are uniformly distributed before estimating the mixture parameters.
+The first approach is the \textit{pre-fitting uniformity test}. That is, before estimating the mixture parameters, we assess whether the ranks in $\mathrm{row}_i(R)$ are uniformly distributed across the observed range $[\hat{u}, \hat{w}]$, where $\hat{u} = \min(r_j)$ and $\hat{w} = \max(r_j)$. While the use of empirical extrema for scaling introduces a conservative bias in the $p$-value estimation, this methodological aspect is justified since the priority is the identification of highly pronounced ``friendship'' patterns.
 
 As an alternative to a uniformity test, we introduce an \textit{Information Criterion} that incorporates prior knowledge about the dataset. Suppose \textit{a priori} that the entity in hand $t_i$ has ``friends'' with probability $q \in (0, 1)$. We define two competing log-likelihoods:
 \begin{equation}
@@ -203,37 +200,35 @@ L_2 := k \ln\left(\frac{1}{\hat{w} - \hat{u} + 1}\right) + \ln(1 - q),
 \end{equation}
 where $L_1$ represents the log-likelihood under the structural break model (assuming $t_i$ has ``friends''), and $L_2$ corresponds to the model where $t_i$ has no ``friends''. The model with the higher value, $\max\{L_1, L_2\}$,  is selected.
 
-
-
-
 \begin{algorithm}[ht!]
 \SetAlgoLined
 \DontPrintSemicolon
-\KwIn{Interaction matrix $A$, entity index $i$, prior probability of having friends $q$ or significance level $\alpha$, \\testing mode $\in \{\text{Test, IC}\}$}
+\KwIn{Interaction matrix $A \in \mathbb{R}^{n \times k}$, entity index $i$, prior probability $q \in (0,1)$, significance level $\alpha$, testing mode $M \in \{\text{Test, IC}\}$}
 \KwOut{Estimated set of friends $\hat{F}$}
 
 \BlankLine
-\tcp{Step 1: Normalization}
-Convert interaction matrix $A$ to rank matrix $R$ using randomized tie-breaking\;
-Extract $\mathrm{row}(R)_i = (r_1, \dots, r_k)$\;
-Estimate support boundaries $\hat{u} = \min(r_j)$ and $\hat{w} = \max(r_j)$\;
+\tcp{Step 1: Rank-based Representation}
+For each column $\mathrm{col}_j(A)$, compute ranks $r_{ij}$ using randomized tie-breaking \;
+Extract normalized profile $\mathrm{row}_i(R) = (r_{i1}, \dots, r_{ik})$ \;
+Set $\hat{u} = \min(\mathrm{row}_i(R))$ and $\hat{w} = \max(\mathrm{row}_i(R))$ \;
+Sort ranks such that $r_{(1)} \le r_{(2)} \le \dots \le r_{(k)}$ \;
 
 \BlankLine
-\tcp{Step 2: Uniformity test}
-\If{mode == \text{Test}}{
-    Perform a uniformity test on $\mathrm{row}_i(R)$\;
-    \If{$p\text{-value} > \alpha$}{
-        \Return{$\emptyset$ \tcp*[f]{No friendship detected}}
+\tcp{Step 2: Pre-fitting Uniformity Check}
+\If{$M = \text{Test}$}{
+    $p_{val} \leftarrow \text{UniformityTest}(\mathrm{row}_i(R), [\hat{u}, \hat{w}])$ \;
+    \If{$p_{val} > \alpha$}{
+        \Return{$\emptyset$} \tcp*[r]{No structural break detected}
     }
 }
 
 \BlankLine
-\tcp{Step 3: Model Fitting}
+\tcp{Step 3: Maximum Likelihood Estimation}
 $L_{max} \leftarrow -\infty$\;
 \For{$m \in \{r_{(1)}, \dots, r_{(k-1)}\}$}{
-    $s \leftarrow \text{count}(\{r_j \le m\})$\;
-    $p \leftarrow s/k$\;
-    $L_{curr} \leftarrow s\ln\left(\frac{p}{m-\hat{u}+1}\right) + (k-s)\ln\left(\frac{1-p}{\hat{w}-m}\right)$\;
+    $s \leftarrow \sum_{j=1}^k \mathbb{I}(r_{ij} \le m)$ \;
+    $\hat{p} \leftarrow s/k$ \;
+    $L_{curr} \leftarrow s \ln\left(\frac{\hat{p}}{m-\hat{u}+1}\right) + (k-s) \ln\left(\frac{1-\hat{p}}{\hat{w}-m}\right)$ \;
     \If{$L_{curr} > L_{max}$}{
         $L_{max} \leftarrow L_{curr}$\;
         $\hat{m} \leftarrow m$\;
@@ -241,31 +236,26 @@ $L_{max} \leftarrow -\infty$\;
 }
 
 \BlankLine
-\tcp{Step 4: Information criterion}
-\If{mode == \text{IC}}{
-    $L_{null} \leftarrow k \ln\left(\frac{1}{\hat{w} - \hat{u} + 1}\right)$\;
+\tcp{Step 4: Model Selection via Information Criterion}
+\If{$M = \text{IC}$}{
+    $L_{null} \leftarrow k \ln\left(\frac{1}{\hat{w} - \hat{u} + 1}\right)$ \;
     \If{$L_{max} + \ln(q) \le L_{null} + \ln(1-q)$}{
-        \Return{$\emptyset$ \tcp*[f]{No friendship detected}}
+        \Return{$\emptyset$} \;
     }
 }
 
-\Return{$\hat{F} = \{c_j : r_j \le \hat{m}\}$}
+\Return{$\hat{F} = \{c_j \in C : r_{ij} \le \hat{m}\}$} 
 \caption{The \textsf{friends.test} procedure}
 \label{alg:friends}
 \end{algorithm}
 
 
-\section{Experimnetal results}
+\section{Experimental results}
 \label{sec:experiments}
 We developed a novel R package \textsf{friends.test}  that implements the functionality described above and is available at 
-\url{https://github.com/favorov/best.friends}. 
- 
-% \subsection{Application to cancer transcriptomic data}
-To validate our \textsf{friends.test} method on the real-world data, we applied it to the previously published transcriptomic dataset (GSE112026) \cite{ando2019chromatin, guo2016characterization}. That dataset contained 47 human papillomavirus-positive head and neck squamous cell carcinoma (HPV+ HNSCC) and 25 normal uvulopharyngoplasty (UPPP) surgical specimens, and naturally fit our setting with HPV+ HNSCC as the cancer group and UPPP as the normal group. 
+\url{https://github.com/favorov/friends.test}. To validate our \textsf{friends.test} method on the real-world data, we applied it to the previously published transcriptomic dataset (GSE112026) \cite{ando2019chromatin, guo2016characterization}. That dataset contained 47 human papillomavirus-positive head and neck squamous cell carcinoma (HPV+ HNSCC) and 25 normal uvulopharyngoplasty (UPPP) surgical specimens. The method was applied to the RSEM-normalized gene expression matrix to identify the friends.  To post-process the data and to interpret the results, we look for group-specific markers among the genes with friends. We say that a gene is a group-specific marker if it has ``friends'' in at least 25\% of the target group samples and has zero ``friends'' in the opposing group. Based on this criterion, we identified cancer markers (associated exclusively with cancer samples) and normal tissue markers (associated exclusively with normal samples).
 
-The method was applied to the RSEM-normalized gene expression matrix to identify the friends.  To post-process the data and to interpret the results, we look for group-specific markers among the genes with friends. We say that a gene is a group-specific marker if it has ``friends'' in at least 25\% of the target group samples and has zero ``friends'' in the opposing group. Based on this criterion, we identified cancer markers (associated exclusively with cancer samples) and normal tissue markers (associated exclusively with normal samples).
-
-To ensure the reproducibility of the identified group-specific markers, we performed a stability analysis. The \textsf{friends.test} algorithm (with the consequent selection of genes and the group-specific markers) was executed $10^3$ times in parallel. The results of all iterations were aggregated to calculate the selection frequency for each gene. Genes identified in $>25\%$ of runs were retained as stable markers (Fig.~\ref{fig:stability}). This yielded 37 markers: 35 cancer-specific and 2 normal-specific. Table~\ref{tab:stable_markers} presents the result. 
+To ensure the reproducibility of the identified group-specific markers, we performed a stability analysis. The \textsf{friends.test} algorithm (with the consequent selection of genes and the group-specific markers) was executed $10^3$ times in parallel. The results of all iterations were aggregated to calculate the selection frequency for each gene. Genes identified in $>25\%$ of runs were retained as stable markers (Fig.~\ref{fig:stability}). This procedure yielded 37 markers: 35 cancer-specific and 2 normal-specific. Table~\ref{tab:stable_markers} presents the result. 
 
 \begin{table}[h!]
 \centering
@@ -304,16 +294,16 @@ Normal Tissue Markers & CLIC3, CR2 \\
      \label{fig:validation_plots}
 \end{figure}
 
-To assess the statistical significance of the identified group-specific markers, we performed a permutation test ($10^6$ iterations) by randomly shuffling group labels. The number of group-specific markers was compared with the number of markers in the permutation-based lists (Fig.~\ref{fig:null_dist}). All of the permutation-based lists were shorter than the group-specific markers. This result confirmed that the signal was stronger than random noise with $p$-value $< 10^{-6}$.
+To assess the statistical significance of the identified group-specific markers, we performed a permutation test ($10^6$ iterations) by randomly shuffling group labels. The number of group-specific markers was compared with the number of markers in the permutation-based lists (Fig.~\ref{fig:null_dist}). All of the permutation-based lists were shorter than the group-specific marker lists. This result confirmed that the signal was stronger than random noise with $p$-value $< 10^{-6}$.
 
-\paragraph{Biological functions of detected genes.} To study biological functions of stable markers and the their relationship to cancer, we performed a literature analysis (see Section~\ref{sec:functions_of_genes}), and found that the 35 cancer markers collectively describes an invasive and remodeling tumor phenotype, including the invasion machinery (\textit{MMP3}, \textit{MMP10}, \textit{MMP13}) and extracellular matrix (ECM) (\textit{POSTN}, \textit{SCUBE3}, cancer-associated fibroblast (CAF) markers \textit{COL11A1}, and \textit{COL22A1}), as well as tumor-specific antigens (\textit{CSAG2, PRAME, KRT17, SYCP2}). The two normal markers included Chloride Intracellular Channel 3 (CLIC3)  and complement C3d receptor 2 (CR2). These results confirm that our \textsf{friends.test} method functions as a high-fidelity biological filter. Section~\ref{sec:functions_of_genes} provides a full list of genes' functions.
+To study biological functions of 37 stable markers and the their relationship to cancer, we performed a literature analysis (see Section~\ref{sec:functions_of_genes}), and found that the 35 cancer markers collectively describes an invasive and remodeling tumor phenotype, including the invasion machinery (\textit{MMP3}, \textit{MMP10}, \textit{MMP13}) and extracellular matrix (ECM) (\textit{POSTN}, \textit{SCUBE3}, cancer-associated fibroblast (CAF) markers \textit{COL11A1}, and \textit{COL22A1}), as well as tumor-specific antigens (\textit{CSAG2, PRAME, KRT17, SYCP2}). The two normal markers included Chloride Intracellular Channel 3 (CLIC3)  and complement C3d receptor 2 (CR2). These results confirm that our \textsf{friends.test} method functions as a high-fidelity biological filter. Section~\ref{sec:functions_of_genes} provides a full list of genes' functions. Additionally, we have performed GSEA-MSigDB enrichment analysis for the  C2 gene set collection \cite{msigdb_genesets} of the cancer marker genes. This analysis showed that those genes were overrepresented mainly in extracellular matrix (ECM) remodeling pathways and in the HNSCC early markers set \red{(see \url{zenoda10}).}
 
-
-\paragraph{GeneSet enrichment analysis.} We have performed GSEA-MSigDB enrichment analysis for the  C2 gene set collection \cite{msigdb_genesets} of the cancer marker genes. It shows that those genes are overrepresented mainly in extracellular matrix (ECM) remodeling pathways and in the HNSCC early markers set \red{(see \url{zenoda10}).}
+The experimental results confirm that the algorithm functions as a biological filter. By isolating these 37 genes, the method successfully recovered the core pathology of HNSCC: the loss of normal lymphoid structure (\textit{CR2}), the acquisition of invasive capability (\textit{MMPs}, \textit{POSTN}), and the restructuring of the tumor microenvironment (\textit{COL11A1}).
+Similarity analysis of cancer marker genes, based on their sets of friends, revealed the underlying functional structure of the gene set.
 
 \subsection{Friends' set similarity analysis}
 \label{sec:discuss_res} 
-To illustrate the applicability of the method for assessing functional similarity between cancer gene markers, we utilize the Weighed Jaccard Similarity (also known as Ruzicka Similarity) \red{[...]}. First, we constructed a global feature space defined by the union of all samples identified across all cancer marker genes. Each gene was then represented as a high-dimensional vector within this space. To characterize these marker genes, we utilized rank-based weighting. Specifically, for a given gene, each sample was assigned a weight based on its rank $r$ (defined as $r^{-1/2}$). Samples not associated with a marker were assigned a weight of zero. Next, we quantified the pairwise functional overlap between genes using the Weighted Jaccard index. This similarity matrix served as the input for hierarchical clustering (using the average linkage method \red{[...]}), see Fig.~\ref{fig:clustering}. Section~\ref{sec:discuss_res} discusses the result.
+To illustrate the applicability of the method for assessing functional similarity between cancer gene markers, we utilized the Weighted Jaccard Similarity (also known as Ruzicka Similarity) \cite{cha2007comprehensive}. First, we constructed a global feature space defined by the union of all samples identified across all cancer marker genes. Each gene was then represented as a high-dimensional vector within this space. To characterize these marker genes, we utilized rank-based weighting. Specifically, for a given gene, each sample was assigned a weight based on its rank $r$ (defined as $r^{-1/2}$). Samples without an associated marker were assigned a weight of zero. Next, we quantified the pairwise functional overlap between genes using the Weighted Jaccard index. The resulting similarity matrix served as the input for hierarchical clustering (using the average linkage method \cite{virtanen2020scipy}), see Fig.~\ref{fig:clustering}. Section~\ref{sec:discuss_res} discusses the result.
 \begin{figure}[ht!]
     \centering
     \includegraphics[width=0.5\textwidth]{figs/weighted_jaccard_clustermap.png} 
@@ -321,30 +311,16 @@ To illustrate the applicability of the method for assessing functional similarit
     \label{fig:clustering}
 \end{figure}
 
-The weighted Jaccard distance matrix (see Fig.~\ref{fig:clustering}) contains two pairs of very close genes. The first (and the most close) pair is \textit{CXorf59} and \textit{CXorf22}. Indeed, the up-to-date gene annotation  has unified these identifiers under the gene symbol \genecard{CFAP47} (see \cite{ncbi_gene_170063}). The second pair is \textit{LST-3TM12} and \textit{SLCO1B3}. \textit{LST-3TM12} is a legacy identifier for a transcript now classified within the \textit{SLCO1B7} genomic region, involved in the same \textit{SLCO1B} gene family. The two genes are located adjacent on chromosome 12. Moreover, these two genes are sometimes transcribed in the same frame, forming a readthrough transcript protein  \cite{uniprot_F5H094}. Notably, the \textsf{friends.test} is purely data-driven and does not incorporate any \textit{a priori} information about the gene structures.
+The weighted Jaccard distance matrix (see Fig.~\ref{fig:clustering}) contains two pairs of very close genes. The first (and the most close) pair is \textit{CXorf59} and \textit{CXorf22}. Indeed, the up-to-date gene annotation has unified these identifiers under the gene symbol \genecard{CFAP47} (see \cite{ncbi_gene_170063}). The second pair is \textit{LST-3TM12} and \textit{SLCO1B3}. \textit{LST-3TM12} is a legacy identifier for a transcript now classified within the \textit{SLCO1B7} genomic region, involved in the same \textit{SLCO1B} gene family. The two genes are located adjacent on chromosome 12. Moreover, these two genes are sometimes transcribed in the same frame, forming a readthrough transcript protein  \cite{uniprot_F5H094}. Notably, the \textsf{friends.test} identifies specific interactions based solely on the internal structure of the input matrix, without relying on external biological databases or pre-existing gene annotations.
 
 
-Based on the silhouette score, the hierarchical tree was pruned to yield nine clusters (Table~\ref{tab:gene_clusters} in Supplement). The functional identity of the clusters was subsequently verified through the same enrichment analysis procedure as for all 35 cancer marker genes. Only the largest cluster (see Table~\ref{tab:gene_clusters}) was overrepresented in any gene set of the C2 collection. Remarkably, now the HNSCC early markers set is the head of the list (\red{(see \url{zenoda11})}).
-
-
-\paragraph{Conclusion.}
-The experimental results confirm that the algorithm functions as a biological filter. By isolating these 37 genes, the method successfully recovered the core pathology of HNSCC: the loss of normal lymphoid structure (\textit{CR2}), the acquisition of invasive capability (\textit{MMPs}, \textit{POSTN}), and the restructuring of the tumor microenvironment (\textit{COL11A1}).
-Similarity analysis of cancer marker genes, based on their sets of friends, revealed the underlying functional structure of the gene set.
-
-
-%Similarity analysis of cancer marker genes, based on their sets of friends, highlighted functional structure of the gene set. 
-
-
-
-
-% \red{move to discussion}
+Based on the silhouette score, the hierarchical tree was pruned to yield nine clusters (Table~\ref{tab:gene_clusters} in Supplement). The functional identity of the clusters was subsequently verified through the same enrichment analysis procedure as for all 35 cancer marker genes. Only cluster 6 (see Table~\ref{tab:gene_clusters}) was overrepresented in any gene set of the C2 collection. Remarkably, now the HNSCC early markers set is the head of the list (\red{(see \url{zenoda11})}).
 
 
 \section{Discussion}
 \label{sec:discussion}
-% The \textsf{friends.test} method is a domain-agnostic approach to detect selective interaction patterns by identifying structural breaks in interaction profiles.
 
-In this work, we introduced \textsf{friends.test}, a domain-agnostic statistical framework designed to identify specific associations within bipartite interaction data. Our approach is motivated by the need to detect entities that exhibit high discriminative power---those that interact mostly with only a limited subset of counterparts, rather than exhibiting broad, non-specific connectivity across the entire dataset. Applying the method to head and neck squamous cell carcinoma transcriptomic data showed that the approach identified a small, stable set of differentially expressed genes.
+In this work, we introduced \textsf{friends.test}, an unsupervised approach designed to identify specific associations within bipartite interaction data. Our approach is motivated by the need to detect entities that exhibit high discriminative power---those that interact mostly with only a limited subset of counterparts, rather than exhibiting broad, non-specific connectivity across the entire dataset. Applying the method to head and neck squamous cell carcinoma transcriptomic data showed that the approach identified a small, stable set of differentially expressed genes.
 
 
 \subsection{Related works}
@@ -358,22 +334,15 @@ Our approach operates at the individual profile level (i.e., row-wise), rather t
 Similarly, change-point detection and segmentation methods, while designed to identify structural breaks, encounter difficulties when the selective signal involves only a few interactions. In such sparse scenarios, these methods may dismiss ``friendly'' interactions as outliers rather than indicate them as a meaningful structural shift.
 
 
-Finally, widely used specificity indices, such as the Tau index or the Gini coefficient, quantify how unevenly values are distributed within an interaction profile, thereby providing a single-number measure of overall specificity. However, these metrics do not identify which particular interactions constitute the specific signal \cite{kryuchkova2017benchmark}.
-
-%разобраться с Gini и likelihood
-
-
-
-% Unlike Gene Set Enrichment Analysis (GSEA), which relies on a priori knowledge of groups, the \texttt{friends.test} is fully unsupervised, discovering specific connectivity patterns de novo using rank statistics to ensure robustness against distributional heterogeneity.
-
-
-% \textcolor{blue}{+ Friedman test }
-% %\url{https://en.wikipedia.org/wiki/Friedman_test}
-
+Widely used specificity indices, such as the Tau index or the Gini coefficient, quantify how unevenly values are distributed within an interaction profile, thereby providing a single-number measure of overall specificity. However, these metrics do not identify which particular interactions constitute the specific signal \cite{kryuchkova2017benchmark}.
 
 
 \subsection{Limitations of the approach}
+\label{sec:limitations}
 The proposed method is designed to detect specific interactions. In particular, we assume that specificity manifests as a separation between a relatively small set of ``friendly'' interactions and background ones. Profiles in which interaction strength changes gradually, or where the signal is distributed smoothly across many counterparts, may not exhibit a well-defined separation and can therefore be classified as non-specific. However, the experiment demonstrates that the method performs well on real data, where the model can be misspecified.
+
+The use of empirical extrema for rank scaling in the uniformity test (Step 2 in Algorithm~\ref{alg:friends}) introduces a potential bias in $p$-value estimation toward conservatism. This approach may lead to the exclusion of genes with moderately expressed structural breaks. However, this conservative filtering is justified within the framework of identifying highly-specific interactions.
+
 
 Moreover, an additional source of variability arises from the randomized tie-breaking procedure. While this approach prevents systematic bias, it can introduce fluctuations in the estimators, particularly when interaction profiles contain many ties or when the signal is weak. For this reason, we recommend running the procedure multiple times and assessing the stability of the identified ``friends'' across runs.
 
@@ -387,7 +356,7 @@ Finally, the proposed framework explicitly assumes an asymmetric interaction str
 
 
 
-\paragraph{Knowledge transfer, functional similarity and clustering.} As we have demonstrated, the concept of ``friendship'' provides a basis for guilt-by-association paradigms: two entities might be considered as functionally similar if they share significantly overlapping sets of ``friends''. Moreover, introduction of functional similarity leads to an interpretable clustering. 
+\paragraph{Functional similarity and clustering.} As we have demonstrated, the concept of ``friendship'' provides a basis for guilt-by-association paradigms: two entities might be considered as functionally similar if they share significantly overlapping sets of ``friends''. Moreover, the introduction of functional similarity leads to an interpretable clustering. 
 
 \paragraph{``Anti-friends'' and negative selection.} The current model identifies strong positive interactions. However, if the estimated set of ``friends'' $\hat{F}$ is large, while its complement is small, one may suppose a significant absence of interaction (the presence of ''anti-friends''). We do not explicitly model or validate such effects in the current study; however, these cases may motivate future extensions of the framework aimed at capturing inhibitory or mutually exclusive relationships.
 
@@ -433,9 +402,6 @@ Finally, the proposed framework explicitly assumes an asymmetric interaction str
 \appendix
 
 
-
-
-
 \section{Supplementary material}
 \label{sec:functions_of_genes}
 \begin{small}
@@ -450,8 +416,8 @@ Finally, the proposed framework explicitly assumes an asymmetric interaction str
 1 & \genecard{ABCA13} & ATP-binding cassette transporter; lipid transport & Overexpressed in some tumors; linked to adhesion and angiogenesis regulation \\ \hline
 2 & \genecard{AMDHD1} & Amidohydrolase in histidine catabolism & Tumor suppressor in cholangiocarcinoma; inhibits metastasis via TGF-b/SMAD pathway \\ \hline
 3 & \genecard{ATP13A5} & P5-type ATPase; cation transport & No direct cancer role documented; expressed in some tumors \\ \hline
-4 & \genecard{C16orf73} & Single-stranded DNA-binding; meiosis & \red{No established cancer role} \url{https://www.nature.com/articles/ncomms10499} \\ \hline
-5 & \genecard{C1orf110} & Coiled-coil protein; cell cycle/DNA repair & \red{No clear cancer role} Downregulated gene in HNSC \url{https://tcr.amegroups.org/article/view/45134/html} \\ \hline
+4 & \genecard{C16orf73} & Single-stranded DNA-binding; meiosis & No established cancer role \\ \hline
+5 & \genecard{C1orf110} & Coiled-coil protein; cell cycle/DNA repair & No clear cancer role \\ \hline
 6 & \genecard{CEL} & Pancreatic lipase; lipid metabolism & Altered in pancreatic cancer; may affect tumor metabolism \\ \hline
 7 & \genecard{COL11A1} & ECM collagen; CAF marker & Invasion-supporting machinery \\ \hline
 8 & \genecard{COL22A1} & ECM collagen; CAF marker & Invasion-supporting machinery \\ \hline
@@ -483,7 +449,7 @@ Finally, the proposed framework explicitly assumes an asymmetric interaction str
 34 & \genecard{SYCP2} & Synaptonemal complex protein & Cancer-testis antigen \\ \hline
 35 & \genecard{TG} & Thyroglobulin precursor & Marker for thyroid cancer; used clinically for monitoring \\ \hline
 36 & \genecard{CLIC3} & Growth regulator & Down-regulated in HNSCC \\ \hline
-37 & \genecard{CR2} & Healthy lymphoid structures & \red{---} \\ \hline
+37 & \genecard{CR2} & Healthy lymphoid structures & \red{?????} \\ \hline
 \end{tabularx}
 \end{small}
 
@@ -510,11 +476,6 @@ Cluster 9 & 1 & CR2 \\
 \end{tabularx}
 \end{table}
 
-
-
-
-
-%Specifically, there were three distinct members of the Matrix Metalloproteinases (MMP) family (\textit{MMP3}, \textit{MMP10}, and \textit{MMP13}), which were critical for degrading the basement membrane, facilitating tumor invasion. Additionally, \textit{MMP10} and \textit{MMP13} were known to correlate with metastasis and poor survival in HNSCC \cite{ luukkaa2006association, vincent2014overexpression, iizuka2014matrix}. \textit{COL7A1} was reported as a top-ranking diagnostic predictor specifically for squamous cell carcinomas, including Head and Neck Squamous Cell Carcinoma (HNSC) and Lung Squamous Cell Carcinoma (LUSC) %need a ref%.  
 
 Further, we summarize the information about the identified cancer marker genes,
 \begin{itemize}
